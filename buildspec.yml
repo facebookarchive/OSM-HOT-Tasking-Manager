@@ -15,7 +15,7 @@ phases:
       - apt-get install -y nodejs
       - node --version
     # Install NPM packages and build client from gulpfile
-      - "cd client && npm install && ./node_modules/.bin/gulp && build cd .."
+      - "cd client && npm install --silent && ./node_modules/.bin/gulp build && cd .."
     # Install Python dependencies
       - python --version
       - apt-get install -y libgeos-c1 libgeos-dev  # Required for shapely
