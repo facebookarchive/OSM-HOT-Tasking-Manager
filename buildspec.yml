@@ -35,6 +35,7 @@ phases:
   post_build:
     commands:
       # Run deploy script to manage deploy to appropriate environment
+      - chmod +x ./devops/ci/shippable_deploy.sh
       - ./devops/ci/shippable_deploy.sh
 artifacts:
   files:
