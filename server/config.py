@@ -20,7 +20,7 @@ class EnvironmentConfig:
 
 
 class StagingConfig(EnvironmentConfig):
-    APP_BASE_URL = 'http://tasking-manager-staging.eu-west-1.elasticbeanstalk.com'
+    APP_BASE_URL = os.getenv('TM_APP_BASE_URL', None)
     API_DOCS_URL = f'{APP_BASE_URL}/api-docs/swagger-ui/index.html?' + \
         'url=http://tasking-manager-staging.eu-west-1.elasticbeanstalk.com/api/docs'
     LOG_DIR = '/var/log/tasking-manager-logs'
