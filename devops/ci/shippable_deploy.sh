@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
+set -euf -o pipefail
+
 echo Running HOT Tasking Manager Deploy, current branch is $BRANCH
+
+echo CODEBUILD_SOURCE_VERSION: $CODEBUILD_SOURCE_VERSION
+echo CODEBUILD_BUILD_ID: $CODEBUILD_BUILD_ID
+
+echo "##############################"
+env
+echo "##############################"
 
 # We don't want to deploy Pull Requests only builds on develop and master
 if [ $IS_PULL_REQUEST == true ]
