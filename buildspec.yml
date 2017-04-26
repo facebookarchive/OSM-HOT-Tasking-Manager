@@ -2,7 +2,7 @@ version: 0.1
 
 environment_variables:
   plaintext:
-    key: "value"
+    SHIPPABLE: "true"
     key: "value"
 
 phases:
