@@ -15,11 +15,7 @@ phases:
       - ln -s `which nodejs` /usr/bin/node
       - node --version
     # Install NPM packages and build client from gulpfile
-      - cd client
-      - pwd && ls -lAht
-      - npm install
-      - ./node_modules/.bin/gulp build
-      - cd ..
+      - "cd client && npm install && ./node_modules/.bin/gulp && build cd .."
     # Install Python dependencies
       - python --version
       - apt-get install -y libgeos-c1 libgeos-dev  # Required for shapely
@@ -32,9 +28,7 @@ phases:
   build:
     commands:
     # JS Unit Tests
-      - cd tests/client
-      - ../../client/node_modules/.bin/karma start ./karma.conf.js --single-run --browsers PhantomJS --reporters junit
-      - cd ../..
+      - "cd tests/client && ../../client/node_modules/.bin/karma start ./karma.conf.js --single-run --browsers PhantomJS --reporters junit && cd ../.."
     # Run Python tests
       - nosetests ./tests/server --with-xunit --xunit-file ./shippable/testresults/unitresults.xml --with-coverage --cover-erase --cover-package=./server
       - coverage xml -o shippable/codecoverage/coverage.xml
