@@ -11,7 +11,7 @@ phases:
     # Install latest LTS node
       - apt-get update
       - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-      - apt-get install nodejs
+      - apt-get install -y nodejs
       - node --version
     # Install NPM packages and build client from gulpfile
       - cd client
