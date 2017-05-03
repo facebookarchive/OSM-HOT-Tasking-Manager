@@ -42,7 +42,8 @@ class DraftProjectDTO(Model):
     """ Describes JSON model used for creating draft project """
     project_name = StringType(required=True, serialized_name='projectName')
     area_of_interest = BaseType(required=True, serialized_name='areaOfInterest')
-    tasks = BaseType(required=True)
+    tasks = BaseType(required=False)
+    has_arbitrary_tasks = BooleanType(required=True, serialized_name='arbitraryTasks')
     user_id = IntType(required=True)
 
 
@@ -80,6 +81,8 @@ class ProjectDTO(Model):
     mapping_types = ListType(StringType, serialized_name='mappingTypes', validators=[is_known_mapping_type])
     campaign_tag = StringType(serialized_name='campaignTag')
     organisation_tag = StringType(serialized_name='organisationTag')
+    license_id = IntType(serialized_name='licenseId')
+    allowed_usernames = ListType(StringType(), serialized_name='allowedUsernames', default=[])
 
 
 class ProjectSearchDTO(Model):

@@ -18,6 +18,7 @@
             initialise: initialise,
             showProjectsOnMap: showProjectsOnMap,
             showProjectOnMap: showProjectOnMap,
+            removeProjectsOnMap: removeProjectsOnMap,
             highlightProjectOnMap: highlightProjectOnMap,
             removeHighlightOnMap: removeHighlightOnMap,
             showInfoOnHoverOrClick: showInfoOnHoverOrClick
@@ -26,9 +27,9 @@
         /**
          * Elements that make up the popup.
          */
-        var container = document.getElementById('popup');
-        var content = document.getElementById('popup-content');
-        var closer = document.getElementById('popup-closer');
+        var container = null;
+        var content = null;
+        var closer = null;
         var overlay = null;
 
         return service;
@@ -117,6 +118,13 @@
                 });
             }
         }
+
+        /**
+         * Remove projects from the map
+         */
+        function removeProjectsOnMap(){
+            projectVectorSource.clear();
+        }
         
          /**
          * Highlight project on map by showing a highlights layer
@@ -149,6 +157,15 @@
          * Show feature info on hover or click
          */
         function showInfoOnHoverOrClick() {
+
+            /**
+            * Elements that make up the popup.
+            */
+            container = document.getElementById('popup');
+            content = document.getElementById('popup-content');
+            closer = document.getElementById('popup-closer');
+            overlay = null;
+
             /**
              * Create an overlay to anchor the popup to the map.
              */

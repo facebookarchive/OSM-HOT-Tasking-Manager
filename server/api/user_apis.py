@@ -1,4 +1,6 @@
 from flask_restful import Resource, current_app, request
+from schematics.exceptions import DataError
+from server.models.dtos.user_dto import UserSearchQuery
 from server.services.authentication_service import token_auth, tm
 from server.services.user_service import UserService, UserServiceError, NotFound
 
@@ -31,6 +33,99 @@ class UserAPI(Resource):
         try:
             user_dto = UserService.get_user_dto_by_username(username)
             return user_dto.to_primitive(), 200
+        except NotFound:
+            return {"Error": "User not found"}, 404
+        except Exception as e:
+            error_msg = f'User GET - unhandled error: {str(e)}'
+            current_app.logger.critical(error_msg)
+            return {"error": error_msg}, 500
+
+
+class UserSearchAllAPI(Resource):
+
+    def get(self):
+        """
+        Gets paged list of all usernames
+        ---
+        tags:
+          - user
+        produces:
+          - application/json
+        parameters:
+            - in: query
+              name: page
+              description: Page of results user requested
+              type: integer
+            - in: query
+              name: username
+              description: Full or part username
+              type: integer
+            - in: query
+              name: role
+              description: Role of User, eg ADMIN, PROJECT_MANAGER
+              type: string
+            - in: query
+              name: level
+              description: Level of User, eg BEGINNER
+              type: string
+        responses:
+            200:
+                description: Users found
+            500:
+                description: Internal Server Error
+        """
+        try:
+            query = UserSearchQuery()
+            query.page = int(request.args.get('page')) if request.args.get('page') else 1
+            query.username = request.args.get('username')
+            query.mapping_level = request.args.get('level')
+            query.role = request.args.get('role')
+            query.validate()
+        except DataError as e:
+            current_app.logger.error(f'Error validating request: {str(e)}')
+            return str(e), 400
+
+        try:
+            users_dto = UserService.get_all_users(query)
+            return users_dto.to_primitive(), 200
+        except Exception as e:
+            error_msg = f'User GET - unhandled error: {str(e)}'
+            current_app.logger.critical(error_msg)
+            return {"error": error_msg}, 500
+
+
+class UserSearchFilterAPI(Resource):
+
+    def get(self, username):
+        """
+        Gets paged lists of users matching username filter
+        ---
+        tags:
+          - user
+        produces:
+          - application/json
+        parameters:
+            - name: username
+              in: path
+              description: Partial or full username
+              type: string
+              default: ab
+            - in: query
+              name: page
+              description: Page of results user requested
+              type: integer
+        responses:
+            200:
+                description: Users found
+            404:
+                description: User not found
+            500:
+                description: Internal Server Error
+        """
+        try:
+            page = int(request.args.get('page')) if request.args.get('page') else 1
+            users_dto = UserService.filter_users(username, page)
+            return users_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
@@ -226,6 +321,52 @@ class UserSetLevel(Resource):
             return {"Success": "Level set"}, 200
         except UserServiceError:
             return {"Error": "Not allowed"}, 400
+        except NotFound:
+            return {"Error": "User or mapping not found"}, 404
+        except Exception as e:
+            error_msg = f'User GET - unhandled error: {str(e)}'
+            current_app.logger.critical(error_msg)
+            return {"error": error_msg}, 500
+
+
+class UserAcceptLicense(Resource):
+
+    @tm.pm_only(False)
+    @token_auth.login_required
+    def post(self, license_id):
+        """
+        Post to indicate user has accepted license terms
+        ---
+        tags:
+          - user
+        produces:
+          - application/json
+        parameters:
+            - in: header
+              name: Authorization
+              description: Base64 encoded session token
+              required: true
+              type: string
+              default: Token sessionTokenHere==
+            - name: license_id
+              in: path
+              description: ID of license terms have been accepted for
+              required: true
+              type: integer
+              default: 1 
+        responses:
+            200:
+                description: Terms accepted
+            401:
+                description: Unauthorized - Invalid credentials
+            404:
+                description: User or license not found
+            500:
+                description: Internal Server Error
+        """
+        try:
+            UserService.accept_license_terms(tm.authenticated_user_id, license_id)
+            return {"Success": "Terms Accepted"}, 200
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:

@@ -1,7 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 from flask import current_app
-from server.models.dtos.user_dto import UserDTO, UserOSMDTO
+from server.models.dtos.user_dto import UserDTO, UserOSMDTO, UserFilterDTO, UserSearchQuery, UserSearchDTO
 from server.models.postgis.user import User, UserRole, MappingLevel
 from server.models.postgis.utils import NotFound
 
@@ -63,6 +63,16 @@ class UserService:
         """Gets user DTO for supplied username """
         user = UserService.get_user_by_username(username)
         return user.as_dto()
+
+    @staticmethod
+    def get_all_users(query: UserSearchQuery) -> UserSearchDTO:
+        """ Gets paginated list of users """
+        return User.get_all_users(query)
+
+    @staticmethod
+    def filter_users(username: str, page: int) -> UserFilterDTO:
+        """ Gets paginated list of users, filtered by username, for autocomplete """
+        return User.filter_users(username, page)
 
     @staticmethod
     def is_user_a_project_manager(user_id: int) -> bool:
@@ -139,6 +149,18 @@ class UserService:
         user.set_mapping_level(requested_level)
 
         return user
+
+    @staticmethod
+    def accept_license_terms(user_id: int, license_id: int):
+        """ Saves the fact user has accepted license terms """
+        user = UserService.get_user_by_id(user_id)
+        user.accept_license_terms(license_id)
+
+    @staticmethod
+    def has_user_accepted_license(user_id: int, license_id: int):
+        """ Checks if user has accepted specified license """
+        user = UserService.get_user_by_id(user_id)
+        return user.has_user_accepted_licence(license_id)
 
     @staticmethod
     def get_osm_details_for_user(username: str) -> UserOSMDTO:

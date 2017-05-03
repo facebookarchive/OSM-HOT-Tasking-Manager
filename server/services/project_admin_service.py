@@ -1,14 +1,18 @@
 import json
 import geojson
+from typing import List
 from flask import current_app
 from server.models.dtos.project_dto import DraftProjectDTO, ProjectDTO, ProjectCommentsDTO
 from server.models.postgis.project import AreaOfInterest, Project, InvalidGeoJson, Task, ProjectStatus
 from server.models.postgis.task import TaskHistory
 from server.models.postgis.utils import NotFound, InvalidData
-
+from server.services.license_service import LicenseService
+from server.services.grid_service import GridService
+from server.services.user_service import UserService
 
 class ProjectAdminServiceError(Exception):
     """ Custom Exception to notify callers an error occurred when validating a Project """
+
     def __init__(self, message):
         if current_app:
             current_app.logger.error(message)
@@ -16,13 +20,13 @@ class ProjectAdminServiceError(Exception):
 
 class ProjectStoreError(Exception):
     """ Custom Exception to notify callers an error occurred with database CRUD operations """
+
     def __init__(self, message):
         if current_app:
             current_app.logger.error(message)
 
 
 class ProjectAdminService:
-
     @staticmethod
     def create_draft_project(draft_project_dto: DraftProjectDTO) -> int:
         """
@@ -39,7 +43,13 @@ class ProjectAdminService:
         draft_project = Project()
         draft_project.create_draft_project(draft_project_dto, area_of_interest)
 
-        ProjectAdminService._attach_tasks_to_project(draft_project, draft_project_dto.tasks)
+        # if arbitrary_tasks requested, create tasks from aoi otherwise use tasks in DTO
+        if draft_project_dto.has_arbitrary_tasks:
+            tasks = GridService.tasks_from_aoi_features(draft_project_dto.area_of_interest)
+        else:
+            tasks = draft_project_dto.tasks
+        ProjectAdminService._attach_tasks_to_project(draft_project, tasks)
+
 
         draft_project.create()
         return draft_project.id
@@ -66,8 +76,38 @@ class ProjectAdminService:
         if project_dto.project_status == ProjectStatus.PUBLISHED.name:
             ProjectAdminService._validate_default_locale(project_dto.default_locale, project_dto.project_info_locales)
 
+        if project_dto.license_id:
+            ProjectAdminService._validate_imagery_licence(project_dto.license_id)
+
+        if project_dto.private:
+            ProjectAdminService._validate_allowed_users(project_dto)
+
         project.update(project_dto)
         return project
+
+    @staticmethod
+    def _validate_imagery_licence(license_id: int):
+        """ Ensures that the suppliced license Id actually exists """
+        try:
+            LicenseService.get_license_as_dto(license_id)
+        except NotFound:
+            raise ProjectAdminServiceError(f'LicenseId {license_id} not found')
+
+    @staticmethod
+    def _validate_allowed_users(project_dto: ProjectDTO):
+        """ Ensures that all usernames are known and returns their user ids """
+        if len(project_dto.allowed_usernames) == 0:
+            raise ProjectAdminServiceError('Must have at least one allowed user on a private project')
+
+        try:
+            allowed_users = []
+            for username in project_dto.allowed_usernames:
+                user = UserService.get_user_by_username(username)
+                allowed_users.append(user)
+
+            project_dto.allowed_users = allowed_users  # Dynamically attach the user object to the DTO for more efficient persistance
+        except NotFound:
+            raise ProjectAdminServiceError(f'allowedUsers contains an unknown username {user}')
 
     @staticmethod
     def delete_project(project_id: int):
@@ -139,7 +179,7 @@ class ProjectAdminService:
 
         for attr, value in default_info.items():
             if not value:
-                raise(ProjectAdminServiceError(f'{attr} not provided for Default Locale'))
+                raise (ProjectAdminServiceError(f'{attr} not provided for Default Locale'))
 
         return True  # Indicates valid default locale for unit testing
 

@@ -35,8 +35,16 @@ class ProjectAdminAPI(Resource):
                           type: string
                           default: HOT Project
                       areaOfInterest:
-                          schema:
-                              $ref: "#/definitions/GeoJsonMultiPolygon"
+                            schema:
+                                properties:
+                                  type:
+                                      type: string
+                                      default: FeatureCollection
+                                  features:
+                                      type: array
+                                      items:
+                                          schema:
+                                              $ref: "#/definitions/GeoJsonFeature"
                       tasks:
                           schema:
                               properties:
@@ -48,6 +56,9 @@ class ProjectAdminAPI(Resource):
                                       items:
                                           schema:
                                               $ref: "#/definitions/GeoJsonFeature"
+                      arbitraryTasks:
+                          type: boolean
+                          default: false
         responses:
             201:
                 description: Draft project created successfully
@@ -195,6 +206,15 @@ class ProjectAdminAPI(Resource):
                       organisationTag:
                           type: string
                           default: red cross
+                      licenseId:
+                          type: integer
+                          default: 1
+                          description: Id of imagery license associated with the project
+                      allowedUsernames:
+                          type: array
+                          items:
+                              type: string
+                          default: ["Iain Hunter", LindaA1]
                       projectInfoLocales:
                           type: array
                           items:

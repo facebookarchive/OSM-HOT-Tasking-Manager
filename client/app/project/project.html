@@ -245,9 +245,14 @@
                                     </div>
                                 </div>
                                 <div class="form__group">
-                                    <textarea ng-model="projectCtrl.comment" class="form__control" rows="4"
+                                    <textarea class="form__control" type="text" mentio
+                                              rows="4"
                                               maxlength="{{ projectCtrl.maxlengthComment }}"
-                                              placeholder="Leave a comment"></textarea>
+                                              placeholder="Leave a comment"
+                                              mentio-typed-text="typedTerm"
+                                              mentio-search="projectCtrl.searchUser(term)"
+                                              mentio-items="projectCtrl.usernames | filter:label:typedTerm"
+                                              ng-model="projectCtrl.comment"></textarea>
                                     <p class="pull-right">{{ projectCtrl.maxlengthComment - projectCtrl.comment.length }}
                                         characters remaining</p>
                                 </div>
@@ -488,9 +493,14 @@
                                     </div>
                                 </div>
                                 <div class="form__group">
-                                    <textarea ng-model="projectCtrl.comment" class="form__control" rows="4"
-                                              maxlength="{{ projectCtrl.maxlengthComment }}"
-                                              placeholder="Leave a comment"></textarea>
+                                     <textarea class="form__control" type="text" mentio
+                                               rows="4"
+                                               maxlength="{{ projectCtrl.maxlengthComment }}"
+                                               placeholder="Leave a comment"
+                                               mentio-typed-text="typedTerm"
+                                               mentio-search="projectCtrl.searchUser(term)"
+                                               mentio-items="projectCtrl.usernames | filter:label:typedTerm"
+                                               ng-model="projectCtrl.comment"></textarea>
                                     <p class="pull-right">{{ projectCtrl.maxlengthComment - projectCtrl.comment.length }}
                                         characters remaining</p>
                                 </div>
@@ -567,9 +577,14 @@
                                     </div>
                                 </div>
                                 <div class="form__group">
-                                    <textarea ng-model="projectCtrl.comment" class="form__control" rows="4"
-                                              maxlength="{{ projectCtrl.maxlengthComment }}"
-                                              placeholder="Leave a comment on all tasks"></textarea>
+                                     <textarea class="form__control" type="text" mentio
+                                               rows="4"
+                                               maxlength="{{ projectCtrl.maxlengthComment }}"
+                                               placeholder="Leave a comment"
+                                               mentio-typed-text="typedTerm"
+                                               mentio-search="projectCtrl.searchUser(term)"
+                                               mentio-items="projectCtrl.usernames | filter:label:typedTerm"
+                                               ng-model="projectCtrl.comment"></textarea>
                                     <p class="pull-right">{{ projectCtrl.maxlengthComment - projectCtrl.comment.length }}
                                         characters remaining</p>
                                 </div>
@@ -668,6 +683,9 @@
                                     <dd>{{ projectCtrl.selectedTaskData.taskStatus }}</dd>
                                     <dt>Locked by</dt>
                                     <dd>{{ projectCtrl.selectedTaskData.lockHolder }}</dd>
+                                    <dt>Task url:</dt>
+                                    <dd> {{ projectCtrl.taskUrl }}</dd>
+
                                 </dl>
                             </div>
                             <div>
@@ -695,14 +713,14 @@
                     <img src="./assets/img/legend.png" width="109px" height="132px"/>
                 </div>
                 <div class="project-title">
-                    <h2 class="section__title">
+                    <h3 class="section__title">
                         #{{ projectCtrl.projectData.projectId }}
                         - {{ projectCtrl.projectData.projectInfo.name }}
-                    </h2>
+                    </h3>
                 </div>
                 <div>
                     <div class="activity-project-button">
-                         <a ng-href="/project/{{ projectCtrl.projectData.projectId }}/dashboard"
+                        <a ng-href="/project/{{ projectCtrl.projectData.projectId }}/dashboard"
                            class="button button--secondary">Activity and Stats
                         </a>
                     </div>
@@ -717,3 +735,37 @@
         </div>
     </section>
 </div>
+
+<!-- accept license modal -->
+<section class="modal modal-tm" ng-show="projectCtrl.showLicenseModal">
+    <div class="modal__inner">
+        <header class="modal__header">
+            <div class="modal__headline">
+                <h1 class="modal__title">Accept imagery license</h1>
+            </div>
+        </header>
+        <div class="modal__body">
+            <p>You need to accept the license before continuing.</p>
+            <hr>
+            <h4>{{ projectCtrl.license.name }}</h4>
+            <p>{{ projectCtrl.license.description }}</p>
+            <p>{{ projectCtrl.license.plainText }}</p>
+        </div>
+        <footer class="modal__footer">
+            <div ng-hide="editProjectCtrl.validateTasksSuccess">
+                <button class="button button--achromic" type="button"
+                        ng-click="projectCtrl.setShowLicenseModal(false)">
+                    Cancel
+                </button>
+                <button class="button button--base" type="button"
+                        ng-click="projectCtrl.acceptLicense()">
+                    Accept and continue
+                </button>
+            </div>
+        </footer>
+    </div>
+    <button class="modal__button-dismiss" title="Close" ng-click="projectCtrl.setShowLicenseModal(false)">
+        Dismiss
+    </button>
+</section>
+<!-- accept license modal -->

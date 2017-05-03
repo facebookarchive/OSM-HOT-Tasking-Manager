@@ -115,9 +115,10 @@ class Task(db.Model):
     # Table has composite PK on (id and project_id)
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True, primary_key=True)
-    x = db.Column(db.Integer, nullable=False)
-    y = db.Column(db.Integer, nullable=False)
-    zoom = db.Column(db.Integer, nullable=False)
+    x = db.Column(db.Integer)
+    y = db.Column(db.Integer)
+    zoom = db.Column(db.Integer)
+    splittable = db.Column(db.Boolean, default=True)
     geometry = db.Column(Geometry('MULTIPOLYGON', srid=4326))
     task_status = db.Column(db.Integer, default=TaskStatus.READY.value)
     locked_by = db.Column(db.BigInteger, db.ForeignKey('users.id', name='fk_users_locked'))
@@ -153,6 +154,7 @@ class Task(db.Model):
             task.x = task_feature.properties['x']
             task.y = task_feature.properties['y']
             task.zoom = task_feature.properties['zoom']
+            task.splittable = task_feature.properties['splittable']
         except KeyError as e:
             raise InvalidData(f'Task: Expected property not found: {str(e)}')
 
@@ -251,14 +253,9 @@ class Task(db.Model):
 
         if new_state == TaskStatus.MAPPED and TaskStatus(self.task_status) != TaskStatus.LOCKED_FOR_VALIDATION:
             # Don't set mapped if state being set back to mapped after validation
-            # TODO +1 user count
             self.mapped_by = user_id
         elif new_state == TaskStatus.VALIDATED:
-            # TODO +1 user count
             self.validated_by = user_id
-        elif new_state == TaskStatus.INVALIDATED:
-            # TODO +1 user count
-            pass
 
         # Using a slightly evil side effect of Actions and Statuses having the same name here :)
         TaskHistory.update_task_locked_with_duration(self.id, self.project_id, TaskStatus(self.task_status))
@@ -275,14 +272,14 @@ class Task(db.Model):
         :return: geojson.FeatureCollection
         """
         project_tasks = \
-            db.session.query(Task.id, Task.x, Task.y, Task.zoom, Task.task_status,
+            db.session.query(Task.id, Task.x, Task.y, Task.zoom, Task.splittable, Task.task_status,
                              Task.geometry.ST_AsGeoJSON().label('geojson')).filter(Task.project_id == project_id).all()
 
         tasks_features = []
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(taskId=task.id, taskX=task.x, taskY=task.y, taskZoom=task.zoom,
-                                   taskStatus=TaskStatus(task.task_status).name)
+                                   taskSplittable=task.splittable,taskStatus=TaskStatus(task.task_status).name)
             feature = geojson.Feature(geometry=task_geometry, properties=task_properties)
             tasks_features.append(feature)
 

@@ -2,11 +2,12 @@ from flask_restful import Resource, current_app, request
 from server.models.dtos.validator_dto import LockForValidationDTO, UnlockAfterValidationDTO
 from schematics.exceptions import DataError
 from server.services.authentication_service import token_auth, tm
-from server.services.validator_service import ValidatorService, NotFound, ValidatatorServiceError
+from server.services.validator_service import ValidatorService, NotFound, ValidatatorServiceError, UserLicenseError
 
 
 class LockTasksForValidationAPI(Resource):
 
+    @tm.pm_only(False)
     @token_auth.login_required
     def post(self, project_id):
         """
@@ -52,6 +53,8 @@ class LockTasksForValidationAPI(Resource):
                 description: Forbidden
             404:
                 description: Task not found
+            409:
+                description: User has not accepted license terms of project
             500:
                 description: Internal Server Error
         """
@@ -71,6 +74,8 @@ class LockTasksForValidationAPI(Resource):
             return {"Error": str(e)}, 403
         except NotFound as e:
             return {"Error": str(e)}, 404
+        except UserLicenseError:
+            return {"Error": "User not accepted license terms"}, 409
         except Exception as e:
             error_msg = f'Validator Lock API - unhandled error: {str(e)}'
             current_app.logger.critical(error_msg)
@@ -79,6 +84,7 @@ class LockTasksForValidationAPI(Resource):
 
 class UnlockTasksAfterValidationAPI(Resource):
 
+    @tm.pm_only(False)
     @token_auth.login_required
     def post(self, project_id):
         """

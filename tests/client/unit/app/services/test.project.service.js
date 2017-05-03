@@ -29,12 +29,12 @@ describe('project.service', function () {
         var zoom = 18;
 
         // Act
-        var grid = projectService.createTaskGrid(AOI, zoom);
+        var grid = projectService.createTaskGrid(AOI.getGeometry().getExtent(), zoom);
         projectService.setTaskGrid(grid);
         var taskGrid = projectService.getTaskGrid();
 
         // Assert
-        expect(taskGrid.length).toBe(10);
+        expect(taskGrid.length).toBe(12);
     });
 
     it('should return a task grid with 23 features for an AOI and zoom level 19', function () {
@@ -51,12 +51,12 @@ describe('project.service', function () {
         var zoom = 19;
 
         // Act
-        var grid = projectService.createTaskGrid(AOI, zoom);
+        var grid = projectService.createTaskGrid(AOI.getGeometry().getExtent(), zoom);
         projectService.setTaskGrid(grid);
         var taskGrid = projectService.getTaskGrid();
 
         // Assert
-        expect(taskGrid.length).toBe(23);
+        expect(taskGrid.length).toBe(32);
     });
 
     it('should return a VALID result when validating an array of non self intersecting features', function () {
@@ -205,6 +205,27 @@ describe('project.service', function () {
         expect(result).toEqual({
             valid: false,
             message: 'SELF_INTERSECTIONS'
+        })
+    });
+
+     it('should return an INVALID CONTAINS_NON_POLYGON_FEATURES result when validating a point', function () {
+
+        var point = new ol.geom.Point(
+            [0, 0]
+        );
+        var feature = new ol.Feature({
+            geometry: point
+        });
+
+        var features = [feature];
+
+        //Act
+        var result = projectService.validateAOI(features);
+
+        //Assert
+        expect(result).toEqual({
+            valid: false,
+            message: 'CONTAINS_NON_POLYGON_FEATURES'
         })
     });
 

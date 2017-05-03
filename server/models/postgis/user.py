@@ -1,18 +1,11 @@
 import geojson
-from enum import Enum
 from server import db
-from server.models.dtos.user_dto import UserDTO, UserMappedProjectsDTO, MappedProject
+from server.models.dtos.user_dto import UserDTO, UserMappedProjectsDTO, MappedProject, UserFilterDTO, Pagination, \
+    UserSearchQuery, UserSearchDTO, ListedUser
+from server.models.postgis.licenses import License, users_licenses_table
 from server.models.postgis.project_info import ProjectInfo
-from server.models.postgis.statuses import MappingLevel, ProjectStatus
+from server.models.postgis.statuses import MappingLevel, ProjectStatus, UserRole
 from server.models.postgis.utils import NotFound
-
-
-class UserRole(Enum):
-    """ Describes the role a user can be assigned, app doesn't support multiple roles """
-    MAPPER = 0
-    ADMIN = 1
-    PROJECT_MANAGER = 2
-    VALIDATOR = 4
 
 
 class User(db.Model):
@@ -28,6 +21,9 @@ class User(db.Model):
     tasks_invalidated = db.Column(db.Integer, default=0, nullable=False)
     projects_mapped = db.Column(db.ARRAY(db.Integer))
 
+    # Relationships
+    accepted_licenses = db.relationship("License", secondary=users_licenses_table)
+
     def create(self):
         """ Creates and saves the current model to the DB """
         db.session.add(self)
@@ -40,6 +36,60 @@ class User(db.Model):
     def get_by_username(self, username: str):
         """ Return the user for the specified username, or None if not found """
         return User.query.filter_by(username=username).one_or_none()
+
+    @staticmethod
+    def get_all_users(query: UserSearchQuery) -> UserSearchDTO:
+        """ Search and filter all users """
+
+        # Base query that applies to all searches
+        base = db.session.query(User.username, User.mapping_level, User.role).order_by(User.username)
+
+        # Add filter to query as required
+        if query.mapping_level and query.username is None and query.role is None:
+            base = base.filter(User.mapping_level == MappingLevel[query.mapping_level.upper()].value)
+        elif query.mapping_level is None and query.username and query.role is None:
+            base = base.filter(User.username.ilike(query.username.lower() + '%'))
+        elif query.mapping_level is None and query.username is None and query.role:
+            base = base.filter(User.role == UserRole[query.role.upper()].value).order_by(User.username)
+        elif query.mapping_level and query.username and query.role is None:
+            base = base.filter(User.mapping_level == MappingLevel[query.mapping_level.upper()].value,
+                               User.username.ilike(query.username.lower() + '%'))
+        elif query.mapping_level is None and query.username and query.role:
+            base = base.filter(User.role == UserRole[query.role.upper()].value,
+                               User.username.ilike(query.username.lower() + '%'))
+        elif query.mapping_level and query.username is None and query.role:
+            base = base.filter(User.role == UserRole[query.role.upper()].value,
+                               User.mapping_level == MappingLevel[query.mapping_level.upper()].value)
+
+        results = base.paginate(query.page, 20, True)
+
+        dto = UserSearchDTO()
+        for result in results.items:
+            listed_user = ListedUser()
+            listed_user.mapping_level = MappingLevel(result.mapping_level).name
+            listed_user.username = result.username
+            listed_user.role = UserRole(result.role).name
+
+            dto.users.append(listed_user)
+
+        dto.pagination = Pagination(results)
+        return dto
+
+    @staticmethod
+    def filter_users(user_filter: str, page: int) -> UserFilterDTO:
+        """ Finds users that matches first characters, for auto-complete """
+        results = db.session.query(User.username).filter(User.username.ilike(user_filter.lower() + '%')) \
+            .order_by(User.username).paginate(page, 20, True)
+
+        if results.total == 0:
+            raise NotFound()
+
+        dto = UserFilterDTO()
+        for result in results.items:
+            dto.usernames.append(result.username)
+
+        dto.pagination = Pagination(results)
+        return dto
 
     @staticmethod
     def upsert_mapped_projects(user_id: int, project_id: int):
@@ -102,6 +152,21 @@ class User(db.Model):
         """ Sets the supplied level on the user """
         self.mapping_level = level.value
         db.session.commit()
+
+    def accept_license_terms(self, license_id: int):
+        """ Associate the user in scope with the supplied license """
+        image_license = License.get_by_id(license_id)
+        self.accepted_licenses.append(image_license)
+        db.session.commit()
+
+    def has_user_accepted_licence(self, license_id: int):
+        """ Test to see if the user has accepted the terms of the specified license"""
+        image_license = License.get_by_id(license_id)
+
+        if image_license in self.accepted_licenses:
+            return True
+
+        return False
 
     def delete(self):
         """ Delete the user in scope from DB """

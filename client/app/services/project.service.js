@@ -49,7 +49,8 @@
             getCommentsForProject: getCommentsForProject,
             userCanMapProject: userCanMapProject,
             userCanValidateProject: userCanValidateProject,
-            getMyProjects: getMyProjects
+            getMyProjects: getMyProjects,
+            trimTaskGrid: trimTaskGrid
         };
 
         return service;
@@ -78,19 +79,15 @@
         /**
          * Creates a task grid with features for a polygon feature.
          * It snaps to the OSM grid
-         * @param areaOfInterest (ol.Feature) - this should be a polygon
+         * @param areaOfInterestExtent (ol.Extent) - this should be a polygon
          * @param zoomLevel - the OSM zoom level the task squares will align with
          */
-        function createTaskGrid(areaOfInterest, zoomLevel) {
+        function createTaskGrid(areaOfInterestExtent, zoomLevel) {
 
-            var zoomLevel = zoomLevel;
-            var extent = areaOfInterest.getGeometry().getExtent();
-            var areaOfInterestGeoJSON = geospatialService.getGeoJSONFromFeature(areaOfInterest);
-
-            var xmin = Math.ceil(extent[0]);
-            var ymin = Math.ceil(extent[1]);
-            var xmax = Math.floor(extent[2]);
-            var ymax = Math.floor(extent[3]);
+            var xmin = Math.ceil(areaOfInterestExtent[0]);
+            var ymin = Math.ceil(areaOfInterestExtent[1]);
+            var xmax = Math.floor(areaOfInterestExtent[2]);
+            var ymax = Math.floor(areaOfInterestExtent[3]);
 
             // task size (in meters) at the required zoom level
             var step = AXIS_OFFSET / (Math.pow(2, (zoomLevel - 1)));
@@ -101,25 +98,21 @@
             var yminstep = parseInt(Math.floor((ymin + AXIS_OFFSET) / step));
             var ymaxstep = parseInt(Math.ceil((ymax + AXIS_OFFSET) / step));
 
-            // Generate an array of task features
             var taskFeatures = [];
+            // Generate an array of task features
             for (var x = xminstep; x < xmaxstep; x++) {
                 for (var y = yminstep; y < ymaxstep; y++) {
                     var taskFeature = createTaskFeature_(step, x, y);
-                    var taskFeatureGeoJSON = geospatialService.getGeoJSONFromFeature(taskFeature);
-                    // Check if the generated task feature intersects with the area of interest
-                    var intersection = turf.intersect(JSON.parse(taskFeatureGeoJSON), JSON.parse(areaOfInterestGeoJSON));
-                    // Add the task feature to the array if it intersects
-                    if (intersection) {
-                        taskFeature.setProperties({
-                            'x': x,
-                            'y': y,
-                            'zoom': zoomLevel
-                        });
-                        taskFeatures.push(taskFeature);
-                    }
+                    taskFeature.setProperties({
+                        'x': x,
+                        'y': y,
+                        'zoom': zoomLevel,
+                        'splittable': true
+                    });
+                    taskFeatures.push(taskFeature);
                 }
             }
+
             return taskFeatures;
         }
 
@@ -224,10 +217,10 @@
          * @returns {{valid: boolean, message: string}}
          */
         function validateAOI(features) {
-             var validationResult = {
-                 valid: true,
-                 message: ''
-             };
+            var validationResult = {
+                valid: true,
+                message: ''
+            };
 
             // check we have a non empty array of things
             if (!features || !features.length || features.length == 0) {
@@ -245,36 +238,40 @@
                 }
             }
 
+            // check everything is a polygon of multiPolygon
+            var allPolygonTypes = features.every(function (feature) {
+                var type = feature.getGeometry().getType();
+                return type === 'MultiPolygon' || type === 'Polygon'
+            });
+            if (!allPolygonTypes) {
+                validationResult.valid = false;
+                validationResult.message = 'CONTAINS_NON_POLYGON_FEATURES';
+                return validationResult;
+            }
+
             // check for self-intersections
             for (var featureCount = 0; featureCount < features.length; featureCount++) {
-                if (features[featureCount].getGeometry() instanceof ol.geom.MultiPolygon) {
-                    // it should only have one polygon per multipolygon at the moment
-                    var polygonsInFeatures = features[featureCount].getGeometry().getPolygons();
-                    var hasSelfIntersections;
-                    for (var polyCount = 0; polyCount < polygonsInFeatures.length; polyCount++) {
+                var hasSelfIntersections = false;
+                var featuresToCheck = [];
+                if (features[featureCount].getGeometry().getType() === 'MultiPolygon') {
+                    features[featureCount].getGeometry().getPolygons().forEach(function (geom) {
                         var feature = new ol.Feature({
-                            geometry: polygonsInFeatures[polyCount]
+                            geometry: geom
                         });
-                        var selfIntersect = checkFeatureSelfIntersections_(feature);
-                        if (selfIntersect) {
-                            hasSelfIntersections = true;
-                            // If only one self intersection exists, return as having self intersections
-                            break;
-                        }
-                    }
-                    if (hasSelfIntersections) {
-                        validationResult.valid = false;
-                        validationResult.message = 'SELF_INTERSECTIONS';
-                        return validationResult;
-                    }
+                        this.push(feature);
+                    }, featuresToCheck);
                 }
                 else {
-                    var hasSelfIntersections = checkFeatureSelfIntersections_(features[featureCount]);
-                    if (hasSelfIntersections) {
-                        validationResult.valid = false;
-                        validationResult.message = 'SELF_INTERSECTIONS';
-                        return validationResult;
-                    }
+                    featuresToCheck.push(features[featureCount]);
+                }
+                var hasSelfIntersections = featuresToCheck.every(function (feature) {
+                    return checkFeatureSelfIntersections_(feature)
+                });
+
+                if (hasSelfIntersections) {
+                    validationResult.valid = false;
+                    validationResult.message = 'SELF_INTERSECTIONS';
+                    return validationResult;
                 }
             }
             return validationResult;
@@ -320,7 +317,7 @@
         function getSplitTasks(task) {
             // For smaller tasks, increase the zoom level by 1
             var zoomLevel = task.getProperties().zoom + 1;
-            var grid = createTaskGrid(task, zoomLevel);
+            var grid = createTaskGrid(task.getGeometry().getExtent(), zoomLevel);
             return grid;
         }
 
@@ -339,20 +336,24 @@
             return hasSelfIntersections;
         }
 
+
         /**
          * Creates a project by calling the API with the AOI, a task grid and a project name
-         * @returns {*|!jQuery.jqXHR|!jQuery.Promise|!jQuery.deferred}
+         * @param projectName
+         * @param isTaskGrid
+         * @returns {*|!jQuery.Promise|!jQuery.jqXHR|!jQuery.deferred}
          */
-        function createProject(projectName) {
+        function createProject(projectName, isTaskGrid) {
 
             var areaOfInterestGeoJSON = geospatialService.getGeoJSONObjectFromFeatures(aoi);
-            var taskGridGeoJSON = geospatialService.getGeoJSONObjectFromFeatures(taskGrid);
+            var taskGridGeoJSON = isTaskGrid?geospatialService.getGeoJSONObjectFromFeatures(taskGrid):null;
 
             // Get the geometry of the area of interest. It should only have one feature.
             var newProject = {
-                areaOfInterest: areaOfInterestGeoJSON.features[0].geometry,
+                areaOfInterest: areaOfInterestGeoJSON,
                 projectName: projectName,
-                tasks: taskGridGeoJSON
+                tasks: taskGridGeoJSON,
+                arbitraryTasks: !isTaskGrid
             };
 
             // Returns a promise
@@ -605,6 +606,42 @@
                 // or server returns response with an error status.
                 return $q.reject("error");
             });
+        }
+
+        /**
+         * Creates a new task grid which has been trimmed to the aoi
+         * @param clipTasksToAoi
+         * @returns {*|!jQuery.jqXHR|!jQuery.Promise|!jQuery.deferred}
+         */
+        function trimTaskGrid(clipTasksToAoi) {
+            // TODO the aoi may have more than one feature when dealing with imported aoi's
+            var areaOfInterestGeoJSON = geospatialService.getGeoJSONObjectFromFeatures(aoi, 'EPSG:3857');
+            var taskGridGeoJSON = geospatialService.getGeoJSONObjectFromFeatures(taskGrid, 'EPSG:3857');
+
+            //create the data for the post
+            var gridAndAoi = {
+                areaOfInterest: areaOfInterestGeoJSON,
+                clipToAoi: clipTasksToAoi,
+                grid: taskGridGeoJSON
+            };
+
+            // Returns a promise
+            return $http({
+                method: 'PUT',
+                url: configService.tmAPI + '/grid/intersecting-tiles',
+                data: gridAndAoi,
+                headers: authService.getAuthenticatedHeader()
+            }).then(function successCallback(response) {
+                // this callback will be called asynchronously
+                // when the response is available
+                return (response.data);
+            }, function errorCallback(reason) {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+
+                return $q.reject(reason);
+            });
+
         }
     }
 })();

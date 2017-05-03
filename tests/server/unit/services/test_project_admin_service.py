@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 from server.services.project_admin_service import ProjectAdminService, InvalidGeoJson, Project, \
-    ProjectAdminServiceError, ProjectDTO, ProjectStatus, NotFound
+    ProjectAdminServiceError, ProjectDTO, ProjectStatus, NotFound, LicenseService
 from server.models.dtos.project_dto import ProjectInfoDTO
 
 
@@ -20,7 +20,7 @@ class TestProjectAdminService(unittest.TestCase):
         # Arrange
         valid_feature_collection = json.loads('{"features": [{"geometry": {"coordinates": [[[[-4.0237, 56.0904],'
                                               '[-3.9111, 56.1715], [-3.8122, 56.098], [-4.0237, 56.0904]]]], "type":'
-                                              '"MultiPolygon"}, "properties": {"x": 2402, "y": 1736, "zoom": 12}, "type":'
+                                              '"MultiPolygon"}, "properties": {"x": 2402, "y": 1736, "zoom": 12, "splittable": true}, "type":'
                                               '"Feature"}], "type": "FeatureCollection"}')
 
         test_project = Project()
@@ -64,6 +64,18 @@ class TestProjectAdminService(unittest.TestCase):
         with self.assertRaises(ProjectAdminServiceError):
             ProjectAdminService.update_project(dto)
 
+    @patch.object(Project, 'get')
+    def test_updating_a_private_project_with_no_allowed_users_causes_an_error(self, mock_project):
+        # Arrange
+        mock_project.return_value = Project()
+
+        dto = ProjectDTO()
+        dto.private = True
+        dto.allowed_usernames = []
+
+        with self.assertRaises(ProjectAdminServiceError):
+            ProjectAdminService.update_project(dto)
+
     def test_no_project_info_for_default_locale_raises_error(self):
         # Arrange
         locales = []
@@ -92,3 +104,11 @@ class TestProjectAdminService(unittest.TestCase):
 
         # Assert
         self.assertTrue(is_valid, 'Complete default locale should be valid')
+
+    @patch.object(LicenseService, 'get_license_as_dto')
+    def test_attempting_to_attach_non_existant_license_raise_error(self, license_mock):
+        # Arrange
+        license_mock.side_effect = NotFound()
+
+        with self.assertRaises(ProjectAdminServiceError):
+            ProjectAdminService._validate_imagery_licence(1)

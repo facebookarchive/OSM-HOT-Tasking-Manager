@@ -304,13 +304,11 @@
                                     <p>Note: follow this format for TMS URLs: tms[22]:http://hiu-maps.net/hot/1.0.0/kathmandu_flipped/{zoom}/{x}/{y}.png</p>
                                 </div>
                                 <div class="form__group">
-                                    <label class="form__label">Required license (TODO)</label>
-                                    <select class="form__control form__control--medium">
-                                        <option>Airbus DS / OSM-FR</option>
-                                        <option>Astrium / UNOSAT</option>
-                                        <option>Hai Phong Satellite Imagery</option>
-                                        <option>NextView</option>
-                                        <option>Public Domain</option>
+                                    <label class="form__label">Required license</label>
+                                    <select class="form__control form__control--medium"
+                                            ng-options="license.name for license in editProjectCtrl.licenses"
+                                            ng-model="editProjectCtrl.projectLicense">
+                                         <option value="">-- no license --</option>
                                     </select>
                                 </div>
                             </fieldset>
@@ -369,7 +367,7 @@
                                 <div class="form__group">
                                     <label class="form__label">Private project</label>
                                     <label class="form__option">
-                                        <input ng-model="editProjectCtrl.project.private" type="checkbox"/>Private
+                                        <input ng-model="editProjectCtrl.project.private" type="checkbox" ng-click="editProjectCtrl.onPrivateChange()"/>Private
                                     </label>
                                     <p>Private means that only a given list of users can access this project. In
                                         order for the user's name to be available to add to the Allowed Users - they
@@ -379,12 +377,24 @@
                                     </p>
                                 </div>
                                 <div class="form__group">
-                                    <label class="form__label">Allowed users (TODO)</label>
+                                    <label class="form__label">Allowed users on private project</label>
+                                    <ul>
+                                        <li ng-repeat="user in editProjectCtrl.project.allowedUsernames">
+                                            {{ user }} <i class="hot-ds-icon-sm-xmark" ng-click="editProjectCtrl.removeUser(user)"></i>
+                                        </li>
+                                    </ul>
                                     <div class="form__input-group">
-                                        <input type="text" class="form__control form__control--medium"
-                                               placeholder="Type a username">
+                                        <input type="text" ng-model="user" placeholder="Type a username"
+                                               ng-change="editProjectCtrl.enableAddUser(false)"
+                                           class="form__control form__control--medium"
+                                           uib-typeahead="user for user in editProjectCtrl.getUser($viewValue)"
+                                           typeahead-loading="loadingLocations"
+                                           typeahead-no-results="noResults"
+                                           typeahead-on-select="editProjectCtrl.enableAddUser(true)">
                                         <span class="form__input-group-button">
-                                            <button type="submit" class="button button--achromic button--medium">
+                                            <button type="submit" class="button button--achromic button--medium"
+                                                    ng-click="editProjectCtrl.addUser(user)"
+                                                   ng-class="!editProjectCtrl.project.private || !editProjectCtrl.addUserEnabled ? 'disabled' : ''">
                                                 <span>Add user</span>
                                             </button>
                                         </span>
@@ -492,6 +502,9 @@
                                     </div>
                                 </div>
                                 <div class="error">
+                                    <p ng-show="editProjectCtrl.project.private && editProjectCtrl.project.allowedUsernames.length < 1">
+                                        You need to add at least one allowed user to a private project.
+                                    </p>
                                     <p ng-show="editProjectCtrl.nameMissing">
                                         A name for the default locale "{{ editProjectCtrl.project.defaultLocale }}" is missing.
                                     </p>

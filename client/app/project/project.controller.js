@@ -7,9 +7,9 @@
      */
     angular
         .module('taskingManager')
-        .controller('projectController', ['$interval', '$scope', '$routeParams', '$window', 'configService', 'mapService', 'projectService', 'styleService', 'taskService', 'geospatialService', 'editorService', 'authService', 'accountService', projectController]);
+        .controller('projectController', ['$location', '$interval', '$scope', '$routeParams', '$window', 'configService', 'mapService', 'projectService', 'styleService', 'taskService', 'geospatialService', 'editorService', 'authService', 'accountService', 'userService', 'licenseService', projectController]);
 
-    function projectController($interval, $scope, $routeParams, $window, configService, mapService, projectService, styleService, taskService, geospatialService, editorService, authService, accountService) {
+    function projectController($location,$interval, $scope, $routeParams, $window, configService, mapService, projectService, styleService, taskService, geospatialService, editorService, authService, accountService, userService, licenseService) {
         var vm = this;
         vm.id = 0;
         vm.projectData = null;
@@ -19,6 +19,7 @@
         vm.map = null;
         vm.user = {};
         vm.maxlengthComment = 500;
+        vm.taskUrl = '';
 
         // tab and view control
         vm.currentTab = '';
@@ -65,13 +66,17 @@
         vm.mappedTasksPerUser = [];
         vm.lockedTasksForCurrentUser = [];
 
-
         //bound from the html
         vm.comment = '';
+        vm.usernames = [];
 
         //table sorting control
         vm.propertyName = 'username';
         vm.reverse = true;
+
+        // License
+        vm.showLicenseModal = false;
+        vm.lockingReason = '';
 
         //interval timer promise for autorefresh
         var autoRefresh = undefined;
@@ -106,6 +111,7 @@
             });
 
             vm.id = $routeParams.id;
+
             initialiseProject(vm.id);
             updateMappedTaskPerUser(vm.id);
 
@@ -124,7 +130,6 @@
                 autoRefresh = undefined;
             }
         })
-
 
         /**
          * calculates padding number to makes sure there is plenty of clear space around feature on map to keep visual
@@ -166,7 +171,6 @@
             vm.taskUnLockError = false;
             vm.taskUnLockErrorMessage = '';
         }
-
 
         /**
          * Make the passed in feature the selected feature and ensure view and map updates for selected feature
@@ -248,8 +252,8 @@
                 $scope.description = data.projectInfo.description;
                 $scope.shortDescription = data.projectInfo.shortDescription;
                 $scope.instructions = data.projectInfo.instructions;
-                vm.userCanMap = projectService.userCanMapProject(vm.user.mappingLevel, vm.projectData.mapperLevel, vm.projectData.enforceMapperLevel );
-                vm.userCanValidate = projectService.userCanValidateProject(vm.user.role, vm.projectData.enforceValidatorRole );
+                vm.userCanMap = projectService.userCanMapProject(vm.user.mappingLevel, vm.projectData.mapperLevel, vm.projectData.enforceMapperLevel);
+                vm.userCanValidate = projectService.userCanValidateProject(vm.user.role, vm.projectData.enforceValidatorRole);
                 addAoiToMap(vm.projectData.areaOfInterest);
                 addProjectTasksToMap(vm.projectData.tasks, true);
 
@@ -278,6 +282,10 @@
                     vm.map.addLayer(vm.highlightVectorLayer);
                 } else {
                     vm.highlightVectorLayer.getSource().clear();
+                }
+
+                if ($routeParams.taskId) {
+                    selectTaskById($routeParams.taskId)
                 }
             }, function () {
                 // project not returned successfully
@@ -318,6 +326,20 @@
                 // project not returned successfully
                 // TODO - may want to handle error
             });
+        }
+
+        /**
+         * Select a task using it's ID.
+         * @param taskId
+         */
+        function selectTaskById(taskId) {
+            //select task on map if id provided in url
+            var task = taskService.getTaskFeatureById(vm.taskVectorLayer.getSource().getFeatures(), $routeParams.taskId);
+            if (task) {
+                selectFeature(task);
+                var padding = getPaddingSize();
+                vm.map.getView().fit(task.getGeometry().getExtent(), {padding: [padding, padding, padding, padding]});
+            }
 
         }
 
@@ -410,12 +432,9 @@
          */
         function onTaskSelection(feature) {
             //we don't want to allow selection of multiple features by map click
-
-
             //get id from feature
             var taskId = feature.get('taskId');
             var projectId = vm.projectData.projectId;
-
 
             // get full task from task service call
             var taskPromise = taskService.getTask(projectId, taskId);
@@ -490,6 +509,10 @@
             else {
                 vm.validatingStep = 'viewing';
             }
+
+            //update taskURL to allow task bookmarking
+            vm.taskUrl = $location.absUrl() + ($routeParams.taskId?'':'/'+data.taskId);
+
         }
 
         /**
@@ -556,7 +579,6 @@
             });
         };
 
-
         /**
          * Call api to unlock currently locked tasks after validation.  Will pass the comment and new status to api.  Will update view and map after unlock.
          * @param comment
@@ -599,11 +621,11 @@
             });
         };
 
-
         /**
          * Call api to lock currently selected task for mapping.  Will update view and map after unlock.
          */
         vm.lockSelectedTaskMapping = function () {
+            vm.lockingReason = 'MAPPING';
             var projectId = vm.projectData.projectId;
             var taskId = vm.selectedTaskData.taskId;
             // - try to lock the task, call returns a promise
@@ -635,6 +657,7 @@
          * Call api to lock currently selected task for mapping.  Will update view and map after unlock.
          */
         vm.lockSelectedTaskValidation = function () {
+            vm.lockingReason = 'VALIDATION';
             var projectId = vm.projectData.projectId;
             var taskId = vm.selectedTaskData.taskId;
             var taskIds = [taskId];
@@ -713,8 +736,6 @@
 
         /**
          * Start the editor by getting the editor options and the URL to call
-         * TODO: complete for all editors
-         * See: https://github.com/hotosm/osm-tasking-manager2/blob/d3a3b70d09256ba16bdff1b35909ad4f3b9f66e2/osmtm/static/js/project.js
          * @param editor
          */
         vm.startEditor = function (editor) {
@@ -785,6 +806,33 @@
         };
 
         /**
+         * Set the accept license modal to visible/invisible
+         * @param showModal
+         */
+        vm.setShowLicenseModal = function (showModal) {
+            vm.showLicenseModal = showModal;
+        };
+
+        /**
+         * Accept the license for this user
+         */
+        vm.acceptLicense = function () {
+            var resultsPromise = userService.acceptLicense(vm.projectData.licenseId);
+            resultsPromise.then(function () {
+                // On success
+                vm.showLicenseModal = false;
+                if (vm.lockingReason === 'MAPPING') {
+                    vm.lockSelectedTaskMapping();
+                }
+                else if (vm.lockingReason === 'VALIDATION') {
+                    vm.lockSelectedTaskValidation();
+                }
+            }, function () {
+                // On error
+            });
+        };
+
+        /**
          * Refresh the map and selected task on error
          * @param projectId
          * @param taskId
@@ -798,6 +846,20 @@
             // Check if it is an unauthorized error. If so, display appropriate message
             if (error.status == 401) {
                 vm.isAuthorized = false;
+            }
+            // User has not accepted the license terms
+            else if (error.status == 409) {
+                vm.isAuthorized = true;
+                vm.hasAcceptedLicenseTerms = false;
+                // call the API to get the license terms
+                var resultsPromise = licenseService.getLicense(vm.projectData.licenseId);
+                resultsPromise.then(function (data) {
+                    // On success
+                    vm.license = data;
+                    vm.showLicenseModal = true;
+                }, function () {
+                    // On error
+                });
             }
             else {
                 // Another error occurred.
@@ -847,7 +909,7 @@
                 return vm.lockedTaskData.taskId;
             }
             return null;
-        }
+        };
 
         /**
          * Higlights the set of tasks on the map
@@ -857,7 +919,7 @@
             //highlight features
             var features = taskService.getTaskFeaturesByIds(vm.taskVectorLayer.getSource().getFeatures(), doneTaskIds);
             vm.highlightVectorLayer.getSource().addFeatures(features);
-        }
+        };
 
         /**
          * Locks the set of tasks for validation
@@ -902,7 +964,7 @@
             }, function (error) {
                 onLockError(vm.projectData.projectId, error)
             });
-        }
+        };
 
         vm.resetToSelectingStep = function () {
             //TODO - The following reset lines are repeated in several places in this file.
@@ -917,19 +979,19 @@
             vm.mappingStep = 'selecting';
             vm.validatingStep = 'selecting';
 
-        }
+        };
 
         vm.resetTaskData = function () {
             vm.selectedTaskData = null;
             vm.lockedTaskData = null;
             vm.multiSelectedTasksData = [];
             vm.multiLockedTasks = [];
-        }
+        };
 
         vm.resetStatusFlags = function () {
             vm.isSelectedMappable = false;
             vm.isSelectedValidatable = false;
-        }
+        };
 
         vm.resetErrors = function () {
             vm.taskErrorMapping = '';
@@ -938,7 +1000,7 @@
             vm.taskLockErrorMessage = '';
             vm.taskUnLockError = false;
             vm.taskUnLockErrorMessage = '';
-        }
+        };
 
         /**
          * Create the url for downloading the currently selected tasks as a gpx file
@@ -949,7 +1011,7 @@
                 return configService.tmAPI + '/project/' + vm.projectData.projectId + '/tasks_as_gpx?tasks=' + vm.getSelectTaskIds() + '&as_file=true';
             }
             else return '';
-        }
+        };
 
         /**
          * Sorts the table by property name
@@ -958,6 +1020,27 @@
         vm.sortBy = function (propertyName) {
             vm.reverse = (vm.propertyName === propertyName) ? !vm.reverse : false;
             vm.propertyName = propertyName;
+        };
+
+        /**
+         * Search for a user
+         * @param searchValue
+         */
+        vm.searchUser = function (search) {
+            // Search for a user by calling the API
+            var resultsPromise = userService.searchUser(search);
+            return resultsPromise.then(function (data) {
+                // On success
+                vm.usernames = [];
+                if (data.usernames) {
+                    for (var i = 0; i < data.usernames.length; i++) {
+                        vm.usernames.push({'label': data.usernames[i]});
+                    }
+                }
+                return data.usernames;
+            }, function () {
+                // On error
+            });
         };
     }
 })

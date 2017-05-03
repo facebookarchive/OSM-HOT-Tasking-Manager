@@ -85,18 +85,29 @@ def init_flask_restful_routes(app):
     api = Api(app)
 
     from server.api.health_check_api import HealthCheckAPI
+    from server.api.license_apis import LicenseAPI, LicenceListAPI
     from server.api.mapping_apis import MappingTaskAPI, LockTaskForMappingAPI, UnlockTaskForMappingAPI, TasksAsGPX, TasksAsOSM
+    from server.api.message_apis import ProjectsMessageAll, HasNewMessages, GetAllMessages, MessagesAPI
     from server.api.project_admin_api import ProjectAdminAPI, ProjectCommentsAPI, ProjectInvalidateAll, ProjectValidateAll, ProjectsForAdminAPI
     from server.api.project_apis import ProjectAPI, ProjectSearchAPI, HasUserTaskOnProject
     from server.api.swagger_docs_api import SwaggerDocsAPI
     from server.api.authentication_apis import LoginAPI, OAuthAPI
     from server.api.stats_api import StatsContributionsAPI, StatsActivityAPI, StatsProjectAPI
     from server.api.tags_apis import CampaignsTagsAPI, OrganisationTagsAPI
-    from server.api.user_apis import UserAPI, UserOSMAPI, UserMappedProjects, UserSetRole, UserSetLevel
+    from server.api.user_apis import UserAPI, UserOSMAPI, UserMappedProjects, UserSetRole, UserSetLevel, UserAcceptLicense, UserSearchFilterAPI, UserSearchAllAPI
     from server.api.validator_apis import LockTasksForValidationAPI, UnlockTasksAfterValidationAPI, MappedTasksByUser
+    from server.api.grid_apis import IntersectingTilesAPI
 
     api.add_resource(SwaggerDocsAPI,                '/api/docs')
     api.add_resource(HealthCheckAPI,                '/api/health-check')
+    api.add_resource(LoginAPI,                      '/api/v1/auth/login')
+    api.add_resource(OAuthAPI,                      '/api/v1/auth/oauth-callback')
+    api.add_resource(LicenseAPI,                    '/api/v1/license', endpoint="create_license", methods=['PUT'])
+    api.add_resource(LicenseAPI,                    '/api/v1/license/<int:license_id>', methods=['GET', 'POST', 'DELETE'])
+    api.add_resource(LicenceListAPI,                '/api/v1/license/list')
+    api.add_resource(HasNewMessages,                '/api/v1/messages/has-new-messages')
+    api.add_resource(GetAllMessages,                '/api/v1/messages/get-all-messages')
+    api.add_resource(MessagesAPI,                   '/api/v1/messages/<int:message_id>')
     api.add_resource(ProjectSearchAPI,              '/api/v1/project/search')
     api.add_resource(ProjectAPI,                    '/api/v1/project/<int:project_id>')
     api.add_resource(HasUserTaskOnProject,          '/api/v1/project/<int:project_id>/has-user-locked-tasks')
@@ -109,6 +120,7 @@ def init_flask_restful_routes(app):
     api.add_resource(ProjectCommentsAPI,            '/api/v1/admin/project/<int:project_id>/comments')
     api.add_resource(ProjectInvalidateAll,          '/api/v1/admin/project/<int:project_id>/invalidate-all')
     api.add_resource(ProjectValidateAll,            '/api/v1/admin/project/<int:project_id>/validate-all')
+    api.add_resource(ProjectsMessageAll,            '/api/v1/admin/project/<int:project_id>/message-all')
     api.add_resource(ProjectsForAdminAPI,           '/api/v1/admin/my-projects')
     api.add_resource(MappingTaskAPI,                '/api/v1/project/<int:project_id>/task/<int:task_id>')
     api.add_resource(UnlockTaskForMappingAPI,       '/api/v1/project/<int:project_id>/task/<int:task_id>/unlock-after-mapping')
@@ -119,10 +131,12 @@ def init_flask_restful_routes(app):
     api.add_resource(StatsProjectAPI,               '/api/v1/stats/project/<int:project_id>')
     api.add_resource(CampaignsTagsAPI,              '/api/v1/tags/campaigns')
     api.add_resource(OrganisationTagsAPI,           '/api/v1/tags/organisations')
+    api.add_resource(UserSearchAllAPI,              '/api/v1/user/search-all')
+    api.add_resource(UserSearchFilterAPI,           '/api/v1/user/search/filter/<string:username>')
     api.add_resource(UserAPI,                       '/api/v1/user/<string:username>')
     api.add_resource(UserMappedProjects,            '/api/v1/user/<string:username>/mapped-projects')
     api.add_resource(UserOSMAPI,                    '/api/v1/user/<string:username>/osm-details')
     api.add_resource(UserSetRole,                   '/api/v1/user/<string:username>/set-role/<string:role>')
     api.add_resource(UserSetLevel,                  '/api/v1/user/<string:username>/set-level/<string:level>')
-    api.add_resource(LoginAPI,                      '/api/v1/auth/login')
-    api.add_resource(OAuthAPI,                      '/api/v1/auth/oauth-callback')
+    api.add_resource(UserAcceptLicense,             '/api/v1/user/accept-license/<int:license_id>')
+    api.add_resource(IntersectingTilesAPI,          '/api/v1/grid/intersecting-tiles')

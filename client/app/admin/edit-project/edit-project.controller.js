@@ -7,9 +7,9 @@
      */
     angular
         .module('taskingManager')
-        .controller('editProjectController', ['$scope', '$location', '$routeParams', '$showdown', '$timeout', 'mapService','drawService', 'projectService', 'geospatialService','accountService', 'authService', 'tagService', editProjectController]);
+        .controller('editProjectController', ['$scope', '$location', '$routeParams', '$showdown', '$timeout', 'mapService','drawService', 'projectService', 'geospatialService','accountService', 'authService', 'tagService', 'licenseService','userService', editProjectController]);
 
-    function editProjectController($scope, $location, $routeParams, $showdown, $timeout, mapService, drawService, projectService, geospatialService, accountService, authService, tagService) {
+    function editProjectController($scope, $location, $routeParams, $showdown, $timeout, mapService, drawService, projectService, geospatialService, accountService, authService, tagService, licenseService, userService) {
         var vm = this;
         vm.currentSection = '';
         vm.editForm = {};
@@ -58,6 +58,9 @@
         
         // Delete
         vm.showDeleteConfirmationModal = false;
+        
+        // Private project/add users
+        vm.addUserEnabled = false;
 
         // Error messages
         vm.deleteProjectFail = false;
@@ -108,7 +111,7 @@
             vm.updateProjectFail = false;
             vm.updateProjectSuccess = false;
             
-            // Only check required fields when
+            // Only check required fields when publishing
             if (vm.project.projectStatus === 'PUBLISHED') {
                 var requiredFieldsMissing = checkRequiredFields();
             }
@@ -121,6 +124,12 @@
             }
             if (vm.projectCampaignTag[0]) {
                 vm.project.campaignTag = vm.projectCampaignTag[0].text;
+            }
+            if (vm.projectLicense){
+                vm.project.licenseId = vm.projectLicense.licenseId;
+            }
+            else {
+                vm.project.licenseId = null;
             }
 
             // Prepare the data for sending to API by removing any locales with no fields
@@ -378,6 +387,59 @@
         };
 
         /**
+         * Get the user for a search value
+         * @param searchValue
+         */
+        vm.getUser = function(searchValue){
+            var resultsPromise = userService.searchUser(searchValue);
+            return resultsPromise.then(function (data) {
+                // On success
+                return data.usernames;
+            }, function(){
+                // On error
+            });
+        };
+
+        /**
+         * Adds the user to the allowed user list
+         * @param user
+         */
+        vm.addUser = function(user){
+            var index = vm.project.allowedUsernames.indexOf(user);
+            if (index == -1){
+                vm.project.allowedUsernames.push(user);
+            }
+        };
+
+        /**
+         * Removes the user from the allowed user list
+         * @param user
+         */
+        vm.removeUser = function(user){
+            var index = vm.project.allowedUsernames.indexOf(user);
+            if (index > -1){
+                vm.project.allowedUsernames.splice(index, 1);
+            }
+        };
+
+        /**
+         * On private change
+         */
+        vm.onPrivateChange = function(){
+            if (!vm.project.private){
+                // clear the allowed users list when a project is not private
+                vm.project.allowedUsernames = [];
+            }
+        };
+
+        /**
+         * Enable adding a user
+         */
+        vm.enableAddUser = function(boolean){
+            vm.addUserEnabled = boolean;
+        };
+
+        /**
          * Check the required fields for the default locale
          * @return boolean if something is missing (description, short description or instructions for the default locale
          */
@@ -521,6 +583,7 @@
             var resultsPromise = projectService.getProjectMetadata(id);
             resultsPromise.then(function (data) {
                 vm.project = data;
+                getLicenses();
                 // only 'non-empty' locales are included so add empty locales to ease editing
                 // TODO: move to separate service?
                 for (var i = 0; i < vm.locales.length; i++){
@@ -560,6 +623,27 @@
                 }
             }, function(){
                // TODO
+            });
+        }
+
+        /**
+         * Get licenses
+         */
+        function getLicenses(){
+            var resultsPromise = licenseService.getLicenseList();
+            resultsPromise.then(function (data) {
+                // On success
+                vm.licenses = data.licenses;
+                if (vm.licenses){
+                    for (var i = 0; i < vm.licenses.length; i++){
+                        if (vm.licenses[i].licenseId === vm.project.licenseId){
+                            vm.projectLicense = vm.licenses[i];
+                            break;
+                        }
+                    }
+                }
+            }, function(){
+                // On error
             });
         }
 
