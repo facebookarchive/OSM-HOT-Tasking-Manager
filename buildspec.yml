@@ -35,7 +35,7 @@ phases:
   post_build:
     commands:
       # Run deploy script to manage deploy to appropriate environment
-      - env
+      - echo "BRANCH: $(git branch --contains $CODEBUILD_RESOLVED_SOURCE_VERSION)"
       - chmod +x ./devops/ci/shippable_deploy.sh
       - ./devops/ci/shippable_deploy.sh
 artifacts:
