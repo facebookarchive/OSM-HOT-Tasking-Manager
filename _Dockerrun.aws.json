@@ -11,7 +11,7 @@
   "containerDefinitions": [
     {
       "name": "app",
-      "image": "670261699094.dkr.ecr.us-east-2.amazonaws.com/hotosm-tasking-manager:latest",
+      "image": "670261699094.dkr.ecr.us-west-2.amazonaws.com/hotosm-tasking-manager:latest",
       "essential": true,
       "memory": 128
     },
