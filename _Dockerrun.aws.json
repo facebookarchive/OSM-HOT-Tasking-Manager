@@ -1,0 +1,37 @@
+{
+  "AWSEBDockerrunVersion": 2,
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "670261699094.dkr.ecr.us-east-2.amazonaws.com/hotosm-tasking-manager:latest",
+      "essential": true,
+      "memory": 128
+    },
+    {
+      "name": "nginx-proxy",
+      "image": "nginx",
+      "essential": true,
+      "memory": 128,
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 80
+        }
+      ],
+      "links": [
+        "app"
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "nginx-proxy-conf",
+          "containerPath": "/etc/nginx/conf.d",
+          "readOnly": true
+        },
+        {
+          "sourceVolume": "awseb-logs-nginx-proxy",
+          "containerPath": "/var/log/nginx"
+        }
+      ]
+    }
+  ]
+}

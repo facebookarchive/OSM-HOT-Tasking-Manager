@@ -1,49 +1,25 @@
 version: 0.1
 
-environment_variables:
-  plaintext:
-    SHIPPABLE: "true"
-    key: "value"
-
 phases:
-  install:
-    commands:
-    # Install latest LTS node
-      - apt-get update
-      - apt-get install -y curl git bzip2
-      - curl -sL https://deb.nodesource.com/setup_6.x | bash -
-      - apt-get install -y nodejs
-      - node --version
-    # Install NPM packages and build client from gulpfile
-      - "cd client && npm install --silent && ./node_modules/.bin/gulp build && cd .."
-    # Install Python dependencies
-      - python --version
-      - apt-get install -y libgeos-c1 libgeos-dev  # Required for shapely
-      - pip install -r requirements.txt
   pre_build:
     commands:
-    # Required to display test results in Shippable GUI
-      - mkdir -p shippable/testresults
-      - mkdir -p shippable/codecoverage
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION)
   build:
     commands:
-    # JS Unit Tests
-      - "cd tests/client && ../../client/node_modules/.bin/karma start ./karma.conf.js --single-run --browsers PhantomJS --reporters junit && cd ../.."
-    # Run Python tests
-      - nosetests ./tests/server --with-xunit --xunit-file ./shippable/testresults/unitresults.xml --with-coverage --cover-erase --cover-package=./server
-      - coverage xml -o shippable/codecoverage/coverage.xml
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
   post_build:
     commands:
-      # Run deploy script to manage deploy to appropriate environment
-      - ls -lAht
-      - pwd
-      - whoami
-      - export BRANCH=$(git branch --contains $CODEBUILD_RESOLVED_SOURCE_VERSION)
-      - chmod +x ./devops/ci/shippable_deploy.sh
-      - ./devops/ci/shippable_deploy.sh
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo renaming _Dockerrun.aws.json file
+      - mv _Dockerrun.aws.json Dockerrun.aws.json
+      - echo deleting Dockerfile
+      - rm Dockerfile
 artifacts:
   files:
-    - location
-    - location
-  discard-paths: yes
-  base-directory: location
+    - '**/*'
