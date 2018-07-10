@@ -135,3 +135,8 @@ On boot the Tasking Manager App will look for the following environment vars:
 
 ## Localisation
 Please see the [Localisation Wiki](https://github.com/hotosm/tasking-manager/wiki/Localisation) for more details.
+
+## Contributing
+If you are interested in improving Tasking Manager, first go to the [Issues](https://github.com/hotosm/tasking-manager/issues) and [Pull Requests](https://github.com/hotosm/tasking-manager/pulls) to see if there's an open issue to get started on. Also, be sure to read the [Contribtuting Guidelines](https://github.com/hotosm/tasking-manager/blob/develop/CONTRIBUTING.md).
+
+If you are not sure where to start, feel free to [join our Slack](http://slack.hotosm.org/) and introduce yourself in `#developers`.
