@@ -393,6 +393,10 @@
                                         <input ng-model="editProjectCtrl.project.enforceValidatorRole" type="checkbox"/>{{ 'Only Validators can validate on this project' | translate }}
                                     </label>
                                     <p>{{ 'If checked, only users with the Validator role will be able to validate tasks in this project. If unchecked, anyone can validate or invalidate tasks.' | translate }}</p>
+                                    <label class="form__option">
+                                        <input ng-model="editProjectCtrl.project.enforceValidatorRole" type="checkbox"/>{{ 'Intermediate or Advanced Mappers can validate on this project' | translate }}
+                                    </label>
+                                    <p>{{ 'If checked, Intermediate and Advanced mappers will be able to validate tasks in this project.' | translate }}</p>
                                 </div>
                                 <div class="form__group form__group--section">
                                     <label class="form__label">{{ 'Private Project' | translate }}</label>
