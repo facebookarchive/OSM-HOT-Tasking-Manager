@@ -12,7 +12,7 @@ const Parameters = {
   },
   DBSnapshot: {
     Type: 'String',
-    Description: 'Specify an RDS snapshot ID, if you want to create the DB from a snapshot.',
+    Description: 'Specify an RDS snapshot Name, if you want to create the DB from a snapshot.',
     Default: ''
   },
   MasterUsername: {
@@ -65,6 +65,14 @@ const Parameters = {
     Description: 'ELB subnets',
     Type: 'String'
   },
+  VpcId: {
+    Description: "ID of the VPC",
+    Type: 'String'
+  },
+  SSLCertificateIdentifier: {
+    Type: 'String',
+    Description: 'SSL certificate for HTTPS protocol'
+  },
   RDSSecurityGroup: {
     Description: 'Security Group for the RDS',
     Type: 'String'
@@ -96,7 +104,7 @@ const Resources = {
       MaxSize: 1,
       HealthCheckGracePeriod: 300,
       LaunchConfigurationName: cf.ref('TaskingManagerLaunchConfiguration'),
-      LoadBalancerNames: [ cf.ref('TaskingManagerLoadBalancer') ],
+      TargetGroupARNs: [ cf.ref('TaskingManagerTargetGroup') ],
       HealthCheckType: 'EC2',
       AvailabilityZones: cf.getAzs(cf.region)
     }
@@ -168,25 +176,61 @@ const Resources = {
      }
   },
   TaskingManagerLoadBalancer: {
-    Type: 'AWS::ElasticLoadBalancing::LoadBalancer',
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer',
     Properties: {
-      CrossZone: true,
-      Listeners: [{
-        InstancePort: 8000,
-        InstanceProtocol: 'HTTP',
-        LoadBalancerPort: 80,
-        Protocol: 'HTTP',
-        PolicyNames: [ cf.sub('${AWS::StackName}-stickiness') ]
-      }],
-      LBCookieStickinessPolicy: [{
-        PolicyName: cf.sub('${AWS::StackName}-stickiness')
-      }],
-      LoadBalancerName: cf.stackName,
+      IpAddressType: 'ipv4',
+      Name: cf.join('-', [cf.stackName, 'lb']),
       Scheme: 'internet-facing',
       SecurityGroups: [cf.ref('ELBSecurityGroup')],
-      Subnets: cf.split(',', cf.ref('ELBSubnets'))
-   }
- },
+      Subnets: cf.split(',', cf.ref('ELBSubnets')),
+      Type: 'application'
+    }
+  },
+  TaskingManagerTargetGroup: {
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup',
+    Properties: {
+      HealthCheckIntervalSeconds: 30,
+      HealthCheckPort: 8000,
+      HealthCheckProtocol: 'HTTP',
+      HealthCheckPath: '/api/health-check',
+      HealthCheckTimeoutSeconds: 10,
+      HealthyThresholdCount: 5,
+      UnhealthyThresholdCount: 3,
+      Port: 8000,
+      Protocol: 'HTTP',
+      VpcId: cf.ref('VpcId'),
+      Matcher: {
+        HttpCode: '200,202,302,304'
+      }
+    }
+  },
+  TaskingManagerHTTPListener: {
+    Type: 'AWS::ElasticLoadBalancingV2::Listener',
+    Properties: {
+      DefaultActions: [{
+        Type: 'forward',
+        TargetGroupArn: cf.ref('TaskingManagerTargetGroup')
+      }],
+      LoadBalancerArn: cf.ref('TaskingManagerLoadBalancer'),
+      Port: 80,
+      Protocol: 'HTTP'
+    }
+  },
+  // TaskingManagerHTTPSListener: {
+  //   Type: 'AWS::ElasticLoadBalancingV2::Listener',
+  //   Properties: {
+  //     Certificates : [ {
+  //       CertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier'))
+  //     }],
+  //     DefaultActions: [{
+  //       Type: 'forward',
+  //       TargetGroupArn: cf.ref('TaskingManagerTargetGroup')
+  //     }],
+  //     LoadBalancerArn: cf.ref('TaskingManagerLoadBalancer'),
+  //     Port: 443,
+  //     Protocol: 'HTTPS'
+  //   }
+  // },
   TaskingManagerRDS: {
     Type: 'AWS::RDS::DBInstance',
     Condition: 'CreateRDS',
