@@ -5,11 +5,6 @@ const Parameters = {
     Type: 'String',
     Description: 'GitSha for this stack'
   },
-  IsStaging: {
-    Type: 'String',
-    Description: 'Is this a staging stack?',
-    AllowedValues: ['Yes', 'No']
-  },
   DBSnapshot: {
     Type: 'String',
     Description: 'Specify an RDS snapshot Name, if you want to create the DB from a snapshot.',
@@ -128,7 +123,7 @@ const Resources = {
       Properties: {
         IamInstanceProfile: cf.ref('TaskingManagerEC2InstanceProfile'),
         ImageId: 'ami-0e4372c1860d7426c',
-        InstanceType: 'c3.2xlarge',
+        InstanceType: 'm3.medium',
         SecurityGroups: [cf.ref('RDSSecurityGroup')],
         UserData: cf.userData([
           '#!/bin/bash',
@@ -136,7 +131,7 @@ const Resources = {
           'echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf',
           cf.join('', [cf.sub('export TM_DB="postgresql://${MasterUsername}:${MasterPassword}@'), cf.if('CreateRDS', cf.getAtt('TaskingManagerRDS', 'Endpoint.Address'), cf.ref('RDSUrl')), '/tm3"']),
           cf.sub('export TM_CONSUMER_KEY=${OSMConsumerKey} && export TM_CONSUMER_SECRET=${OSMConsumerSecret} && export TM_ENV=${TaskingManagerEnv} && export TM_SECRET=${TaskingManagerSecret} && ./venv/bin/python3.6 manage.py db upgrade && cd client/ && npm install && gulp build && cd ../ && echo "done"'),
-          'gunicorn -b 0.0.0.0:8000 -w 17 --timeout 179 manage:application'
+          'gunicorn -b 0.0.0.0:8000 -w 3 --timeout 179 manage:application'
         ]),
         KeyName: 'mbtiles'
       }
