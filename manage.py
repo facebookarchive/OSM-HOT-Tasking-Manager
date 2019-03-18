@@ -44,5 +44,13 @@ def refresh_levels():
     print(f'Updated {users_updated} user mapper levels')
 
 
+@manager.command
+def rebuild():
+    print('Rebuilding front-end')
+    path = os.path.dirname(os.path.realpath(__file__)) + '/client'
+    import subprocess
+    process = subprocess.Popen(["gulp", "build"], cwd=path) 
+    output, error = process.communicate()
+
 if __name__ == '__main__':
     manager.run()
