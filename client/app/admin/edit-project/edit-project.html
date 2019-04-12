@@ -29,7 +29,7 @@
                                 <li>
                                     <a title="{{ 'Edit tags' | translate }}" ng-click="editProjectCtrl.currentSection = 'metadata'"
                                        class="aside-menu-item" ng-class="editProjectCtrl.currentSection === 'metadata' ? 'aside-menu-item--active' : ''">
-                                        {{ 'Metadata' | translate }}
+                                        {{ 'Metadata' | translate }} *
                                     </a>
                                 </li>
                                 <li>
@@ -289,7 +289,7 @@
                                     <p>{{ 'Setting the level will help the mappers find suitable projects to work on. You can enforce the level required for mapping in the permissions section.' | translate }}</p>
                                 </div>
                                 <div class="form__group form__group--section">
-                                    <label class="form__label">{{ 'Type(s) of mapping' | translate }}</label>
+                                    <label class="form__label">{{ 'Type(s) of mapping' | translate }} *</label>
                                     <label class="form__option">
                                         <input type="checkbox" ng-model="editProjectCtrl.mappingTypes.roads"/>{{ 'Roads' | translate }}
                                     </label>
@@ -307,7 +307,7 @@
                                     </label>
                                 </div>
                                 <div class="form__group form__group--section">
-                                    <label class="form__label">{{ 'Organisation Tag' | translate }}</label>
+                                    <label class="form__label">{{ 'Organisation Tag' | translate }} *</label>
                                     <p>{{ 'Only one organisation tag is allowed.' | translate }}</p>
                                     <tags-input ng-model="editProjectCtrl.projectOrganisationTag"
                                         name="organisationTag" placeholder="{{ 'choose from existing tags or create a new one' | translate }}"
@@ -557,6 +557,12 @@
                                     </p>
                                     <p class="error" ng-show="!editProjectCtrl.editForm.organisationTag.$valid">
                                         {{ 'Please make sure you only have one organisation tag.' | translate }}
+                                    </p>
+                                    <p class="error" ng-show="editProjectCtrl.organisationTagMissing">
+                                        {{ 'An organisation tag is missing.' | translate }}
+                                    </p>
+                                    <p class="error" ng-show="editProjectCtrl.mappingTypeMissing">
+                                        {{ 'A mapping type selection is missing.' | translate }}
                                     </p>
                                 </div>
                             </div>
