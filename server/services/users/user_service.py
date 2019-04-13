@@ -7,6 +7,7 @@ import datetime
 from server.models.dtos.user_dto import UserDTO, UserOSMDTO, UserFilterDTO, UserSearchQuery, UserSearchDTO, \
     UserStatsDTO
 from server.models.dtos.message_dto import MessageDTO
+from server.models.postgis.message import Message, MessageType, NotFound
 from server.models.postgis.message import Message
 from server.models.postgis.task import TaskHistory
 from server.models.postgis.user import User, UserRole, MappingLevel
@@ -346,6 +347,7 @@ class UserService:
 
         text_template = text_template.replace('[LEVEL]', level)
         level_upgrade_message = Message()
+        level_upgrade_message.message_type = MessageType.SYSTEM.value
         level_upgrade_message.to_user_id = user_id
         level_upgrade_message.subject = 'Mapper Level Upgrade '
         level_upgrade_message.message = text_template
