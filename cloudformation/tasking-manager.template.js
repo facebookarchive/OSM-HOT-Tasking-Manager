@@ -13,6 +13,12 @@ const Parameters = {
     Description: 'Specify an RDS snapshot ID, if you want to create the DB from a snapshot.',
     Default: ''
   },
+  EmptyDatabase: {
+    Type: 'String',
+    Description: 'Are you creating an empty database, without using a snapshot or referencing to a remote RDS database?',
+    Default: 'false',
+    AllowedValues: ['true', 'false']
+  },
   NewRelicLicense: {
     Type: 'String',
     Description: 'NEW_RELIC_LICENSE'
@@ -91,6 +97,7 @@ const Parameters = {
 const Conditions = {
   UseASnapshot: cf.notEquals(cf.ref('DBSnapshot'), ''),
   UsePostgresEndpoint: cf.notEquals(cf.ref('PostgresEndpoint'), ''),
+  IsDatabaseEmpty: cf.equals(cf.ref('EmptyDatabase'), 'true')
 };
 
 const Resources = {
@@ -197,6 +204,7 @@ const Resources = {
         cf.sub('export TM_SMTP_PASSWORD="${TaskingManagerSMTPPassword}"'),
         cf.sub('export TM_SMTP_PORT="${TaskingManagerSMTPPort}"'),
         cf.sub('export TM_SMTP_USER="${TaskingManagerSMTPUser}"'),
+        cf.if('IsDatabaseEmpty', 'psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_ENDPOINT/$POSTGRES_DB" -f ./tests/database/tasking-manager.sql', ''),
         './venv/bin/python3.6 manage.py db upgrade',
         'cd client/',
         'npm install',
@@ -326,7 +334,6 @@ const Resources = {
         MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
         AllocatedStorage: cf.ref('DatabaseSize'),
         StorageType: 'gp2',
-        DBInstanceIdentifier: cf.stackName,
         DBInstanceClass: 'db.m3.large', //rethink here
         DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
         VPCSecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('Environment'), 'ec2s-security-group', cf.region]))],
