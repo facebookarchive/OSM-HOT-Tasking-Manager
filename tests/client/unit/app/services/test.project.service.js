@@ -594,7 +594,7 @@ describe('project.service', function () {
         var results = scenarios.map(function (scenario) {
             return {
                 expected: scenario.expected,
-                actual: projectService.userCanValidateProject(scenario.userRole, scenario.mapperLevel, scenario.enforce, scenario.allowNonBeginners)
+                actual: projectService.userCanValidateProject(scenario.userRole, scenario.mappingLevel, scenario.enforce, scenario.allowNonBeginners)
             }
         });
 
