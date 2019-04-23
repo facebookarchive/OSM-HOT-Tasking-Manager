@@ -118,8 +118,8 @@ class ProjectDTO(Model):
     active_mappers = IntType(serialized_name='activeMappers')
     task_creation_mode = StringType(required=True, serialized_name='taskCreationMode',
                                     validators=[is_known_task_creation_mode], serialize_when_none=False)
-    mapping_editors = ListType(StringType, serialized_name='mappingEditors', validators=[is_known_editor])
-    validation_editors = ListType(StringType, serialized_name='validationEditors', validators=[is_known_editor])
+    mapping_editors = ListType(StringType, min_size=1, required=True, serialized_name='mappingEditors', validators=[is_known_editor])
+    validation_editors = ListType(StringType, min_size=1, required=True, serialized_name='validationEditors', validators=[is_known_editor])
 
 
 class ProjectSearchDTO(Model):

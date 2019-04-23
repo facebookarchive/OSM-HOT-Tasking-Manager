@@ -74,8 +74,18 @@ class Project(db.Model):
     campaign_tag = db.Column(db.String, index=True)
 
     # Editors
-    mapping_editors = db.Column(ARRAY(db.Integer), default=[Editors.ID.value, Editors.JOSM.value, Editors.POTLATCH_2.value, Editors.FIELD_PAPERS.value], index=True, nullable=False)
-    validation_editors = db.Column(ARRAY(db.Integer), default=[Editors.ID.value, Editors.JOSM.value, Editors.POTLATCH_2.value, Editors.FIELD_PAPERS.value], index=True, nullable=False)
+    mapping_editors = db.Column(ARRAY(db.Integer), default=[
+                                                            Editors.ID.value,
+                                                            Editors.JOSM.value,
+                                                            Editors.POTLATCH_2.value,
+                                                            Editors.FIELD_PAPERS.value],
+                                                            index=True, nullable=False)
+    validation_editors = db.Column(ARRAY(db.Integer), default=[
+                                                               Editors.ID.value,
+                                                               Editors.JOSM.value,
+                                                               Editors.POTLATCH_2.value,
+                                                               Editors.FIELD_PAPERS.value],
+                                                               index=True, nullable=False)
 
     # Stats
     total_tasks = db.Column(db.Integer, nullable=False)
