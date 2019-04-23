@@ -4,6 +4,15 @@
      * @fileoverview This file provides a message service.
      */
 
+    // These match the MessageType constants on the server
+    angular.module('taskingManager').constant('MessageType', {
+      SYSTEM: 1,
+      BROADCAST: 2,
+      MENTION_NOTIFICATION: 3,
+      VALIDATION_NOTIFICATION: 4,
+      INVALIDATION_NOTIFICATION: 5,
+    });
+
     angular
         .module('taskingManager')
         .service('messageService', ['$http', '$q','configService', 'authService', messageService]);
@@ -18,8 +27,9 @@
             getProjectChatMessages: getProjectChatMessages,
             addProjectChatMessage: addProjectChatMessage,
             deleteMessage: deleteMessage,
+            deleteMultipleMessages: deleteMultipleMessages,
             resendEmailVerification: resendEmailVerification,
-            formatUserNamesToLink: formatUserNamesToLink
+            formatShortCodes: formatShortCodes,
         };
 
         return service;
@@ -74,11 +84,51 @@
          * Get all messages
          * @returns {*|!jQuery.jqXHR|!jQuery.deferred|!jQuery.Promise}
          */
-        function getAllMessages(){
+        function getAllMessages(page, pageSize, sortBy, sortDirection, fromFilter, projectFilter, taskFilter, messageTypeFilter){
+            var params = '?pageSize=' + (pageSize ? pageSize : '10');
+            if (page) {
+                params += '&page=' + page;
+            }
+
+            if (fromFilter) {
+                params += "&from=" + encodeURIComponent(fromFilter);
+            }
+
+            if (projectFilter) {
+                params += "&project=" + encodeURIComponent(projectFilter);
+            }
+
+            if (taskFilter) {
+                params += "&taskId=" + encodeURIComponent(taskFilter);
+            }
+
+            if (typeof messageTypeFilter === 'number') {
+                params += "&messageType=" + messageTypeFilter;
+            }
+
+            if (sortBy) {
+              switch(sortBy) {
+                case "sentDate":
+                case "sent_date":
+                  params += "&sortBy=date";
+                  break;
+                case "projectId":
+                  params += "&sortBy=project_id";
+                  break;
+                case "taskId":
+                  params += "&sortBy=task_id";
+                  break;
+              }
+            }
+
+            if (sortDirection) {
+              params += '&sortDirection=' + sortDirection;
+            }
+
             // Returns a promise
             return $http({
                 method: 'GET',
-                url: configService.tmAPI + '/messages/get-all-messages',
+                url: configService.tmAPI + '/messages/get-all-messages' + params,
                 headers: authService.getAuthenticatedHeader()
             }).then(function successCallback(response) {
                 // this callback will be called asynchronously
@@ -123,6 +173,30 @@
             return $http({
                 method: 'DELETE',
                 url: configService.tmAPI + '/messages/' + messageId,
+                headers: authService.getAuthenticatedHeader()
+            }).then(function successCallback(response) {
+                // this callback will be called asynchronously
+                // when the response is available
+                return response.data;
+            }, function errorCallback() {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+                return $q.reject("error");
+            });
+        }
+
+        /**
+         * Delete all of the specified messages to the logged-in user
+         * @returns {*|!jQuery.Promise|!jQuery.deferred|!jQuery.jqXHR}
+         */
+        function deleteMultipleMessages(messageIds) {
+            // Returns a promise
+            return $http({
+                method: 'DELETE',
+                url: configService.tmAPI + '/messages/delete-multiple',
+                data: {
+                    messageIds: messageIds,
+                },
                 headers: authService.getAuthenticatedHeader()
             }).then(function successCallback(response) {
                 // this callback will be called asynchronously
@@ -221,6 +295,132 @@
                 }
             }
             return text;
+        }
+
+        /**
+         * Format OSM viewport URLs or zoom/lat/lon references as openstreetmap.org
+         * links that open in a new tab. Supported viewport references:
+         *
+         * [v/14/42.3824/12.2633]        -> https://www.openstreetmap.org/#map=14/42.3824/12.2633
+         * [view/14/42.3824/12.2633]     -> https://www.openstreetmap.org/#map=14/42.3824/12.2633
+         * [viewport/14/42.3824/12.2633] -> https://www.openstreetmap.org/#map=14/42.3824/12.2633
+         *
+         * Note: for convenience, a full url can also be given instead of just zoom/lat/lon.
+         * E.G., [v/https://www.openstreetmap.org/#map=14/42.3824/12.2633]
+         *
+         * @param text
+         */
+        function formatViewportShortcodeToLink(text){
+            if (text) {
+              var shortCodeRegex = /\[(v|view|viewport)\/(https:\/\/www.openstreetmap.org\/#map=)?([^/]+\/[^/]+\/[^/]+)\]/g;
+              var codeMap = {
+                v: 'viewport',
+                view: 'viewport',
+                viewport: 'viewport',
+              };
+              var shortCodeMatch = null;
+
+              while (shortCodeMatch = shortCodeRegex.exec(text)) {
+                  // Ignore short codes we don't explicitly support
+                  if (!codeMap[shortCodeMatch[1]]) {
+                      continue;
+                  }
+
+                  // zoom/lat/lon
+                  var viewport = shortCodeMatch[3];
+                  var linkUrl = 'https://www.openstreetmap.org/#map=' + viewport;
+                  var linkTitle = codeMap[shortCodeMatch[1]] + ' ' + viewport;
+                  var linkText = codeMap[shortCodeMatch[1]] + '/' + viewport;
+                  var link = '<a target="_blank" title="' + linkTitle + '" href="' + linkUrl + '">' + linkText + '</a>';
+
+                  // Replace short-code in text with generated link
+                  text = text.replace(shortCodeMatch[0], link);
+              }
+            }
+
+            return text;
+        }
+
+        /**
+         * Format OSM entity references as openstreetmap.org links that open
+         * in a new tab. Supported entity references:
+         * [n/123]        -> https://www.openstreetmap.org/node/123
+         * [node/123]     -> https://www.openstreetmap.org/node/123
+         * [w/123]        -> https://www.openstreetmap.org/way/123
+         * [way/123]      -> https://www.openstreetmap.org/way/123
+         * [r/123]        -> https://www.openstreetmap.org/relation/123
+         * [rel/123]      -> https://www.openstreetmap.org/relation/123
+         * [relation/123] -> https://www.openstreetmap.org/relation/123
+         * @param text
+         */
+        function formatOsmEntitiesToLink(text){
+            if (text) {
+              var shortCodeRegex = /\[\w+\/\d+(,?\s*\w+\/\d+)*\]/g;
+              var entityRegex = /(\w+)\/(\d+)/;
+              var entityMap = {
+                n: 'node',
+                node: 'node',
+                w: 'way',
+                way: 'way',
+                r: 'relation',
+                rel: 'relation',
+                relation: 'relation'
+              };
+
+              var shortCodeMatch = null;
+              while (shortCodeMatch = shortCodeRegex.exec(text)) {
+                // There could be multiple entities in a combo code, so split them up
+                // and expand each one. Entities must be comma or space separated.
+                var entities = shortCodeMatch[0].slice(1, -1).split(/,\s*|\s+/);
+
+                var expandedEntities = entities.map(function(entity) {
+                    var entityMatch = entityRegex.exec(entity);
+                    // Ignore short codes we don't explicitly support
+                    if (!entityMap[entityMatch[1]]) {
+                        return null;
+                    }
+
+                    return {
+                        linkText: entityMap[entityMatch[1]] + '/' + entityMatch[2],
+                        linkTitle: entityMap[entityMatch[1]] + ' ' + entityMatch[2],
+                        overpassQuery: entityMap[entityMatch[1]] + '(' + entityMatch[2] + ');'
+                    };
+                });
+
+                // If there are any null entity expansions, we have an unsupported code, so ignore it.
+                if (expandedEntities.indexOf(null) !== -1) {
+                    continue;
+                }
+
+                // Combine expansion data from all entities into final link
+                var linkText = expandedEntities.map(function(e) { return e.linkText; }).join(', ');
+                var linkTitle = expandedEntities.map(function(e) { return e.linkTitle; }).join(', ');
+                var overpassQuery =
+                    '(' +
+                    expandedEntities.map(function(e) { return e.overpassQuery; }).join('') +
+                    ');(._;>;);out;';
+                var linkUrl='http://overpass-turbo.eu/map.html?Q=' + encodeURIComponent(overpassQuery);
+                var link = '<a target="_blank" title="' + linkTitle + '" href="' + linkUrl + '">' + linkText + '</a>';
+
+                // Replace short code in comment with generated link
+                text = text.replace(shortCodeMatch[0], link);
+              }
+            }
+
+            return text;
+        }
+
+        /**
+         * Formats short codes in the text, such as usernames and OSM entity
+         * links.
+         * @param text
+         */
+        function formatShortCodes(text) {
+          return formatViewportShortcodeToLink(
+              formatOsmEntitiesToLink(
+                  formatUserNamesToLink(text)
+              )
+          );
         }
     }
 })();
