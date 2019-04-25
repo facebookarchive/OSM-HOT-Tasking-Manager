@@ -13,7 +13,11 @@ services:
     depends_on:
       - postgresql
     expose:
+<<<<<<< HEAD
       - "8000"
+=======
+      - "5000"
+>>>>>>> issue-893-restrict-editors
     ports:
       - "8000:8000"
     links:
