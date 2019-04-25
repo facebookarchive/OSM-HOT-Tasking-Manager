@@ -74,6 +74,8 @@ class TaskInvalidationHistory(db.Model):
         TaskInvalidationHistory.close_all_for_task(project_id, task_id)
 
         last_mapped = TaskHistory.get_last_mapped_action(project_id, task_id)
+        if last_mapped is None:
+            return
         entry = TaskInvalidationHistory(project_id, task_id)
         entry.invalidation_history_id = history.id
         entry.mapper_id = last_mapped.user_id
