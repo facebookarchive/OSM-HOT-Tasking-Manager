@@ -660,7 +660,7 @@
          */
         function userCanValidateProject(userRole, mappingLevel, enforceValidateRole, allowNonBeginners) {
             var userCanValidate = true
-            if (enforceValidateRole) {
+            if (enforceValidateRole || allowNonBeginners) {
                 var validatorRoles = ['ADMIN', 'PROJECT_MANAGER', 'VALIDATOR'];
                 userCanValidate = (validatorRoles.indexOf(userRole) != -1);
                 if (!userCanValidate){
@@ -669,8 +669,7 @@
                     userCanValidate = (allowedLevels.indexOf(mappingLevel) != -1);
                   }
                 }
-            }
-
+            } 
             return userCanValidate;
         }
 
