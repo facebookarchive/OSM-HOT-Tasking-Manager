@@ -335,7 +335,7 @@ describe('project.service', function () {
     it('should return expected result for user can validate for all user and project role contributions', function () {
         //Arrange a set of scearios to test including the expected result
         var scenarios = [
-            //'ADMIN', 'PROJECT_MANAGER', 'VALIDATOR'
+            //'ADMIN', 'PROJECT_MANAGER', 'VALIDATOR', 'MAPPER'
             {
                 userRole: 'MAPPER',
                 mappingLevel: 'BEGINNER',
@@ -400,11 +400,32 @@ describe('project.service', function () {
                 expected: true
             },
             {
+                userRole: 'MAPPER',
+                mappingLevel: 'BEGINNER',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: false
+            },
+            {
+                userRole: 'MAPPER',
+                mappingLevel: 'INTERMEDIATE',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
+                userRole: 'MAPPER',
+                mappingLevel: 'ADVANCED',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
                 userRole: 'ADMIN',
                 mappingLevel: 'BEGINNER',
                 enforce: true,
                 allowNonBeginners: true,
-                expected: true
+                expected: false
             },
             {
                 userRole: 'ADMIN',
@@ -463,11 +484,32 @@ describe('project.service', function () {
                 expected: true
             },
             {
+                userRole: 'ADMIN',
+                mappingLevel: 'BEGINNER',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: false
+            },
+            {
+                userRole: 'ADMIN',
+                mappingLevel: 'INTERMEDIATE',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
+                userRole: 'ADMIN',
+                mappingLevel: 'ADVANCED',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
                 userRole: 'PROJECT_MANAGER',
                 mappingLevel: 'BEGINNER',
                 enforce: true,
                 allowNonBeginners: true,
-                expected: true
+                expected: false
             },
             {
                 userRole: 'PROJECT_MANAGER',
@@ -526,11 +568,32 @@ describe('project.service', function () {
                 expected: true
             },
             {
+                userRole: 'PROJECT_MANAGER',
+                mappingLevel: 'BEGINNER',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: false
+            },
+            {
+                userRole: 'PROJECT_MANAGER',
+                mappingLevel: 'INTERMEDIATE',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
+                userRole: 'PROJECT_MANAGER',
+                mappingLevel: 'ADVANCED',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
                 userRole: 'VALIDATOR',
                 mappingLevel: 'BEGINNER',
                 enforce: true,
                 allowNonBeginners: true,
-                expected: true
+                expected: false
             },
             {
                 userRole: 'VALIDATOR',
@@ -586,6 +649,27 @@ describe('project.service', function () {
                 mappingLevel: 'ADVANCED',
                 enforce: false,
                 allowNonBeginners: false,
+                expected: true
+            },
+            {
+                userRole: 'VALIDATOR',
+                mappingLevel: 'BEGINNER',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: false
+            },
+            {
+                userRole: 'VALIDATOR',
+                mappingLevel: 'INTERMEDIATE',
+                enforce: false,
+                allowNonBeginners: true,
+                expected: true
+            },
+            {
+                userRole: 'VALIDATOR',
+                mappingLevel: 'ADVANCED',
+                enforce: false,
+                allowNonBeginners: true,
                 expected: true
             }
         ];
