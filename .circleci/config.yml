@@ -75,48 +75,49 @@ jobs:
         - client/node_modules
         - env
   deploy:
-    stack_name:
-      description: "the name of the stack for cfn-config"
-      type: string
-    environment_name: 
-      description: "The environment (staging or production) on AWS"
-      type: enum
-      enum: ["staging", "production"]
-    new_relic_license:
-      type: env_var_name
-      default: NEW_RELIC_LICENSE
-    postgres_db: 
-      type: env_var_name
-    postgres_password:
-      type: env_var_name
-    postgres_user:
-      type: env_var_name
-    base_url:
-      type: env_var_name
-    consumer_key:
-      type: env_var_name
-    consumer_secret:
-      type: env_var_name
-    tm_secret:
-      type: env_var_name
-    email_from_address:
-      type: env_var_name
-    smtp_host:
-      type: env_var_name
-    smtp_password:
-      type: env_var_name
-    smtp_user:
-      type: env_var_name
-    smtp_port:
-      type: env_var_name
-    log_dir:
-      type: env_var_name
-    db_size:
-      type: env_var_name
-    elb_subnets:
-      type: env_var_name
-    ssl_cert: 
-      type: env_var_name
+    parameters:
+      stack_name:
+        description: "the name of the stack for cfn-config"
+        type: string
+      environment_name: 
+        description: "The environment (staging or production) on AWS"
+        type: enum
+        enum: ["staging", "production"]
+      new_relic_license:
+        type: env_var_name
+        default: NEW_RELIC_LICENSE
+      postgres_db: 
+        type: env_var_name
+      postgres_password:
+        type: env_var_name
+      postgres_user:
+        type: env_var_name
+      base_url:
+        type: env_var_name
+      consumer_key:
+        type: env_var_name
+      consumer_secret:
+        type: env_var_name
+      tm_secret:
+        type: env_var_name
+      email_from_address:
+        type: env_var_name
+      smtp_host:
+        type: env_var_name
+      smtp_password:
+        type: env_var_name
+      smtp_user:
+        type: env_var_name
+      smtp_port:
+        type: env_var_name
+      log_dir:
+        type: env_var_name
+      db_size:
+        type: env_var_name
+      elb_subnets:
+        type: env_var_name
+      ssl_cert: 
+        type: env_var_name
     working_directory: /home/circleci/tasking-manager
     docker:
     - image: circleci/python:3-stretch
@@ -211,8 +212,8 @@ workflows:
             - develop
         requires:
         - build
-        stack_name: staging
-        environment_name: staging
+        stack_name: "staging"
+        environment_name: "staging"
         postgres_db: POSTGRES_DB_STAGING
         postgres_password: POSTGRES_PASSWORD_STAGING
         postgres_user: POSTGRES_USER_STAGING
@@ -237,8 +238,8 @@ workflows:
               - master
         requires:
           - build
-        stack_name: production
-        environment_name: production
+        stack_name: "production"
+        environment_name: "production"
         postgres_db: POSTGRES_DB_PRODUCTION
         postgres_password: POSTGRES_PASSWORD_PRODUCTION
         postgres_user: POSTGRES_USER_PRODUCTION
@@ -262,9 +263,9 @@ workflows:
             only:
               - teachosm
         requires:
-          -build
-        stack_name: teachosm
-        environment_name: production
+          - build
+        stack_name: "teachosm"
+        environment_name: "production"
         postgres_db: POSTGRES_DB_TEACHOSM
         postgres_password: POSTGRES_PASSWORD_TEACHOSM
         postgres_user: POSTGRES_USER_TEACHOSM
@@ -288,9 +289,9 @@ workflows:
             only:
               - machine-learning
         requires:
-          -build
-        stack_name: assisted
-        environment_name: staging
+          - build
+        stack_name: "assisted"
+        environment_name: "staging"
         postgres_db: POSTGRES_DB_ASSISTED
         postgres_password: POSTGRES_PASSWORD_ASSISTED
         postgres_user: POSTGRES_USER_ASSISTED
