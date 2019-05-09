@@ -23,7 +23,9 @@ tasks = Task.__table__
 def upgrade():
     conn = op.get_bind()
 
-    for project in conn.execute(projects.select()):
+    #select only the needed columns so it does not give a missing column error
+    cols = [projects.c.id, projects.c.task_creation_mode]
+    for project in conn.execute(projects.select().with_only_columns(cols)):
         zooms = conn.execute(
             sa.sql.expression.select([tasks.c.zoom]).distinct(tasks.c.zoom)
                 .where(tasks.c.project_id == project.id))
