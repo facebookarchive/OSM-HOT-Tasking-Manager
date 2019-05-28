@@ -307,3 +307,12 @@ class User(db.Model):
         user_dto.time_spent_validating = total_validation_time.time().strftime('%H:%M:%S')
         
         return user_dto
+
+
+# class Favorite(db.Model):
+#     """ User favorites projects """
+#     __tablename__ = "project_favorites"
+
+#     id = db.Column(db.BigInteger, primary_key=True)
+#     to_user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), index=True)
+#     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True)

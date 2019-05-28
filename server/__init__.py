@@ -103,7 +103,7 @@ def init_flask_restful_routes(app):
     from server.api.project_admin_api import ProjectAdminAPI, ProjectCommentsAPI, ProjectInvalidateAll,\
         ProjectValidateAll, ProjectMapAll, ProjectResetAll, ProjectResetBadImagery, ProjectsForAdminAPI
     from server.api.project_apis import ProjectAPI, ProjectAOIAPI, ProjectSearchAPI, HasUserTaskOnProject,\
-        HasUserTaskOnProjectDetails, ProjectSearchBBoxAPI, ProjectSummaryAPI
+        HasUserTaskOnProjectDetails, ProjectSearchBBoxAPI, ProjectSummaryAPI, ProjectFavoritesAPI
     from server.api.swagger_docs_api import SwaggerDocsAPI
     from server.api.stats_api import StatsContributionsAPI, StatsActivityAPI, StatsProjectAPI, HomePageStatsAPI, StatsUserAPI
     from server.api.tags_apis import CampaignsTagsAPI, OrganisationTagsAPI
@@ -159,6 +159,7 @@ def init_flask_restful_routes(app):
     api.add_resource(LockTasksForValidationAPI,     '/api/v1/project/<int:project_id>/lock-for-validation')
     api.add_resource(UnlockTasksAfterValidationAPI, '/api/v1/project/<int:project_id>/unlock-after-validation')
     api.add_resource(StopValidatingAPI,             '/api/v1/project/<int:project_id>/stop-validating')
+    api.add_resource(ProjectFavoritesAPI,           '/api/v1/project/<int:project_id>/favorites', methods=['GET', 'PUT', 'DELETE'])
     api.add_resource(StatsContributionsAPI,         '/api/v1/stats/project/<int:project_id>/contributions')
     api.add_resource(StatsActivityAPI,              '/api/v1/stats/project/<int:project_id>/activity')
     api.add_resource(StatsProjectAPI,               '/api/v1/stats/project/<int:project_id>')
