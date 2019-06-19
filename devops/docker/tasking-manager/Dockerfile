@@ -12,7 +12,7 @@ RUN apt-get update \
 # Upgrade pip
 RUN pip install --upgrade pip
 
-ARG branch=develop
+ARG branch=feature/1678-translations
 RUN git clone --depth=1 git://github.com/hotosm/tasking-manager.git \
 	--branch $branch /usr/src/app
 
