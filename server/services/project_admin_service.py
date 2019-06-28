@@ -229,7 +229,11 @@ class ProjectAdminService:
         project = Project.get(project_id)
         if project.author_id == author_id:
             new_owner = UserService.get_user_by_username(username)
-            project.author_id = new_owner.id
-            project.save()
+            is_pm = UserService.is_user_a_project_manager(new_owner.id)
+            if is_pm:
+                project.author_id = new_owner.id
+                project.save()
+            else:
+                raise Exception("User must be a project manager")
         else:
             raise Exception("Invalid owner_id")
