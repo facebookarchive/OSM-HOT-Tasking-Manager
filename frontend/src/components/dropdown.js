@@ -47,7 +47,7 @@ class DropdownContent extends React.PureComponent {
   };
   render() {
     return (
-      <div className="di tl mt1 ba b--grey-light br1 fixed shadow-1 z-1 flex flex-column">
+      <div className={`dib pointer ${this.props.className || ''}`}>
         {this.props.options.map((i, k) =>
           <span
             key={k}
