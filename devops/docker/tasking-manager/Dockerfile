@@ -12,7 +12,7 @@ RUN apt-get update \
 # Upgrade pip
 RUN pip install --upgrade pip
 
-ARG branch=develop
+ARG branch=feature/switch-frontend
 RUN git clone --depth=1 git://github.com/hotosm/tasking-manager.git \
 	--branch $branch /usr/src/app
 
@@ -27,11 +27,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - \
   && apt-get install -y nodejs
 
-RUN npm install -g gulp-cli karma karma-jasmine karma-chrome-launcher
+RUN cd frontend && npm start
 
-RUN cd client && npm link gulp && \
-	npm install closure-util --save && \
-	npm install && gulp build
+#RUN npm install -g gulp-cli karma karma-jasmine karma-chrome-launcher
+
+#RUN cd client && npm link gulp && \
+#	npm install closure-util --save && \
+#	npm install && gulp build
 
 EXPOSE 5000
 CMD ["python", "manage.py", "runserver", "-h", "0.0.0.0"]
