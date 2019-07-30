@@ -9,7 +9,7 @@ from server.api.utils import TMAPIDecorators
 from server.services.messaging.message_service import MessageService
 from server.services.users.user_service import UserService, NotFound
 
-token_auth = HTTPTokenAuth(scheme='Token')
+token_auth = HTTPTokenAuth(scheme="Token")
 tm = TMAPIDecorators()
 
 
@@ -18,26 +18,28 @@ def verify_token(token):
     """ Verify the supplied token and check user role is correct for the requested resource"""
 
     if not token:
-        current_app.logger.debug(f'Token not supplied {request.base_url}')
+        current_app.logger.debug(f"Token not supplied {request.base_url}")
         return False
 
     try:
-        decoded_token = base64.b64decode(token).decode('utf-8')
+        decoded_token = base64.b64decode(token).decode("utf-8")
     except UnicodeDecodeError:
-        current_app.logger.debug(f'Unable to decode token {request.base_url}')
+        current_app.logger.debug(f"Unable to decode token {request.base_url}")
         return False  # Can't decode token, so fail login
 
     valid_token, user_id = AuthenticationService.is_valid_token(decoded_token, 604800)
     if not valid_token:
-        current_app.logger.debug(f'Token not valid {request.base_url}')
+        current_app.logger.debug(f"Token not valid {request.base_url}")
         return False
 
     if tm.is_pm_only_resource:
         if not UserService.is_user_a_project_manager(user_id):
-            current_app.logger.debug(f'User {user_id} is not a PM {request.base_url}')
+            current_app.logger.debug(f"User {user_id} is not a PM {request.base_url}")
             return False
 
-    tm.authenticated_user_id = user_id  # Set the user ID on the decorator as a convenience
+    tm.authenticated_user_id = (
+        user_id
+    )  # Set the user ID on the decorator as a convenience
     return True  # All tests passed token is good for the requested resource
 
 
@@ -50,9 +52,8 @@ class AuthServiceError(Exception):
 
 
 class AuthenticationService:
-
     @staticmethod
-    def login_user(osm_user_details, redirect_to, user_element='user') -> str:
+    def login_user(osm_user_details, redirect_to, user_element="user") -> str:
         """
         Generates authentication details for user, creating in DB if user is unknown to us
         :param osm_user_details: XML response from OSM
@@ -64,23 +65,25 @@ class AuthenticationService:
         osm_user = osm_user_details.find(user_element)
 
         if osm_user is None:
-            raise AuthServiceError('User element not found in OSM response')
+            raise AuthServiceError("User element not found in OSM response")
 
-        osm_id = int(osm_user.attrib['id'])
-        username = osm_user.attrib['display_name']
+        osm_id = int(osm_user.attrib["id"])
+        username = osm_user.attrib["display_name"]
 
         try:
             UserService.get_user_by_id(osm_id)
             UserService.update_username(osm_id, username)
         except NotFound:
             # User not found, so must be new user
-            changesets = osm_user.find('changesets')
-            changeset_count = int(changesets.attrib['count'])
+            changesets = osm_user.find("changesets")
+            changeset_count = int(changesets.attrib["count"])
             new_user = UserService.register_user(osm_id, username, changeset_count)
             MessageService.send_welcome_message(new_user)
 
         session_token = AuthenticationService.generate_session_token_for_user(osm_id)
-        authorized_url = AuthenticationService.generate_authorized_url(username, session_token, redirect_to)
+        authorized_url = AuthenticationService.generate_authorized_url(
+            username, session_token, redirect_to
+        )
 
         return authorized_url
 
@@ -108,17 +111,19 @@ class AuthenticationService:
     @staticmethod
     def _get_email_validated_url(is_valid: bool) -> str:
         """ Helper function to generate redirect url for email verification """
-        base_url = current_app.config['APP_BASE_URL']
+        base_url = current_app.config["APP_BASE_URL"]
 
-        verification_params = {'is_valid': is_valid}
-        verification_url = '{0}/validate-email?{1}'.format(base_url, urllib.parse.urlencode(verification_params))
+        verification_params = {"is_valid": is_valid}
+        verification_url = "{0}/validate-email?{1}".format(
+            base_url, urllib.parse.urlencode(verification_params)
+        )
         return verification_url
 
     @staticmethod
     def get_authentication_failed_url():
         """ Generates the auth-failed URL for the running app """
-        base_url = current_app.config['APP_BASE_URL']
-        auth_failed_url = f'{base_url}/auth-failed'
+        base_url = current_app.config["APP_BASE_URL"]
+        auth_failed_url = f"{base_url}/auth-failed"
         return auth_failed_url
 
     @staticmethod
@@ -128,7 +133,7 @@ class AuthenticationService:
         :param osm_id: OSM ID of the user authenticating
         :return: Token
         """
-        entropy = current_app.secret_key if current_app.secret_key else 'un1testingmode'
+        entropy = current_app.secret_key if current_app.secret_key else "un1testingmode"
 
         serializer = URLSafeTimedSerializer(entropy)
         return serializer.dumps(osm_id)
@@ -136,15 +141,17 @@ class AuthenticationService:
     @staticmethod
     def generate_authorized_url(username, session_token, redirect_to):
         """ Generate URL that we'll redirect the user to once authenticated """
-        base_url = current_app.config['FRONTEND_BASE_URL']
+        base_url = current_app.config["FRONTEND_BASE_URL"]
 
-        redirect_query = ''
+        redirect_query = ""
         if redirect_to:
-            redirect_query = f'&redirect_to={urllib.parse.quote(redirect_to)}'
+            redirect_query = f"&redirect_to={urllib.parse.quote(redirect_to)}"
 
         # Trailing & added as Angular a bit flaky with parsing querystring
-        authorized_url = f'{base_url}/authorized?username={urllib.parse.quote(username)}&session_token={session_token}&ng=0' \
-                         f'{redirect_query}'
+        authorized_url = (
+            f"{base_url}/authorized?username={urllib.parse.quote(username)}&session_token={session_token}&ng=0"
+            f"{redirect_query}"
+        )
         return authorized_url
 
     @staticmethod
@@ -155,16 +162,16 @@ class AuthenticationService:
         :param token_expiry: When the token expires in seconds
         :return: True if token is valid, and user_id contained in token
         """
-        entropy = current_app.secret_key if current_app.secret_key else 'un1testingmode'
+        entropy = current_app.secret_key if current_app.secret_key else "un1testingmode"
         serializer = URLSafeTimedSerializer(entropy)
 
         try:
             tokenised_user_id = serializer.loads(token, max_age=token_expiry)
         except SignatureExpired:
-            current_app.logger.debug('Token has expired')
+            current_app.logger.debug("Token has expired")
             return False, None
         except BadSignature:
-            current_app.logger.debug('Bad Token Signature')
+            current_app.logger.debug("Bad Token Signature")
             return False, None
 
         return True, tokenised_user_id

@@ -1,15 +1,15 @@
 from cachetools import TTLCache, cached
 from flask import current_app
-from functools import reduce
-import dateutil.parser
-import datetime
-
 from sqlalchemy import text
-
 from server import db
-from server.models.dtos.user_dto import UserDTO, UserOSMDTO, UserFilterDTO, UserSearchQuery, UserSearchDTO, \
-    UserStatsDTO
-from server.models.dtos.message_dto import MessageDTO
+from server.models.dtos.user_dto import (
+    UserDTO,
+    UserOSMDTO,
+    UserFilterDTO,
+    UserSearchQuery,
+    UserSearchDTO,
+    UserStatsDTO,
+)
 from server.models.postgis.message import Message
 from server.models.postgis.task import TaskHistory
 from server.models.postgis.user import User, UserRole, MappingLevel
@@ -69,8 +69,8 @@ class UserService:
         new_user.id = osm_id
         new_user.username = username
 
-        intermediate_level = current_app.config['MAPPER_LEVEL_INTERMEDIATE']
-        advanced_level = current_app.config['MAPPER_LEVEL_ADVANCED']
+        intermediate_level = current_app.config["MAPPER_LEVEL_INTERMEDIATE"]
+        advanced_level = current_app.config["MAPPER_LEVEL_ADVANCED"]
 
         if changeset_count > advanced_level:
             new_user.mapping_level = MappingLevel.ADVANCED.value
@@ -83,7 +83,9 @@ class UserService:
         return new_user
 
     @staticmethod
-    def get_user_dto_by_username(requested_username: str, logged_in_user_id: int) -> UserDTO:
+    def get_user_dto_by_username(
+        requested_username: str, logged_in_user_id: int
+    ) -> UserDTO:
         """Gets user DTO for supplied username """
         requested_user = UserService.get_user_by_username(requested_username)
         logged_in_user = UserService.get_user_by_id(logged_in_user_id)
@@ -103,23 +105,23 @@ class UserService:
         user = UserService.get_user_by_username(username)
         stats_dto = UserStatsDTO()
 
-        actions = TaskHistory.query.filter(
-            TaskHistory.user_id == user.id,
-            TaskHistory.action_text != ''
+        actions = TaskHistory.query.filter(  # noqa
+            TaskHistory.user_id == user.id, TaskHistory.action_text != ""
         ).all()
 
         tasks_mapped = TaskHistory.query.filter(
-            TaskHistory.user_id == user.id,
-            TaskHistory.action_text == 'MAPPED'
+            TaskHistory.user_id == user.id, TaskHistory.action_text == "MAPPED"
         ).count()
         tasks_validated = TaskHistory.query.filter(
-            TaskHistory.user_id == user.id,
-            TaskHistory.action_text == 'VALIDATED'
+            TaskHistory.user_id == user.id, TaskHistory.action_text == "VALIDATED"
         ).count()
-        projects_mapped = TaskHistory.query.filter(
-            TaskHistory.user_id == user.id,
-            TaskHistory.action == 'STATE_CHANGE'
-        ).distinct(TaskHistory.project_id).count()
+        projects_mapped = (
+            TaskHistory.query.filter(
+                TaskHistory.user_id == user.id, TaskHistory.action == "STATE_CHANGE"
+            )
+            .distinct(TaskHistory.project_id)
+            .count()
+        )
 
         stats_dto.tasks_mapped = tasks_mapped
         stats_dto.tasks_validated = tasks_validated
@@ -150,7 +152,6 @@ class UserService:
 
         return stats_dto
 
-
     @staticmethod
     def update_user_details(user_id: int, user_dto: UserDTO) -> dict:
         """ Update user with info supplied by user, if they add or change their email address a verification mail
@@ -158,9 +159,14 @@ class UserService:
         user = UserService.get_user_by_id(user_id)
 
         verification_email_sent = False
-        if user_dto.email_address and user.email_address != user_dto.email_address.lower():
+        if (
+            user_dto.email_address
+            and user.email_address != user_dto.email_address.lower()
+        ):
             # Send user verification email if they are adding or changing their email address
-            SMTPService.send_verification_email(user_dto.email_address.lower(), user.username)
+            SMTPService.send_verification_email(
+                user_dto.email_address.lower(), user.username
+            )
             user.set_email_verified_status(is_verified=False)
             verification_email_sent = True
 
@@ -175,8 +181,9 @@ class UserService:
 
     @staticmethod
     @cached(user_filter_cache)
-    def filter_users(username: str, project_id: int, 
-                     page: int, is_project_manager: bool = False) -> UserFilterDTO:
+    def filter_users(
+        username: str, project_id: int, page: int, is_project_manager: bool = False
+    ) -> UserFilterDTO:
         """ Gets paginated list of users, filtered by username, for autocomplete """
         return User.filter_users(username, project_id, page, is_project_manager)
 
@@ -201,7 +208,11 @@ class UserService:
         """ Determines if user is a validator """
         user = UserService.get_user_by_id(user_id)
 
-        if UserRole(user.role) in [UserRole.VALIDATOR, UserRole.ADMIN, UserRole.PROJECT_MANAGER]:
+        if UserRole(user.role) in [
+            UserRole.VALIDATOR,
+            UserRole.ADMIN,
+            UserRole.PROJECT_MANAGER,
+        ]:
             return True
 
         return False
@@ -239,16 +250,23 @@ class UserService:
         try:
             requested_role = UserRole[role.upper()]
         except KeyError:
-            raise UserServiceError(f'Unknown role {role} accepted values are ADMIN, PROJECT_MANAGER, VALIDATOR')
+            raise UserServiceError(
+                f"Unknown role {role} accepted values are ADMIN, PROJECT_MANAGER, VALIDATOR"
+            )
 
         admin = UserService.get_user_by_id(admin_user_id)
         admin_role = UserRole(admin.role)
 
         if admin_role == UserRole.PROJECT_MANAGER and requested_role == UserRole.ADMIN:
-            raise UserServiceError(f'You must be an Admin to assign Admin role')
+            raise UserServiceError(f"You must be an Admin to assign Admin role")
 
-        if admin_role == UserRole.PROJECT_MANAGER and requested_role == UserRole.PROJECT_MANAGER:
-            raise UserServiceError(f'You must be an Admin to assign Project Manager role')
+        if (
+            admin_role == UserRole.PROJECT_MANAGER
+            and requested_role == UserRole.PROJECT_MANAGER
+        ):
+            raise UserServiceError(
+                f"You must be an Admin to assign Project Manager role"
+            )
 
         user = UserService.get_user_by_username(username)
         user.set_user_role(requested_role)
@@ -262,7 +280,9 @@ class UserService:
         try:
             requested_level = MappingLevel[level.upper()]
         except KeyError:
-            raise UserServiceError(f'Unknown role {level} accepted values are BEGINNER, INTERMEDIATE, ADVANCED')
+            raise UserServiceError(
+                f"Unknown role {level} accepted values are BEGINNER, INTERMEDIATE, ADVANCED"
+            )
 
         user = UserService.get_user_by_username(username)
         user.set_mapping_level(requested_level)
@@ -312,41 +332,43 @@ class UserService:
         if user_level == MappingLevel.ADVANCED:
             return  # User has achieved highest level, so no need to do further checking
 
-        intermediate_level = current_app.config['MAPPER_LEVEL_INTERMEDIATE']
-        advanced_level = current_app.config['MAPPER_LEVEL_ADVANCED']
+        intermediate_level = current_app.config["MAPPER_LEVEL_INTERMEDIATE"]
+        advanced_level = current_app.config["MAPPER_LEVEL_ADVANCED"]
 
         try:
             osm_details = OSMService.get_osm_details_for_user(user_id)
-            if (osm_details.changeset_count > advanced_level and
-                user.mapping_level !=  MappingLevel.ADVANCED.value):
+            if (
+                osm_details.changeset_count > advanced_level
+                and user.mapping_level != MappingLevel.ADVANCED.value
+            ):
                 user.mapping_level = MappingLevel.ADVANCED.value
-                UserService.notify_level_upgrade(user_id, user.username, 'ADVANCED')
-            elif (intermediate_level < osm_details.changeset_count < advanced_level and
-                user.mapping_level != MappingLevel.INTERMEDIATE.value):
+                UserService.notify_level_upgrade(user_id, user.username, "ADVANCED")
+            elif (
+                intermediate_level < osm_details.changeset_count < advanced_level
+                and user.mapping_level != MappingLevel.INTERMEDIATE.value
+            ):
                 user.mapping_level = MappingLevel.INTERMEDIATE.value
-                UserService.notify_level_upgrade(user_id, user.username, 'INTERMEDIATE')
+                UserService.notify_level_upgrade(user_id, user.username, "INTERMEDIATE")
         except OSMServiceError:
             # Swallow exception as we don't want to blow up the server for this
-            current_app.logger.error('Error attempting to update mapper level')
+            current_app.logger.error("Error attempting to update mapper level")
             return
-
 
         user.save()
         return user
 
     def notify_level_upgrade(user_id: int, username: str, level: str):
-        text_template = get_template('level_upgrade_message_en.txt')
+        text_template = get_template("level_upgrade_message_en.txt")
 
         if username is not None:
-            text_template = text_template.replace('[USERNAME]', username)
+            text_template = text_template.replace("[USERNAME]", username)
 
-        text_template = text_template.replace('[LEVEL]', level)
+        text_template = text_template.replace("[LEVEL]", level)
         level_upgrade_message = Message()
         level_upgrade_message.to_user_id = user_id
-        level_upgrade_message.subject = 'Mapper Level Upgrade '
+        level_upgrade_message.subject = "Mapper Level Upgrade "
         level_upgrade_message.message = text_template
         level_upgrade_message.save()
-
 
     @staticmethod
     def refresh_mapper_level() -> int:
@@ -359,7 +381,7 @@ class UserService:
             UserService.check_and_update_mapper_level(user.id)
 
             if users_updated % 50 == 0:
-                print(f'{users_updated} users updated of {total_users}')
+                print(f"{users_updated} users updated of {total_users}")
 
             users_updated += 1
 

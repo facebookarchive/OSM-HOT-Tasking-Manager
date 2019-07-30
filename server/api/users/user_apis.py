@@ -39,12 +39,14 @@ class UserAPI(Resource):
                 description: Internal Server Error
         """
         try:
-            user_dto = UserService.get_user_dto_by_username(username, tm.authenticated_user_id)
+            user_dto = UserService.get_user_dto_by_username(
+                username, tm.authenticated_user_id
+            )
             return user_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -87,7 +89,7 @@ class UserIdAPI(Resource):
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'Userid GET - unhandled error: {str(e)}'
+            error_msg = f"Userid GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -140,21 +142,25 @@ class UserUpdateAPI(Resource):
         """
         try:
             user_dto = UserDTO(request.get_json())
-            if user_dto.email_address == '':
-                user_dto.email_address = None  # Replace empty string with None so validation doesn't break
+            if user_dto.email_address == "":
+                user_dto.email_address = (
+                    None
+                )  # Replace empty string with None so validation doesn't break
 
             user_dto.validate()
         except DataError as e:
-            current_app.logger.error(f'error validating request: {str(e)}')
+            current_app.logger.error(f"error validating request: {str(e)}")
             return str(e), 400
 
         try:
-            verification_sent = UserService.update_user_details(tm.authenticated_user_id, user_dto)
+            verification_sent = UserService.update_user_details(
+                tm.authenticated_user_id, user_dto
+            )
             return verification_sent, 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -193,20 +199,22 @@ class UserSearchAllAPI(Resource):
         """
         try:
             query = UserSearchQuery()
-            query.page = int(request.args.get('page')) if request.args.get('page') else 1
-            query.username = request.args.get('username')
-            query.mapping_level = request.args.get('level')
-            query.role = request.args.get('role')
+            query.page = (
+                int(request.args.get("page")) if request.args.get("page") else 1
+            )
+            query.username = request.args.get("username")
+            query.mapping_level = request.args.get("level")
+            query.role = request.args.get("role")
             query.validate()
         except DataError as e:
-            current_app.logger.error(f'Error validating request: {str(e)}')
+            current_app.logger.error(f"Error validating request: {str(e)}")
             return str(e), 400
 
         try:
             users_dto = UserService.get_all_users(query)
             return users_dto.to_primitive(), 200
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -243,15 +251,17 @@ class UserSearchFilterAPI(Resource):
                 description: Internal Server Error
         """
         try:
-            page = int(request.args.get('page')) if request.args.get('page') else 1
-            project_id = request.args.get('projectId', None, int)
-            is_project_manager = request.args.get('isProjectManager', False) == 'true'
-            users_dto = UserService.filter_users(username, project_id, page, is_project_manager)
+            page = int(request.args.get("page")) if request.args.get("page") else 1
+            project_id = request.args.get("projectId", None, int)
+            is_project_manager = request.args.get("isProjectManager", False) == "true"
+            users_dto = UserService.filter_users(
+                username, project_id, page, is_project_manager
+            )
             return users_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -290,7 +300,7 @@ class UserOSMAPI(Resource):
         except UserServiceError as e:
             return {"Error": str(e)}, 502
         except Exception as e:
-            error_msg = f'User OSM GET - unhandled error: {str(e)}'
+            error_msg = f"User OSM GET - unhandled error: {str(e)}"
             current_app.logger.error(error_msg)
             return {"error": error_msg}, 500
 
@@ -326,14 +336,17 @@ class UserMappedProjects(Resource):
                 description: Internal Server Error
         """
         try:
-            locale = request.environ.get('HTTP_ACCEPT_LANGUAGE') if request.environ.get(
-                'HTTP_ACCEPT_LANGUAGE') else 'en'
+            locale = (
+                request.environ.get("HTTP_ACCEPT_LANGUAGE")
+                if request.environ.get("HTTP_ACCEPT_LANGUAGE")
+                else "en"
+            )
             user_dto = UserService.get_mapped_projects(username, locale)
             return user_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -388,7 +401,7 @@ class UserSetRole(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -443,9 +456,10 @@ class UserSetLevel(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
+
 
 class UserSetExpertMode(Resource):
     @tm.pm_only(False)
@@ -483,14 +497,16 @@ class UserSetExpertMode(Resource):
                 description: Internal Server Error
         """
         try:
-            UserService.set_user_is_expert(tm.authenticated_user_id, is_expert == 'true')
+            UserService.set_user_is_expert(
+                tm.authenticated_user_id, is_expert == "true"
+            )
             return {"Success": "Expert mode updated"}, 200
         except UserServiceError:
             return {"Error": "Not allowed"}, 400
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'UserSetExpert POST - unhandled error: {str(e)}'
+            error_msg = f"UserSetExpert POST - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -535,6 +551,6 @@ class UserAcceptLicense(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
