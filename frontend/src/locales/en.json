@@ -55,5 +55,8 @@
   "project.card.projectPriorityHigh": "High",
   "project.card.projectPriorityMedium": "Medium",
   "project.card.projectPriorityLow": "Low",
-  "project.card.dueDateLeft": "{daysLeftHumanize} left"
+  "project.card.dueDateLeft": "{daysLeftHumanize} left",
+  "user.level.advanced": "Advanced",
+  "user.level.intermediate": "Intermediate",
+  "user.level.begginer": "Begginer"
 }
