@@ -6,7 +6,9 @@ import messages from './messages';
 
 export const MappingLevelMessage = (props) =>  {
   const {level, ...otherProps} = props;
-  const message = level ? <FormattedMessage {...messages["mappingLevel"+level]} /> : "";
+  const message = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(level) ? (
+    <FormattedMessage {...messages[`mappingLevel${level}`]} />
+  ) : level;
   return (
     <span {...otherProps}>
       {message}

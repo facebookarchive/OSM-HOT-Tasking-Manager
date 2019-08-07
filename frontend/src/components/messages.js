@@ -29,8 +29,8 @@ export default defineMessages({
     id: 'mapping.level.intermediate',
     defaultMessage: 'Intermediate'
   },
-  mappingLevelBEGGINER: {
-    id: 'mapping.level.begginer',
-    defaultMessage: 'Begginer'
+  mappingLevelBEGINNER: {
+    id: 'mapping.level.beginner',
+    defaultMessage: 'Beginner'
   },
 });
