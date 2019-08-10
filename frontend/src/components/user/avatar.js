@@ -8,7 +8,7 @@ export const UserAvatar = (props) => {
   const userPicture = useSelector(state => state.auth.get('userPicture'));
   if (userPicture) {
     return (
-      <img {...props} src={`https://www.gravatar.com/avatar/${userPicture}`}
+      <img {...props} src={userPicture}
         alt={'user avatar'}
       />
     );
