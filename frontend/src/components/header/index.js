@@ -18,10 +18,13 @@ import { supportedLocales } from '../../utils/internationalization';
 
 
 const menuItems = [
-  {label: messages.exploreProjects, link: "contribute"},
-  {label: messages.howItWorks, link: "learn"},
-  {label: messages.about, link: "about"},
-  {label: messages.help, link: "help"}
+  {label: messages.exploreProjects, link: "contribute", showAlways: true},
+  {label: messages.howItWorks, link: "learn", authenticated: false},
+  {label: messages.about, link: "about", authenticated: false},
+  {label: messages.help, link: "help", authenticated: false},
+  {label: messages.myProjects, link: "projects", authenticated: true},
+  {label: messages.myTasks, link: "tasks", authenticated: true},
+  {label: messages.statsBadges, link: "user", authenticated: true},
 ];
 
 
@@ -65,12 +68,22 @@ class Header extends React.Component {
   linkCombo = "link mh3 barlow-condensed blue-dark f4 ttu";
   isActive = ({ isPartiallyCurrent }) => {
     return isPartiallyCurrent ? {className: `${this.linkCombo} bb b--blue-dark bw1 pv2`} : {className: this.linkCombo};
-  }
+  };
+  userLinks = [
+    {label: <FormattedMessage {...messages.settings} />, url: 'settings'},
+    {label: <FormattedMessage {...messages.logout} />, url: 'logout'}
+  ];
 
   renderMenuItems() {
+    let filteredMenuItems;
+    if (this.props.token) {
+      filteredMenuItems = this.menuItems.filter(item => item.authenticated === true || item.showAlways);
+    } else {
+      filteredMenuItems = this.menuItems.filter(item => item.authenticated === false || item.showAlways)
+    }
     return(
       <div className="v-mid">
-        {this.menuItems.map((item, n) =>
+        {filteredMenuItems.map((item, n) =>
           <TopNavLink to={item.link} key={n} isActive={this.isActive}>
             <FormattedMessage {...item.label}/>
           </TopNavLink>
@@ -82,7 +95,31 @@ class Header extends React.Component {
   renderPopupItems() {
     return(
       <div className="v-mid tc">
-        {this.menuItems.map((item, n) =>
+        {this.props.username &&
+          this.menuItems.filter(
+            item => item.authenticated === true
+          ).map((item, n) =>
+            <p key={n}>
+              <Link to={item.link} className={ this.linkCombo }>
+                <FormattedMessage {...item.label} />
+              </Link>
+            </p>
+          )
+        }
+        {this.props.username &&
+          <>
+            <p>
+              <Link to={'settings'} className={ this.linkCombo }>
+                <FormattedMessage {...messages.settings} />
+              </Link>
+            </p>
+            <p className="bb b--grey-light">
+            </p>
+          </>
+        }
+        {this.menuItems.filter(
+          item => item.authenticated === false || item.showAlways
+        ).map((item, n) =>
           <p key={n}>
             <Link to={item.link} className={ this.linkCombo }>
               <FormattedMessage {...item.label} />
@@ -146,10 +183,7 @@ class Header extends React.Component {
           onRemove={() => {}}
           onChange={this.onUserMenuSelect}
           value={[]}
-          options={[
-            {label: <FormattedMessage {...messages.settings}/>, url: 'settings'},
-            {label: <FormattedMessage {...messages.logout}/>, url: 'logout'}
-          ]}
+          options={this.userLinks}
           display={<UserDisplay username={this.props.username} />}
           className="blue-dark bg-white mr1 v-mid dn dib-ns pv1 ph3 bn"
         />

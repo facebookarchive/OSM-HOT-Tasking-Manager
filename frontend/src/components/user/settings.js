@@ -52,7 +52,7 @@ class UserTopBar extends React.Component {
   }
 
   componentWillUnmount() {
-    this.getOSMDetails && this.getOSMDetails.cancel();
+    this.osmDetailsPromise && this.osmDetailsPromise.cancel();
   }
 
   getOSMDetails = (event) => {
@@ -72,7 +72,7 @@ class UserTopBar extends React.Component {
       <div className="cf ph4 pt3">
         <div className="w-100 w-70-l fl">
           <div className="fl dib pr3">
-            <UserAvatar className="h4 br-100" />
+            <UserAvatar className="h4 br-100 pa1 ba b--grey-light bw3" />
           </div>
           <div className="pl2 dib">
             <h3 className="ttu f2 fw-6 mv0 barlow-condensed">{this.props.userDetails.name || this.props.userDetails.username}</h3>
