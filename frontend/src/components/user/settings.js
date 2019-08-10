@@ -4,6 +4,7 @@ import { FormattedMessage, FormattedNumber } from "react-intl";
 
 import messages from './messages';
 import { UserAvatar } from './avatar';
+import { UserInformationForm } from './forms';
 import { MappingLevelMessage } from "../mappingLevel";
 import { cancelablePromise } from '../../utils/promise';
 import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
@@ -32,6 +33,7 @@ function NextMappingLevel({changesetsCount}: Object) {
   }
   return '';
 }
+
 
 
 class UserTopBar extends React.Component {
@@ -85,7 +87,9 @@ class UserTopBar extends React.Component {
           </div>
         </div>
         <div className="w-100 w-30-l fl">
-
+          <div className="w-100 w-30-l fr">
+            <UserInformationForm userDetails={this.props.userDetails} />
+          </div>
         </div>
       </div>
     );
