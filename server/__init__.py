@@ -247,14 +247,14 @@ def add_api_endpoints(app):
     api.add_resource(OAuthAPI, "/api/v2/auth/oauth-callback")
     api.add_resource(AuthEmailAPI, "/api/auth/email")
     api.add_resource(
-        LicenseAPI, "/api/v2/license", endpoint="create_license", methods=["PUT"]
+        LicenseAPI, "/api/v2/licenses", endpoint="create_license", methods=["POST"]
     )
     api.add_resource(
         LicenseAPI,
-        "/api/v2/license/<int:license_id>",
-        methods=["GET", "POST", "DELETE"],
+        "/api/v2/licenses/<int:license_id>",
+        methods=["GET", "PATCH", "DELETE"],
     )
-    api.add_resource(LicenceListAPI, "/api/v2/license/list")
+    api.add_resource(LicenceListAPI, "/api/v2/licenses")
     api.add_resource(HasNewMessages, "/api/v2/messages/has-new-messages")
     api.add_resource(GetAllMessages, "/api/v2/messages/get-all-messages")
     api.add_resource(MessagesAPI, "/api/v2/messages/<int:message_id>")
@@ -325,8 +325,8 @@ def add_api_endpoints(app):
     )
     api.add_resource(
         TaskAnnotationsAPI,
-        "/api/v2/project/<int:project_id>/task-annotations/<string:annotation_type>",
-        "/api/v2/project/<int:project_id>/task-annotations",
+        "/api/v2/projects/<int:project_id>/annotations/<string:annotation_type>",
+        "/api/v2/projects/<int:project_id>/annotations",
         methods=["GET", "POST"],
     )
     api.add_resource(
