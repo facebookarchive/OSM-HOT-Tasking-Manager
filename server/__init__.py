@@ -168,7 +168,7 @@ def add_api_endpoints(app):
     from server.api.tags_apis import CampaignsTagsAPI, OrganisationTagsAPI
     from server.api.mapping_issues_apis import (
         MappingIssueCategoryAPI,
-        MappingIssueCategoriesAPI,
+        MappingIssueCategoriesAPI
     )
     from server.api.users.user_apis import (
         UserAPI,
@@ -342,17 +342,15 @@ def add_api_endpoints(app):
     api.add_resource(CampaignsTagsAPI, "/api/v2/tags/campaigns")
     api.add_resource(OrganisationTagsAPI, "/api/v2/tags/organisations")
     api.add_resource(
-        MappingIssueCategoryAPI,
-        "/api/v2/mapping-issue-category",
-        endpoint="create_mapping_issue_category",
-        methods=["POST"],
+        MappingIssueCategoriesAPI,
+        "/api/v2/tasks/issues/categories",
+        methods=["GET", "POST"],
     )
     api.add_resource(
         MappingIssueCategoryAPI,
-        "/api/v2/mapping-issue-category/<int:category_id>",
-        methods=["GET", "PUT", "DELETE"],
+        "/api/v2/tasks/issues/categories/<int:category_id>",
+        methods=["GET", "PATCH", "DELETE"],
     )
-    api.add_resource(MappingIssueCategoriesAPI, "/api/v2/mapping-issue-categories")
     api.add_resource(UserSearchAllAPI, "/api/v2/user/search-all")
     api.add_resource(
         UserSearchFilterAPI, "/api/v2/user/search/filter/<string:username>"
