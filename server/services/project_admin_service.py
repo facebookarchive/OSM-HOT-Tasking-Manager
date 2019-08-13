@@ -4,7 +4,11 @@ import geojson
 from flask import current_app
 
 from server import db
-from server.models.dtos.project_dto import DraftProjectDTO, ProjectDTO, ProjectCommentsDTO
+from server.models.dtos.project_dto import (
+    DraftProjectDTO,
+    ProjectDTO,
+    ProjectCommentsDTO,
+)
 from server.models.postgis.project import Project, Task, ProjectStatus
 from server.models.postgis.statuses import TaskCreationMode, UserRole
 from server.models.postgis.task import TaskHistory, TaskStatus, TaskAction

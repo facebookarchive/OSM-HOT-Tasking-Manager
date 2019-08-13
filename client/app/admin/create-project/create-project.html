@@ -322,7 +322,7 @@
             </div>
             <div id="map" class="map-container">
                     <div class="ml-project-button">
-                        <button class="button" ng-click="createProjectCtrl.displayMLLayer()" ng-show="createProjectCtrl.currentStep === 'taskSize'" >
+                        <button class="button" ng-click="createProjectCtrl.mlPanelIsVisible = !createProjectCtrl.mlPanelIsVisible" ng-show="createProjectCtrl.currentStep === 'taskSize'" >
                             {{ 'ML Layer' | translate }}
                         </button>
                     </div>
@@ -338,6 +338,10 @@
                 </div>
                 <div class="add-layer-panel">
                     <add-layer ng-show="createProjectCtrl.isVisible"></add-layer>
+                </div>
+                
+                <div class="ml-layer-panel">
+                    <ml-layer ng-show="createProjectCtrl.mlPanelIsVisible"></ml-layer>
                 </div>
             </div>
         </div>

@@ -14,6 +14,7 @@
         var vm = this;
         vm.map = null;
 
+
         // Wizard
         vm.currentStep = '';
         vm.projectName = '';
@@ -56,7 +57,9 @@
         vm.drawAndSelectPoint = null;
 
         //ML split task
+        vm.mlPanelIsVisible = false;
         vm.mlPredictionsEnabled = false;
+        vm.mlPredictionModel = '';
 
         // Draw interactions
         vm.modifyInteraction = null;
@@ -294,7 +297,7 @@
             // Create a task grid
             if (vm.isDrawnAOI || vm.isImportedAOI) {
                 var aoiExtent = drawService.getSource().getExtent();
-                var taskGrid = projectService.createTaskGrid(aoiExtent, vm.zoomLevelForTaskGridCreation + vm.userZoomLevelOffset, vm.mlPredictionsEnabled, false);
+                var taskGrid = projectService.createTaskGrid(aoiExtent, vm.zoomLevelForTaskGridCreation + vm.userZoomLevelOffset, vm.mlPredictionsEnabled, vm.mlPredictionModel);
                 projectService.setTaskGrid(taskGrid);
                 projectService.addTaskGridToMap();
 
@@ -552,9 +555,11 @@
         /**
          * Makes a query for the ML-enabler API to run the prediction for a bounding box.
          */
-        vm.displayMLLayer = function(){
-            vm.mlPredictionsEnabled = !vm.mlPredictionsEnabled;
+        $scope.$on('addMlLayerEvent', function (event, data) {
+            vm.mlPanelIsVisible = false;
+            vm.mlPredictionModel = data; 
+            vm.mlPredictionsEnabled = data ? true : false;
             vm.createTaskGrid();
-        } 
+        });
     }
 })();

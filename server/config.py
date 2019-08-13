@@ -23,11 +23,14 @@ class EnvironmentConfig:
     SECRET_KEY = os.getenv('TM_SECRET', None)
 
     ML_ENABLER_URL = os.getenv('TM_ML_ENABLER_URL', 'https://ml-enabler.hotosm.org/v1')
-    ML_ENABLER_ENDPOINT = os.getenv('TM_ML_ENABLER_ENDPOINT', 'http://localhost:8501/v1/')
+    ML_ENABLER_BUILDING_API_ENDPOINT = os.getenv('TM_ML_ENABLER_BUILDING_API_ENDPOINT', 'http://buildingfootprintsapi.azurewebsites.net/api/BuildingFootprints')
+    ML_ENABLER_LOOKING_GLASS_ENDPOINT = os.getenv('TM_ML_ENABLER_LOOKING_GLASS_ENDPOINT', 'http://localhost:8501/v1/')
     ML_ENABLER_MAPBOX_TOKEN = os.getenv('TM_ML_ENABLER_MAPBOX_TOKEN', None)
-
-    ML_ENABLER_PREDICTOR_CLASS = os.getenv('TM_ML_ENABLER_PREDICTOR_CLASS', 'looking_glass')
     ML_ENABLER_AGGREGATOR_CLASS = os.getenv('TM_ML_ENABLER_AGGREGATOR_CLASS', 'looking_glass')
+    ML_ENABLER_ENDPOINTS = {
+                           'looking_glass': ML_ENABLER_LOOKING_GLASS_ENDPOINT, 
+                           'building_api': ML_ENABLER_BUILDING_API_ENDPOINT
+                          }
     ML_TILE_URL = os.getenv('TM_ML_ENABLER_TILE_URL', 'https://api.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.jpg?access_token={token}')
     ML_OVERPASS_URL = os.getenv('TM_ML_ENABLER_OVERPASS_URL', 'https://lz4.overpass-api.de/api/interpreter')
 

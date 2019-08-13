@@ -23,6 +23,7 @@
         var taskGrid = null;
         var aoi = null;
         var mlEnabled = false;
+        var mlModel= false;
 
         // OpenLayers source for the task grid
         var taskGridSource = null;
@@ -60,7 +61,6 @@
             getProjectSummary: getProjectSummary,
             getTaskAnnotations: getTaskAnnotations,
             getPrediction: getPrediction,
-            postPrediction: postPrediction,
             setMLEnabled: setMLEnabled, 
             getMlEnabled: getMLEnabled 
         };
@@ -96,15 +96,24 @@
             return mlEnabled;
         }
 
+        function setMLModel(val){
+            mlModel = val;
+        }
+
+        function getMLModel(){
+            return mlModel;
+        }
+
         /**
          * Creates a task grid with features for a polygon feature.
          * It snaps to the OSM grid
          * @param areaOfInterestExtent (ol.Extent) - this should be a polygon
          * @param zoomLevel - the OSM zoom level the task squares will align with
          */
-        function createTaskGrid(areaOfInterestExtent, zoomLevel, mlEnabled, disablePrediction) {
+        function createTaskGrid(areaOfInterestExtent, zoomLevel, mlEnabled, mlModel) {
 
             setMLEnabled(mlEnabled);
+            setMLModel(mlModel);
 
             var xmin = Math.ceil(areaOfInterestExtent[0]);
             var ymin = Math.ceil(areaOfInterestExtent[1]);
@@ -140,21 +149,12 @@
 
             if (getMLEnabled()){
                 var extent = ol.proj.transformExtent(areaOfInterestExtent, 'EPSG:3857', 'EPSG:4326');
-                //TODO: do a post prediction here
-                var promise = getPrediction(extent, zoomLevel);
+                var promise = getPrediction(extent, zoomLevel, mlModel);
                 promise.then(function(data){
                     if (data.status === "ok"){
                         taskFeatures = drawMLLayer(data, taskFeatures);
-                    } else if (!disablePrediction) {
-                        //Posting a prediction for processing
-                        var innerPromise = postPrediction(extent, zoomLevel);
-                        alert("fetching new prediction for this area, this could take a while");
-                        innerPromise.then(function(data){
-                            var tg = createTaskGrid(areaOfInterestExtent, zoomLevel, mlEnabled, true);
-                            //forces redraw
-                            setTaskGrid(tg);
-                            addTaskGridToMap();
-                        });
+                    } else { 
+                        alert("No prediction for this area");
                     }
                 });
             } 
@@ -431,7 +431,7 @@
         function getSplitTasks(task) {
             // For smaller tasks, increase the zoom level by 1
             var zoomLevel = task.getProperties().zoom + 1;
-            var grid = createTaskGrid(task.getGeometry().getExtent(), zoomLevel, getMLEnabled(), true);
+            var grid = createTaskGrid(task.getGeometry().getExtent(), zoomLevel, getMLEnabled(), getMLModel());
             return grid;
         }
 
@@ -916,30 +916,12 @@
                 }
             });
         }
-        function getPrediction(bbox, zoom) {
+        function getPrediction(bbox, zoom, model) {
             // Returns a promise
-            var params = "?bbox=" + bbox + "&zoom=" + zoom;
+            var params = "?bbox=" + bbox + "&zoom=" + zoom + "&aggregator=" + model;
             return $http({
                 method: 'GET',
                 url: configService.tmAPI + '/prediction' + params,
-                headers: authService.getAuthenticatedHeader()
-            }).then(function successCallback(response) {
-                // this callback will be called asynchronously
-                // when the response is available
-                return response.data;
-            }, function errorCallback() {
-                // called asynchronously if an error occurs
-                // or server returns response with an error status.
-                return $q.reject("error");
-            });
-        }
-
-        function postPrediction(bbox, zoom){
-            // Returns a promise
-            return $http({
-                method: 'POST',
-                url: configService.tmAPI + '/prediction',
-                data: {bbox: bbox, zoom: zoom},
                 headers: authService.getAuthenticatedHeader()
             }).then(function successCallback(response) {
                 // this callback will be called asynchronously
