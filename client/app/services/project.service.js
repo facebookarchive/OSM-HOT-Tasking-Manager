@@ -23,7 +23,8 @@
         var taskGrid = null;
         var aoi = null;
         var mlEnabled = false;
-        var mlModel= false;
+        var mlModel = false;
+        var mlDomain = [];
 
         // OpenLayers source for the task grid
         var taskGridSource = null;
@@ -100,6 +101,14 @@
             mlModel = val;
         }
 
+        function setDomain(domain){
+            mlDomain = domain;
+        }
+
+        function getDomain(){
+            return mlDomain;
+        }
+
         function getMLModel(){
             return mlModel;
         }
@@ -111,9 +120,14 @@
          * @param zoomLevel - the OSM zoom level the task squares will align with
          */
         function createTaskGrid(areaOfInterestExtent, zoomLevel, mlEnabled, mlModel) {
-
+            var oldModel = getMLModel();
             setMLEnabled(mlEnabled);
-            setMLModel(mlModel);
+            if (oldModel != mlModel){
+                setMLModel(mlModel);
+                //resets the domain
+                setDomain([]);
+            }
+
 
             var xmin = Math.ceil(areaOfInterestExtent[0]);
             var ymin = Math.ceil(areaOfInterestExtent[1]);
@@ -146,68 +160,90 @@
                     taskFeatures.push(taskFeature);
                 }
             }
-
             if (getMLEnabled()){
-                var extent = ol.proj.transformExtent(areaOfInterestExtent, 'EPSG:3857', 'EPSG:4326');
-                var promise = getPrediction(extent, zoomLevel, mlModel);
-                promise.then(function(data){
-                    if (data.status === "ok"){
-                        taskFeatures = drawMLLayer(data, taskFeatures);
-                    } else { 
-                        alert("No prediction for this area");
-                    }
+                //just a counter for callback completion
+                var calculatedFeatures = 0;
+                var totalFeatures = taskFeatures.length;
+                taskFeatures.forEach(function(feature, index){
+                    var extent = ol.proj.transformExtent(feature.getGeometry().getExtent(), 'EPSG:3857', 'EPSG:4326');
+                    var promise = getPrediction(extent, 18, mlModel);
+                    promise.then(function(data){
+                        if (data.status === "ok"){
+                            feature = drawMLLayer(data, feature);
+                            taskFeatures[index] = feature;
+                            calculatedFeatures += 1
+                            if (calculatedFeatures == totalFeatures){
+                                var d3Scale = d3.scaleQuantile().domain(getDomain()).range(d3.schemeReds[5]);
+                                taskFeatures.forEach(function(feature){
+                                    feature.setStyle(getTaskAnnotationStyle(feature, d3Scale));
+                                });
+                            }
+                        } else { 
+                            console.log('no prediction for this feature')
+                        }
+                    });
                 });
             } 
 
             return taskFeatures;
         }
 
-        function drawMLLayer(predictionData, taskFeatures){
-            var predictionList = [];
-            var domain = []
-            Object.values(predictionData.predictions).forEach(function(item) {
-                item.forEach(function(element) {
-                    domain.push(element.building_area_diff);
-                    predictionList.push(element);
-                });
+        function drawMLLayer(predictionData, taskFeature){
+            var building_area_diff_total = predictionData.diff_total;           
+            var domain = getDomain();
+            if (domain.length === 0){
+                setDomain([building_area_diff_total, building_area_diff_total]);
+            }
+
+            if (domain[0] >= building_area_diff_total){
+                domain[0] = building_area_diff_total;
+                setDomain(domain);
+            }
+            if (domain[1] <= building_area_diff_total){
+                domain[1] = building_area_diff_total;
+                setDomain(domain);
+            }
+
+            taskFeature.set('building_area_diff', building_area_diff_total);
+            return taskFeature;
+        }
+
+        function getTaskAnnotationStyle(feature, d3Scale) {
+            var STROKE_COLOUR = [84, 84, 84, 0.7]; //grey, 0.7 opacity
+            var STROKE_WIDTH = 1;
+
+            // Pick the color from the scale.
+            var featureValue = feature.get('building_area_diff');
+            var fillColor = d3Scale(featureValue);
+
+            // if (featureValue){
+            //     featureValue = featureValue.toFixed(1);
+            // } else {
+            //     featureValue = 'Null';
+            // }
+
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: fillColor + 'd1'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: STROKE_COLOUR,
+                    width: STROKE_WIDTH
+                })
+                // text: new ol.style.Text({
+                //     text: featureValue,
+                //     scale: 1.3,
+                //     fill: new ol.style.Fill({
+                //         color: '#000000'
+                //     }),
+                //     stroke: new ol.style.Stroke({
+                //         color: '#FFFF99',
+                //         width: 3.5
+                //     })
+                // })
             });
-
-            domain.sort(function(a, b){ return a - b;});
-            domain = [domain[0], domain[domain.length -1 ]]
-            var d3Scale = d3.scaleQuantile().domain(domain).range(d3.schemeReds[5]);
-
-            //check intercecption here 
-            taskFeatures.forEach(function(feature, index, thearray) {
-                predictionList.forEach(function(prediction) {
-                    if (ol.extent.intersects(feature.getGeometry().getExtent(), prediction.bbox)){
-                        feature.set('building_area_diff', prediction.building_area_diff);
-                        feature.set('building_area_diff_percent', prediction.building_area_diff_percent);
-                        feature.setStyle(getTaskAnnotationStyle(feature, d3Scale));
-                        thearray[index] = feature;
-                    }
-                });
-            });
-
-            function getTaskAnnotationStyle(feature, d3Scale) {
-                var STROKE_COLOUR = [84, 84, 84, 0.7]; //grey, 0.7 opacity
-                var STROKE_WIDTH = 1;
-    
-                // Pick the color from the scale.
-                var fillColor = d3Scale(feature.get('building_area_diff'));
-    
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: fillColor
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: STROKE_COLOUR,
-                        width: STROKE_WIDTH
-                    })
-                });
-            } 
+        } 
             
-            return taskFeatures;
-        }
 
         /**
          * Return the task grid

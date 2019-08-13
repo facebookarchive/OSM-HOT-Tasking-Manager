@@ -457,14 +457,20 @@
                 var taskGrid = projectService.getTaskGrid();
                 var tasks_to_split = []
                 taskGrid.forEach(function(feature) {
-                   if (feature.get('building_area_diff_percent') > 80){
-                    tasks_to_split.push(feature);
-                   }  
+                    var color = feature.getStyle().getFill().getColor();
+                    if (color === d3.schemeReds[5][4] + 'd1'){
+                        tasks_to_split.push(feature);
+                    }
                 });
                 tasks_to_split.forEach(function(feature) {
                     taskGrid = projectService.getTaskGrid() 
                     if (taskGrid.includes(feature)){
-                        projectService.splitTasks(feature);
+                        //Cloned a feature to avoid bug on task intersection inside the splittask method
+                        var clonedFeature = feature.clone();
+                        var geom = feature.getGeometry();
+                        geom.scale(0.3);
+                        clonedFeature.setGeometry(geom);
+                        projectService.splitTasks(clonedFeature);
                     }
                 });
                 vm.numberOfTasks = projectService.getNumberOfTasks();

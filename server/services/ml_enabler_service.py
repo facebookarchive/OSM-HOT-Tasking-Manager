@@ -19,7 +19,11 @@ class MLEnablerService:
         response = requests.get(url, params=params)
         data = response.json()
         if not data.get('error'):
-            main_response = {'status': 'ok', 'prediction_ids': [], 'error': ''}
+            main_response = {'status': 'ok', 'prediction_ids': [], 
+                             'error': '', 'diff_total': 0}
+            osm_total = 0
+            pred_total = 0
+
             for k in data.keys():
                 main_response['prediction_ids'].append(k)
                 new_list = []
@@ -28,15 +32,17 @@ class MLEnablerService:
                     bbox = mercantile.xy_bounds(tile)
                     pred['bbox'] = (bbox.left, bbox.bottom, bbox.right, bbox.top)
                     pred['zoom'] = tile.z
-                    pred['building_area_diff'] = pred['ml_prediction'] - pred['osm_building_area']
-                    try:
-                        pred['building_area_diff_percent'] = 100 - ((pred['osm_building_area'] * 100) / pred['ml_prediction'])
-                    except ZeroDivisionError:
-                        #zerodivisionerror
-                        pred['building_area_diff_percent'] = 0
+                    
+                    #we ignore negativae values 
+                    if pred['ml_prediction'] > pred['osm_building_area']:
+                        pred_total += pred['ml_prediction']
+                        osm_total += pred['osm_building_area']
+                        
                     new_list.append(pred)
                 data[k] = new_list
+
             main_response['predictions'] = data
+            main_response['diff_total'] = pred_total - osm_total
         else:
             main_response = {'status': 'error', 'error': data.get('error')}
 
