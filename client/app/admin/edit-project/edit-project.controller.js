@@ -45,7 +45,8 @@
             id: false,
             josm: false,
             potlatch2: false,
-            fieldpapers: false
+            fieldpapers: false,
+            custom: false
         };
 
         // Editors for validation
@@ -53,7 +54,8 @@
             id: false,
             josm: false,
             potlatch2: false,
-            fieldpapers: false
+            fieldpapers: false,
+            custom: false
         };
 
         // Tags
@@ -105,8 +107,9 @@
         // Form
         vm.form = {};
 
-        // User role
+        // User info
         vm.userRole = '';
+        vm.isUserExpert = false;
 
         activate();
 
@@ -126,6 +129,7 @@
                 var resultsPromise = accountService.getUser(session.username);
                 resultsPromise.then(function (user) {
                     vm.userRole = user.role;
+                    vm.isUserExpert = user.isExpert;
                     // Returned the user successfully. Check the user's role
                     if (user.role !== 'PROJECT_MANAGER' && user.role !== 'ADMIN'){
                         $location.path('/');
@@ -883,6 +887,9 @@
                 if (vm.project.campaignTag) {
                     vm.projectCampaignTag = [vm.project.campaignTag];
                 }
+                if (vm.project.customEditor) {
+                    vm.customEditor = vm.project.customEditor;
+                }
             }, function(){
                 vm.errorReturningProjectMetadata = true;
             });
@@ -1023,6 +1030,7 @@
                 vm.mappingEditors.josm = vm.project.mappingEditors.indexOf("JOSM") != -1;
                 vm.mappingEditors.potlatch2 = vm.project.mappingEditors.indexOf("POTLATCH_2") != -1;
                 vm.mappingEditors.fieldpapers = vm.project.mappingEditors.indexOf("FIELD_PAPERS") != -1;
+                vm.mappingEditors.custom = vm.project.mappingEditors.indexOf("CUSTOM") != -1;
             }
         }
 
@@ -1043,6 +1051,9 @@
             if (vm.mappingEditors.fieldpapers){
                 mappingEditorsArray.push("FIELD_PAPERS");
             }
+            if (vm.mappingEditors.custom && vm.project.customEditor.enabled){
+                mappingEditorsArray.push("CUSTOM");
+            }
             return mappingEditorsArray;
         }
 
@@ -1057,6 +1068,7 @@
                 vm.validationEditors.josm = vm.project.validationEditors.indexOf("JOSM") != -1;
                 vm.validationEditors.potlatch2 = vm.project.validationEditors.indexOf("POTLATCH_2") != -1;
                 vm.validationEditors.fieldpapers = vm.project.validationEditors.indexOf("FIELD_PAPERS") != -1;
+                vm.validationEditors.custom = vm.project.validationEditors.indexOf("CUSTOM") != -1;
             }
         }
 
@@ -1076,6 +1088,9 @@
             }
             if (vm.validationEditors.fieldpapers){
                 validationEditorsArray.push("FIELD_PAPERS");
+            }
+            if (vm.validationEditors.custom && vm.project.customEditor.enabled){
+                validationEditorsArray.push("CUSTOM");
             }
             return validationEditorsArray;
         }
@@ -1131,6 +1146,15 @@
                 }
             }
             return projectName;
+        }
+
+        /**
+         * Removes the custom editor from the project
+         */
+        vm.deleteCustomEditor = function(){
+            // have to force the toggle to false or it will stay enabled
+            vm.project.customEditor.enabled = false;
+            vm.project.customEditor = null;
         }
     }
 })();
