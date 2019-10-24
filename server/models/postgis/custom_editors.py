@@ -9,7 +9,7 @@ class CustomEditor(db.Model):
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String)
     url = db.Column(db.String, nullable=False)
-    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=False)
 
     @staticmethod
     def get_by_project_id(project_id: int):

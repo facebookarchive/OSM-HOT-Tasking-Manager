@@ -87,11 +87,10 @@ class ProjectInfoDTO(Model):
 
 class CustomEditorDTO(Model):
     """ DTO to define a custom editor """
-    # project_id = IntType(serialized_name='projectId')
     name = StringType(required=True)
     description = StringType()
     url = StringType(required=True)
-    enabled = BooleanType()
+    enabled = BooleanType(default=False)
 
 
 class ProjectDTO(Model):
