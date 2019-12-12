@@ -25,6 +25,11 @@ class InterestService:
         return interest
 
     @staticmethod
+    def get_by_name(name):
+        interest = Interest.get_by_name(name)
+        return interest
+
+    @staticmethod
     def create(interest_name):
         interest_model = Interest(name=interest_name)
         interest_model.create()
