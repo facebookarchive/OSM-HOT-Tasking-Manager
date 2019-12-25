@@ -25,6 +25,7 @@ import { SelectTask } from './views/taskSelection';
 import { MapTask, ValidateTask } from './views/taskAction';
 import { EmailVerification } from './views/verifyEmail';
 import { ProjectEdit } from './views/projectEdit';
+import {ContactPage} from './views/contact';
 
 /*TODO(tdk): if QueryParamProvider is not needed elsewhere,
  *  create special sub-router for Projects page and wrap it only around that */
@@ -70,6 +71,7 @@ function App() {
             <MapTask path="projects/:id/map" />
             <ValidateTask path="projects/:id/validate" />
             <ProjectDetailPage path="projects/:id" />
+            <ContactPage path="contact/" />
             <Redirect from="project/:id" to="projects/:id" noThrow />
             <NotFound default />
           </Router>
