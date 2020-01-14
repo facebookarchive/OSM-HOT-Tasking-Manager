@@ -24,7 +24,7 @@ from server.models.postgis.project import Project, ProjectInfo
 from server.models.postgis.user import User, UserRole, MappingLevel, UserEmail
 from server.models.postgis.task import TaskHistory, TaskAction, Task
 from server.models.dtos.mapping_dto import TaskDTOs
-from server.models.postgis.statuses import TaskStatus
+from server.models.postgis.statuses import TaskStatus, ProjectStatus
 from server.models.postgis.utils import NotFound
 from server.services.users.osm_service import OSMService, OSMServiceError
 from server.services.messaging.smtp_service import SMTPService
@@ -197,7 +197,8 @@ class UserService:
         user_id: int,
         start_date: datetime.datetime = None,
         end_date: datetime.datetime = None,
-        status: str = None,
+        task_status: str = None,
+        project_status: str = None,
         project_id: int = None,
         sort_by: str = None,
     ) -> TaskDTOs:
@@ -234,8 +235,15 @@ class UserService:
         )
         tasks = tasks.add_column("max_1")
 
-        if status:
-            tasks = tasks.filter(Task.task_status == TaskStatus[status.upper()].value)
+        if task_status:
+            tasks = tasks.filter(
+                Task.task_status == TaskStatus[task_status.upper()].value
+            )
+
+        if project_status:
+            tasks = tasks.filter(
+                Task.task_status == ProjectStatus[project_status.upper()].value
+            )
 
         if project_id:
             tasks = tasks.filter_by(project_id=project_id)
