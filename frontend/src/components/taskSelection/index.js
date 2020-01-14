@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { FormattedMessage } from 'react-intl';
 import ReactPlaceholder from 'react-placeholder';
@@ -36,9 +36,12 @@ const getRandomTaskByAction = (activities, taskAction) => {
 
 export function TaskSelection({ project, type, loading }: Object) {
   const user = useSelector(state => state.auth.get('userDetails'));
+  const lockedTasks = useSelector(state => state.lockedTasks);
+  const dispatch = useDispatch();
   const [tasks, setTasks] = useState([]);
   const [activeSection, setActiveSection] = useState(null);
   const [selected, setSelectedTasks] = useState([]);
+  const [mapInit, setMapInit] = useState(false);
   const [randomTask, setRandomTask] = useState([]);
   const [taskAction, setTaskAction] = useState('mapATask');
   // these two fetches are needed to initialize the component
@@ -63,6 +66,28 @@ export function TaskSelection({ project, type, loading }: Object) {
     setActiveSection(user.mappingLevel === 'BEGINNER' ? 'instructions' : 'tasks');
     setTasks(initialTasks);
   }, [user.mappingLevel, initialTasks]);
+
+  useEffect(() => {
+    // run it only when the component is initialized
+    if (!mapInit && initialActivities.activity && user.username) {
+      const lockedByCurrentUser = initialActivities.activity
+        .filter(i => i.taskStatus.startsWith('LOCKED_FOR_'))
+        .filter(i => i.actionBy === user.username);
+      if (lockedByCurrentUser.length) {
+        const tasks = lockedByCurrentUser.map(i => i.taskId);
+        setSelectedTasks(tasks);
+        setTaskAction(
+          lockedByCurrentUser[0].taskStatus === 'LOCKED_FOR_MAPPING'
+            ? 'resumeMapping'
+            : 'resumeValidation',
+        );
+        dispatch({ type: 'SET_LOCKED_TASKS', tasks: tasks });
+        dispatch({ type: 'SET_PROJECT', project: project.projectId });
+        dispatch({ type: 'SET_TASKS_STATUS', status: lockedByCurrentUser[0].taskStatus });
+      }
+      setMapInit(true);
+    }
+  }, [lockedTasks, dispatch, initialActivities, user.username, mapInit, project, user]);
 
   // refresh the task status on the map each time the activities are updated
   useEffect(() => {
@@ -90,7 +115,15 @@ export function TaskSelection({ project, type, loading }: Object) {
         setTaskAction(getTaskAction(user, project, null));
       } else {
         setSelectedTasks([selection]);
-        setTaskAction(getTaskAction(user, project, status));
+        if (lockedTasks.get('tasks').includes(selection)) {
+          setTaskAction(
+            lockedTasks.get('status') === 'LOCKED_FOR_MAPPING'
+              ? 'resumeMapping'
+              : 'resumeValidation',
+          );
+        } else {
+          setTaskAction(getTaskAction(user, project, status));
+        }
       }
     }
   }
@@ -146,7 +179,7 @@ export function TaskSelection({ project, type, loading }: Object) {
             type={'media'}
             rows={26}
             delay={200}
-            ready={!tasksLoading}
+            ready={!tasksLoading && mapInit}
           >
             <TasksMap
               mapResults={tasks}

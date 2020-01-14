@@ -144,6 +144,14 @@ export default defineMessages({
     id: 'project.selectTask.footer.button.validateAnotherTask',
     defaultMessage: 'Validate another task',
   },
+  resumeMapping: {
+    id: 'project.selectTask.footer.button.resumeMapping',
+    defaultMessage: 'Resume mapping',
+  },
+  resumeValidation: {
+    id: 'project.selectTask.footer.button.resumeValidation',
+    defaultMessage: 'Resume validation',
+  },
   taskLastUpdate: {
     id: 'project.tasks.list.lastUpdate',
     defaultMessage: 'Last updated by {user}',
