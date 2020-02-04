@@ -29,6 +29,7 @@ const Fallback = () => {
 
 export const UserDetail = ({ username }) => {
   const token = useSelector(state => state.auth.get('token'));
+  const authDetails = useSelector(state => state.auth.get('userDetails'));
   if (!token) {
     return <Redirect to={'login'} noThrow />;
   }
@@ -52,8 +53,8 @@ export const UserDetail = ({ username }) => {
   return (
     <div className="bg-tan w-100">
       <Suspense fallback={<Fallback />}>
-        <div className="bg-white blue-dark w-100 cf ph6-l ph4-m ph2 pv3">
-          <HeaderProfile user={user} />
+        <div className="bg-white blue-dark w-100 cf ph6-l ph4-m ph2 pb3">
+          <HeaderProfile user={user} username={username} authUser={authDetails.username} />
         </div>
         <div className={blockWidth}>
           <div className="mv4">

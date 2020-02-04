@@ -5,6 +5,7 @@ import messages from '../user/messages';
 import { TwitterIconNoBg, FacebookIcon, LinkedinIcon } from '../svgIcons';
 import { MappingLevelMessage } from '../mappingLevel';
 import { NextMappingLevel } from '../user/settings';
+import { SectionMenu } from '../menu';
 
 const SocialMedia = ({ data }) => {
   const socialMediaItems = ['twitterId', 'facebookId', 'linkedinId'];
@@ -70,34 +71,51 @@ const SocialMedia = ({ data }) => {
   );
 };
 
-export const HeaderProfile = ({ user }) => {
+const MyContributionsNav = ({ username, authUser }) => {
+  const items = [
+    { url: `/users/${username}`, label: <FormattedMessage {...messages.myStats} /> },
+    { url: '/manage/projects', label: <FormattedMessage {...messages.myProjects} /> },
+    { url: '/contributions', label: <FormattedMessage {...messages.myContribs} /> },
+  ];
+
+  return (
+    <div className="fr">
+      <SectionMenu items={items} />
+    </div>
+  );
+};
+
+export const HeaderProfile = ({ user, username, authUser }) => {
   const details = user.details.read();
   const osm = user.osmDetails.read();
 
   const avatarClass = 'h4 w4 br-100 pa1 ba b--grey-light bw3 red';
   return (
-    <div className="w-100 h-100 cf">
-      <div className="fl dib mr3">
-        {details.pictureUrl ? (
-          <img className={avatarClass} src={details.pictureUrl} alt={'hey'} />
-        ) : (
-          <div className={avatarClass + ' bg-light-gray ma1'}></div>
-        )}
-      </div>
-      <div className="pl2 dib">
-        <div className="mb4">
-          <p className="barlow-condensed f2 ttu b ma0 mb2">{details.name || details.username}</p>
-          <p className="f4 ma0 mb2">
-            <FormattedMessage
-              {...messages.mapper}
-              values={{
-                level: <MappingLevelMessage level={details.mappingLevel} />,
-              }}
-            />
-          </p>
-          <NextMappingLevel changesetsCount={osm.changesetsCount} />
+    <div>
+      {username === authUser ? <MyContributionsNav username={username} /> : null}
+      <div className="w-100 h-100 cf pt3">
+        <div className="fl dib mr3">
+          {details.pictureUrl ? (
+            <img className={avatarClass} src={details.pictureUrl} alt={'hey'} />
+          ) : (
+            <div className={avatarClass + ' bg-light-gray ma1'}></div>
+          )}
         </div>
-        <SocialMedia data={details} />
+        <div className="pl2 dib">
+          <div className="mb4">
+            <p className="barlow-condensed f2 ttu b ma0 mb2">{details.name || details.username}</p>
+            <p className="f4 ma0 mb2">
+              <FormattedMessage
+                {...messages.mapper}
+                values={{
+                  level: <MappingLevelMessage level={details.mappingLevel} />,
+                }}
+              />
+            </p>
+            <NextMappingLevel changesetsCount={osm.changesetsCount} />
+          </div>
+          <SocialMedia data={details} />
+        </div>
       </div>
     </div>
   );
