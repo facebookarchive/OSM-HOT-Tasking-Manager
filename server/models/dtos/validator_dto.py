@@ -92,7 +92,9 @@ class MappedTasksByUser(Model):
     username = StringType(required=True)
     mapped_task_count = IntType(required=True, serialized_name="mappedTaskCount")
     tasks_mapped = ListType(IntType, required=True, serialized_name="tasksMapped")
-    last_seen = StringType(required=True, serialized_name="lastSeen")
+    last_seen = DateTimeType(
+        required=True, serialized_name="lastSeen", serialized_format=utc_format()
+    )
     mapping_level = StringType(required=True, serialized_name="mappingLevel")
     date_registered = DateTimeType(
         serialized_name="dateRegistered", serialized_format=utc_format()
