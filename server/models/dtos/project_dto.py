@@ -382,7 +382,9 @@ class ListSearchResultDTO(Model):
     percent_validated = IntType(serialized_name="percentValidated")
     status = StringType(serialized_name="status")
     active_mappers = IntType(serialized_name="activeMappers")
-    last_updated = StringType(serialized_name="lastUpdated")
+    last_updated = DateTimeType(
+        serialized_name="lastUpdated", serialized_format=utc_format()
+    )
     due_date = DateTimeType(serialized_name="dueDate", serialized_format=utc_format())
     total_contributors = IntType(serialized_name="totalContributors")
     country = StringType(serialize_when_none=False)

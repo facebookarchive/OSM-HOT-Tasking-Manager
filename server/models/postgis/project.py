@@ -17,7 +17,6 @@ from shapely.ops import transform
 from functools import partial
 import pyproj
 import requests
-import datetime
 
 from server import db
 from server.models.dtos.project_dto import (
