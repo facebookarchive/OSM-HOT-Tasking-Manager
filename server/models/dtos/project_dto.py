@@ -461,7 +461,7 @@ class ProjectSummary(Model):
     project_id = IntType(required=True, serialized_name="projectId")
     area = FloatType(serialized_name="projectArea(in sq.km)")
     author = StringType()
-    created = DateTimeType()
+    created = DateTimeType(serialized_format=utc_format())
     due_date = DateTimeType(serialized_name="dueDate", serialized_format=utc_format())
     last_updated = DateTimeType(
         serialized_name="lastUpdated", serialized_format=utc_format()

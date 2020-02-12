@@ -40,7 +40,7 @@ class ChatMessageDTO(Model):
     user_id = IntType(required=True, serialize_when_none=False)
     project_id = IntType(required=True, serialize_when_none=False)
     picture_url = StringType(default=None, serialized_name="pictureUrl")
-    timestamp = DateTimeType()
+    timestamp = DateTimeType(serialized_format=utc_format())
     username = StringType()
 
 
