@@ -27,7 +27,6 @@ from server.models.postgis.utils import (
     ST_GeomFromGeoJSON,
     ST_SetSRID,
     timestamp,
-    utc_format,
     parse_duration,
     NotFound,
 )
@@ -1007,7 +1006,7 @@ class Task(db.Model):
             history.history_id = action.id
             history.action = action.action
             history.action_text = action.action_text
-            history.action_date = utc_format(action.action_date)
+            history.action_date = action.action_date
             history.action_by = (
                 action.actioned_by.username if action.actioned_by else None
             )

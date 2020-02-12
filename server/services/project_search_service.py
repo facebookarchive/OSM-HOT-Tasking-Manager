@@ -24,7 +24,6 @@ from server.models.postgis.utils import (
     ST_MakeEnvelope,
     ST_Transform,
     ST_Area,
-    utc_format,
 )
 
 from server.models.postgis.interests import projects_interests
@@ -100,8 +99,8 @@ class ProjectSearchService:
         list_dto.priority = ProjectPriority(project.priority).name
         list_dto.mapper_level = MappingLevel(project.mapper_level).name
         list_dto.short_description = project_info_dto.short_description
-        list_dto.last_updated = utc_format(project.last_updated)
-        list_dto.due_date = utc_format(project.due_date)
+        list_dto.last_updated = project.last_updated
+        list_dto.due_date = project.due_date
         list_dto.percent_mapped = Project.calculate_tasks_percent(
             "mapped",
             project.total_tasks,

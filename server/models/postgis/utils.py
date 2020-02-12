@@ -116,10 +116,9 @@ def timestamp():
     return datetime.datetime.utcnow()
 
 
-def utc_format(timestamp_to_format):
-    if timestamp_to_format:
-        time_format = current_app.config["DTO_TIME_FORMAT"]
-        return timestamp_to_format.strftime(time_format)
+def utc_format():
+    """Returns serialized format for DateTimeType"""
+    return "%Y-%m-%dT%H:%M:%S" + "Z"
 
 
 # Based on https://stackoverflow.com/a/51916936

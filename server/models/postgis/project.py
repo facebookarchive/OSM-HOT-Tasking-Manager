@@ -59,7 +59,6 @@ from server.models.postgis.utils import (
     ST_SetSRID,
     ST_GeomFromGeoJSON,
     timestamp,
-    utc_format,
     ST_Centroid,
     NotFound,
     ST_X,
@@ -728,9 +727,9 @@ class Project(db.Model):
         summary.area = area
         summary.country_tag = self.country
         summary.changeset_comment = self.changeset_comment
-        summary.due_date = utc_format(self.due_date)
-        summary.created = utc_format(self.created)
-        summary.last_updated = utc_format(self.last_updated)
+        summary.due_date = self.due_date
+        summary.created = self.created
+        summary.last_updated = self.last_updated
         summary.mapper_level = MappingLevel(self.mapper_level).name
         summary.mapping_permission = MappingPermission(self.mapping_permission).name
         summary.validation_permission = ValidationPermission(

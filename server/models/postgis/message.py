@@ -8,7 +8,7 @@ from server.models.dtos.message_dto import MessageDTO, MessagesDTO
 from server.models.postgis.user import User
 from server.models.postgis.task import Task
 from server.models.postgis.project import Project
-from server.models.postgis.utils import timestamp, NotFound, utc_format
+from server.models.postgis.utils import timestamp, NotFound
 
 
 class MessageType(Enum):
@@ -80,7 +80,7 @@ class Message(db.Model):
         dto = MessageDTO()
         dto.message_id = self.id
         dto.message = self.message
-        dto.sent_date = utc_format(self.date)
+        dto.sent_date = self.date
         dto.read = self.read
         dto.subject = self.subject
         dto.project_id = self.project_id

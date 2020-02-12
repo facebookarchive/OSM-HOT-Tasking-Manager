@@ -2,7 +2,7 @@ import bleach
 from flask import current_app
 from server import db
 from server.models.postgis.user import User
-from server.models.postgis.utils import timestamp, utc_format
+from server.models.postgis.utils import timestamp
 from server.models.dtos.message_dto import ChatMessageDTO, ProjectChatDTO, Pagination
 
 
@@ -53,7 +53,7 @@ class ProjectChat(db.Model):
             chat_dto.message = message.message
             chat_dto.username = message.posted_by.username
             chat_dto.picture_url = message.posted_by.picture_url
-            chat_dto.timestamp = utc_format(message.time_stamp)
+            chat_dto.timestamp = message.time_stamp
 
             dto.chat.append(chat_dto)
 

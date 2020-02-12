@@ -1,7 +1,7 @@
 from server import db
 from flask import current_app
 from server.models.postgis.user import User
-from server.models.postgis.utils import timestamp, utc_format
+from server.models.postgis.utils import timestamp
 from server.models.dtos.notification_dto import NotificationDTO
 
 
@@ -25,7 +25,7 @@ class Notification(db.Model):
         dto = NotificationDTO()
         dto.user_id = self.user_id
         dto.unread_count = self.unread_count
-        dto.date = utc_format(self.date)
+        dto.date = self.date
 
         return dto
 
