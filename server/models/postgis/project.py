@@ -17,6 +17,7 @@ from shapely.ops import transform
 from functools import partial
 import pyproj
 import requests
+import datetime
 
 from server import db
 from server.models.dtos.project_dto import (
@@ -58,6 +59,7 @@ from server.models.postgis.utils import (
     ST_SetSRID,
     ST_GeomFromGeoJSON,
     timestamp,
+    utc_format,
     ST_Centroid,
     NotFound,
     ST_X,
@@ -65,7 +67,6 @@ from server.models.postgis.utils import (
 )
 from server.services.grid.grid_service import GridService
 from server.models.postgis.interests import Interest, projects_interests
-
 
 # Secondary table defining many-to-many join for projects that were favorited by users.
 project_favorites = db.Table(
@@ -727,9 +728,9 @@ class Project(db.Model):
         summary.area = area
         summary.country_tag = self.country
         summary.changeset_comment = self.changeset_comment
-        summary.created = self.created
-        summary.last_updated = self.last_updated
-        summary.due_date = self.due_date
+        summary.due_date = utc_format(self.due_date)
+        summary.created = utc_format(self.created)
+        summary.last_updated = utc_format(self.last_updated)
         summary.mapper_level = MappingLevel(self.mapper_level).name
         summary.mapping_permission = MappingPermission(self.mapping_permission).name
         summary.validation_permission = ValidationPermission(

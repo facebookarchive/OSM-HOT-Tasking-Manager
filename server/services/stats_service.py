@@ -21,7 +21,7 @@ from server.models.dtos.project_dto import ProjectSearchResultsDTO
 from server.models.postgis.project import Project
 from server.models.postgis.statuses import TaskStatus, MappingLevel
 from server.models.postgis.task import TaskHistory, User, Task, TaskAction
-from server.models.postgis.utils import timestamp, NotFound
+from server.models.postgis.utils import timestamp, NotFound, utc_format
 from server.services.project_service import ProjectService
 from server.services.project_search_service import ProjectSearchService
 from server.services.users.user_service import UserService
@@ -141,7 +141,7 @@ class StatsService:
             history.task_id = item.task_id
             history.action = item.action
             history.action_text = item.action_text
-            history.action_date = item.action_date
+            history.action_date = utc_format(item.action_date)
             history.action_by = item.username
             activity_dto.activity.append(history)
 

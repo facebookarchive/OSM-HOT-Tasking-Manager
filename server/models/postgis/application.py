@@ -1,6 +1,6 @@
 from server import db
 from server.models.dtos.application_dto import ApplicationDTO, ApplicationsDTO
-from server.models.postgis.utils import timestamp
+from server.models.postgis.utils import timestamp, utc_format
 from server.services.users.authentication_service import AuthenticationService
 
 
@@ -56,7 +56,7 @@ class Application(db.Model):
             application_dto.id = r.id
             application_dto.user = r.user
             application_dto.app_key = r.app_key
-            application_dto.created = r.created
+            application_dto.created = utc_format(r.created)
             applications_dto.applications.append(application_dto)
         return applications_dto
 
@@ -64,5 +64,5 @@ class Application(db.Model):
         app_dto = ApplicationDTO()
         app_dto.user = self.user
         app_dto.app_key = self.app_key
-        app_dto.created = self.created
+        app_dto.created = utc_format(self.created)
         return app_dto

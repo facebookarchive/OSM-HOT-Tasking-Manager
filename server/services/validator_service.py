@@ -305,8 +305,8 @@ class ValidatorService:
             dto.task_id = entry.task_id
             dto.project_id = entry.project_id
             dto.history_id = entry.invalidation_history_id
-            dto.closed = entry.is_closed
-            dto.updated_date = entry.updated_date
+            dto.closed = utc_format(entry.is_closed)
+            dto.updated_date = utc_format(entry.updated_date)
 
             if dto.project_id not in project_names:
                 project_names[dto.project_id] = ProjectInfo.get_dto_for_locale(

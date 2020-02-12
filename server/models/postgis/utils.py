@@ -116,6 +116,12 @@ def timestamp():
     return datetime.datetime.utcnow()
 
 
+def utc_format(timestamp_to_format):
+    if timestamp_to_format:
+        time_format = current_app.config["DTO_TIME_FORMAT"]
+        return timestamp_to_format.strftime(time_format)
+
+
 # Based on https://stackoverflow.com/a/51916936
 duration_regex = re.compile(
     r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"

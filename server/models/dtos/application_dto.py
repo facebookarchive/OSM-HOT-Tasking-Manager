@@ -1,4 +1,4 @@
-from schematics.types import DateTimeType, IntType, ListType, ModelType, StringType
+from schematics.types import IntType, ListType, ModelType, StringType
 from schematics import Model
 
 
@@ -8,7 +8,7 @@ class ApplicationDTO(Model):
     id = IntType(required=True, serialized_name="keyId")
     user = IntType(required=True, serialized_name="userId")
     app_key = StringType(required=True, serialized_name="applicationkey")
-    created = DateTimeType(required=True, serialized_name="createdDate")
+    created = StringType(required=True, serialized_name="createdDate")
 
 
 class ApplicationsDTO(Model):
