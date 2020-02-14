@@ -7,6 +7,7 @@ from schematics.types import (
     BooleanType,
     FloatType,
     UTCDateTimeType,
+    DateType,
 )
 from schematics.types.compound import ListType, ModelType
 from server.models.dtos.task_annotation_dto import TaskAnnotationDTO
@@ -428,7 +429,7 @@ class ProjectCommentsDTO(Model):
 
 
 class ProjectContribDTO(Model):
-    date = UTCDateTimeType(required=True)
+    date = DateType(required=True)
     mapped = IntType(required=True)
     validated = IntType(required=True)
     cumulative_mapped = IntType(required=False)
