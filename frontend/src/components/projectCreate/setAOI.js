@@ -12,11 +12,30 @@ var tj = require('@mapbox/togeojson');
 var osmtogeojson = require('osmtogeojson');
 var shp = require('shpjs');
 
+export const DisplayGeom = (mapObj, layer_name, geom) => {
+  if (mapObj.map.getLayer(layer_name)) {
+    mapObj.map.removeLayer(layer_name);
+  }
+  if (mapObj.map.getSource(layer_name)) {
+    mapObj.map.removeSource(layer_name);
+  }
+
+  mapObj.map.addLayer({
+    id: layer_name,
+    type: 'fill',
+    source: {
+      type: 'geojson',
+      data: geom,
+    },
+    paint: paintOptions,
+  });
+};
+
 export default function SetAOI({ mapObj, metadata, updateMetadata, setErr }) {
   const [arbitraryTasks, setArbitrary] = useState(metadata.arbitraryTasks);
   const layer_name = 'aoi';
 
-  const setDataGeom = geom => {
+  const setDataGeom = (geom, display: true) => {
     const area = turf.area(geom) / 1e6;
     const zoomLevel = mapObj.map.getZoom() + 4;
     const grid = makeGrid(geom, zoomLevel, {});
@@ -30,22 +49,10 @@ export default function SetAOI({ mapObj, metadata, updateMetadata, setErr }) {
       tempTaskGrid: grid,
     });
 
-    if (mapObj.map.getLayer(layer_name)) {
-      mapObj.map.removeLayer(layer_name);
+    if (display === false) {
+      return;
     }
-    if (mapObj.map.getSource(layer_name)) {
-      mapObj.map.removeSource(layer_name);
-    }
-
-    mapObj.map.addLayer({
-      id: layer_name,
-      type: 'fill',
-      source: {
-        type: 'geojson',
-        data: geom,
-      },
-      paint: paintOptions,
-    });
+    DisplayGeom(mapObj, layer_name, geom);
   };
 
   const verifyAndSetData = event => {
@@ -115,6 +122,12 @@ export default function SetAOI({ mapObj, metadata, updateMetadata, setErr }) {
   };
 
   const deleteHandler = () => {
+    const features = mapObj.draw.getAll();
+    if (features.features.length > 0) {
+      const id = features.features[0].id;
+      mapObj.draw.delete(id);
+    }
+
     if (mapObj.map.getLayer(layer_name)) {
       mapObj.map.removeLayer(layer_name);
     }
@@ -126,14 +139,12 @@ export default function SetAOI({ mapObj, metadata, updateMetadata, setErr }) {
 
   const drawHandler = () => {
     const updateArea = event => {
-      // Validate area first.
-      const id = event.features[0].id;
       const geom = turf.featureCollection(event.features);
-      mapObj.draw.delete(id);
       setArbitrary(false);
-      setDataGeom(geom);
+      setDataGeom(geom, false);
     };
 
+    mapObj.map.on('draw.update', updateArea);
     mapObj.map.once('draw.create', updateArea);
     mapObj.draw.changeMode('draw_polygon');
   };

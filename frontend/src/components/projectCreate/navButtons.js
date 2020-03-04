@@ -2,6 +2,7 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import messages from './messages';
+import { DisplayGeom } from './setAOI';
 import { Button } from '../button';
 
 const validateStep = props => {
@@ -14,6 +15,9 @@ const validateStep = props => {
         const message = 'Project geometry not set';
         return { error: true, message: message };
       } else {
+        const id = props.metadata.geom.features[0].id;
+        props.mapObj.draw.delete(id);
+        DisplayGeom(props.mapObj, 'aoi', props.metadata.geom);
         props.updateMetadata({
           ...props.metadata,
           tasksNo: props.metadata.taskGrid.features.length,
