@@ -47,14 +47,14 @@ class ProjectAdminService:
         :returns ID of new draft project
         """
         user_id = draft_project_dto.user_id
-        is_pm = UserService.is_user_a_project_manager(user_id)
+        is_admin = UserService.is_user_an_admin(user_id)
         user_orgs = OrganisationService.get_organisations_managed_by_user_as_dto(
             user_id
         )
         is_org_manager = len(user_orgs.organisations) > 0
 
         # First things first, we need to validate that the author_id is a PM. issue #1715
-        if not (is_pm or is_org_manager):
+        if not (is_admin or is_org_manager):
             user = UserService.get_user_by_id(user_id)
             raise (
                 ProjectAdminServiceError(
@@ -172,21 +172,12 @@ class ProjectAdminService:
 
         project = ProjectAdminService._get_project_by_id(project_id)
         is_admin = UserService.is_user_an_admin(authenticated_user_id)
-        is_pm = UserService.is_user_a_project_manager(authenticated_user_id)
+        user_orgs = OrganisationService.get_organisations_managed_by_user_as_dto(
+            authenticated_user_id
+        )
+        is_org_manager = len(user_orgs.organisations) > 0
 
-        if is_pm and not is_admin:
-            if project.author_id != authenticated_user_id:
-                raise ProjectAdminServiceError(
-                    "Project can only be deleted by admins or by the owner"
-                )
-            else:
-                if project.can_be_deleted():
-                    project.delete()
-                else:
-                    raise ProjectAdminServiceError(
-                        "Project has mapped tasks, cannot be deleted"
-                    )
-        elif is_admin:
+        if is_admin or is_org_manager:
             if project.can_be_deleted():
                 project.delete()
             else:
