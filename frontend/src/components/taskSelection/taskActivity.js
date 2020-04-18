@@ -8,7 +8,7 @@ import { CloseIcon } from '../svgIcons';
 import { useFetch } from '../../hooks/UseFetch';
 import { formatOSMChaLink } from '../../utils/osmchaLink';
 import { formatOverpassLink } from '../../utils/overpassLink';
-import { compareLastUpdate } from '../../utils/sorting';
+import { compareHistoryLastUpdate } from '../../utils/sorting';
 import { CurrentUserAvatar, UserAvatar } from '../user/avatar';
 import { pushToLocalJSONAPI, fetchLocalJSONAPI } from '../../network/genericJSONRequest';
 import { Button } from '../button';
@@ -172,7 +172,7 @@ export const TaskDataDropdown = ({ history, changesetComment, bbox }: Object) =>
         }
       });
       setLastActivityDate(
-        history.taskHistory.sort(compareLastUpdate)[history.taskHistory.length - 1],
+        history.taskHistory.sort(compareHistoryLastUpdate)[history.taskHistory.length - 1],
       );
     }
     setContributors(users);

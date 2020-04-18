@@ -22,8 +22,9 @@ export function TaskStatus({ status, lockHolder }: Object) {
   return (
     <span>
       <span
-        className={`${['READY', 'LOCKED_FOR_MAPPING'].includes(status) &&
-          'ba bw1 b--grey-light'} dib v-mid`}
+        className={`${
+          ['READY', 'LOCKED_FOR_MAPPING'].includes(status) && 'ba bw1 b--grey-light'
+        } dib v-mid`}
         style={{
           height: dotSize,
           width: dotSize,
@@ -54,9 +55,9 @@ function TaskItem({
   data,
   projectId,
   setZoomedTaskId,
+  setActiveTaskModal,
   selectTask,
   selected = [],
-  geometry,
   projectName,
   changesetComment,
 }: Object) {
@@ -93,22 +94,12 @@ function TaskItem({
       </div>
       <div className="w-10-l w-20 pv3 fl dib blue-light">
         <div className="dib v-mid">
-          <Popup
-            trigger={<ListIcon width="18px" height="18px" className="pointer hover-blue-grey" />}
-            modal
-            closeOnDocumentClick
-          >
-            {close => (
-              <TaskActivity
-                taskId={data.taskId}
-                projectName={projectName}
-                projectId={projectId}
-                changesetComment={changesetComment}
-                bbox={bbox(geometry)}
-                close={close}
-              />
-            )}
-          </Popup>
+          <ListIcon
+            width="18px"
+            height="18px"
+            className="pointer hover-blue-grey"
+            onClick={() => setActiveTaskModal(data.taskId)}
+          />
         </div>
         <div className="pl2 dib v-mid">
           <ZoomPlusIcon
@@ -124,7 +115,7 @@ function TaskItem({
 }
 
 export function TaskFilter({ project, statusFilter, setStatusFn }: Object) {
-  const user = useSelector(state => state.auth.get('userDetails'));
+  const user = useSelector((state) => state.auth.get('userDetails'));
   const validationIsPossible = user && project ? userCanValidate(user, project) : false;
   const activeClass = 'bg-blue-grey white';
   const inactiveClass = 'bg-white blue-grey';
@@ -167,37 +158,43 @@ export function TaskList({
   selected,
   userContributions,
 }: Object) {
-  const user = useSelector(state => state.auth.get('userDetails'));
+  const user = useSelector((state) => state.auth.get('userDetails'));
   const [readyTasks, setTasks] = useState([]);
+  const [activeTaskModal, setActiveTaskModal] = useState(null);
   const [textSearch, setTextSearch] = useQueryParam('search', StringParam);
   const [sortBy, setSortingOption] = useQueryParam('sortBy', StringParam);
   const [statusFilter, setStatusFilter] = useQueryParam('filter', StringParam);
 
   useEffect(() => {
-    if (tasks && tasks.activity) {
-      let newTasks = tasks.activity;
+    if (tasks && tasks.features) {
+      let newTasks = tasks.features;
       if (statusFilter === 'readyToMap') {
-        newTasks = newTasks.filter(task => ['READY', 'INVALIDATED'].includes(task.taskStatus));
+        newTasks = newTasks.filter((task) =>
+          ['READY', 'INVALIDATED'].includes(task.properties.taskStatus),
+        );
       }
       if (statusFilter === 'readyToValidate') {
-        newTasks = newTasks.filter(task => ['MAPPED', 'BADIMAGERY'].includes(task.taskStatus));
+        newTasks = newTasks.filter((task) =>
+          ['MAPPED', 'BADIMAGERY'].includes(task.properties.taskStatus),
+        );
       }
       if (textSearch) {
         if (Number(textSearch)) {
           newTasks = newTasks.filter(
-            task =>
-              task.taskId === Number(textSearch) ||
-              (task.actionBy && task.actionBy.includes(textSearch)),
+            (task) =>
+              task.properties.taskId === Number(textSearch) ||
+              (task.properties.actionBy && task.properties.actionBy.includes(textSearch)),
           );
         } else {
           const usersTaskIds = userContributions
-            .filter(user => user.username.toLowerCase().includes(textSearch.toLowerCase()))
-            .map(user => user.taskIds)
+            .filter((user) => user.username.toLowerCase().includes(textSearch.toLowerCase()))
+            .map((user) => user.taskIds)
             .flat();
           newTasks = newTasks.filter(
-            task =>
-              usersTaskIds.includes(task.taskId) ||
-              (task.actionBy && task.actionBy.toLowerCase().includes(textSearch.toLowerCase())),
+            (task) =>
+              usersTaskIds.includes(task.properties.taskId) ||
+              (task.properties.actionBy &&
+                task.properties.actionBy.toLowerCase().includes(textSearch.toLowerCase())),
           );
         }
       }
@@ -223,14 +220,14 @@ export function TaskList({
           <div>
             <div className="w-50-l w-100 dib v-mid pr2 pv1 relative">
               <FormattedMessage {...messages.filterPlaceholder}>
-                {msg => {
+                {(msg) => {
                   return (
                     <input
                       type="text"
                       placeholder={msg}
                       className="pa2 w-100"
                       value={textSearch || ''}
-                      onChange={e => setTextSearch(e.target.value)}
+                      onChange={(e) => setTextSearch(e.target.value)}
                     />
                   );
                 }}
@@ -263,7 +260,7 @@ export function TaskList({
         showLoadingAnimation={true}
         rows={6}
         delay={50}
-        ready={tasks && tasks.activity && tasks.activity.length}
+        ready={tasks && tasks.features && tasks.features.length}
       >
         {readyTasks && (
           <PaginatedList
@@ -273,15 +270,33 @@ export function TaskList({
             }
             ItemComponent={TaskItem}
             setZoomedTaskId={setZoomedTaskId}
+            setActiveTaskModal={setActiveTaskModal}
             selected={selected}
             selectTask={selectTask}
             projectId={project.projectId}
-            tasksGeoJSON={project.tasks}
             projectName={project.projectInfo.name}
             changesetComment={project.changesetComment}
           />
         )}
       </ReactPlaceholder>
+      {activeTaskModal && (
+        <Popup open modal closeOnDocumentClick onClose={() => setActiveTaskModal(null)}>
+          {(close) => (
+            <TaskActivity
+              taskId={activeTaskModal}
+              projectName={project.projectInfo.name}
+              projectId={project.projectId}
+              changesetComment={project.changesetComment}
+              bbox={
+                activeTaskModal
+                  ? bbox(readyTasks.filter((task) => task.properties.taskId === activeTaskModal)[0])
+                  : ''
+              }
+              close={close}
+            />
+          )}
+        </Popup>
+      )}
     </div>
   );
 }
@@ -292,8 +307,8 @@ function PaginatedList({
   pageSize,
   projectId,
   setZoomedTaskId,
+  setActiveTaskModal,
   selectTask,
-  tasksGeoJSON,
   selected,
   projectName,
   changesetComment,
@@ -316,7 +331,8 @@ function PaginatedList({
     if (selected.length === 1) {
       setPage(
         Math.ceil(
-          (latestItems.current.findIndex(task => task.taskId === selected[0]) + 1) / pageSize,
+          (latestItems.current.findIndex((task) => task.properties.taskId === selected[0]) + 1) /
+            pageSize,
         ),
       );
     }
@@ -333,16 +349,13 @@ function PaginatedList({
         {items.slice(pageSize * ((page || 1) - 1), pageSize * (page || 1)).map((item, n) => (
           <ItemComponent
             key={n}
-            data={item}
+            data={item.properties}
             projectId={projectId}
             selectTask={selectTask}
             selected={selected}
-            geometry={
-              tasksGeoJSON.features.filter(task => task.properties.taskId === item.taskId)[0]
-                .geometry
-            }
             changesetComment={changesetComment}
             setZoomedTaskId={setZoomedTaskId}
+            setActiveTaskModal={setActiveTaskModal}
             projectName={projectName}
           />
         ))}
