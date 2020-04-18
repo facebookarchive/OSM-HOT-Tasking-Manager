@@ -417,7 +417,7 @@ export default defineMessages({
   },
   missingFieldsForLocale: {
     id: 'pages.edit_project.actions.missing_fields_for_locale',
-    defaultMessage: 'Missing Fields for locale default {locale}:',
+    defaultMessage: 'Project update failed. Missing information for default locale {locale} on:',
   },
   projectEditSection_description: {
     id: 'pages.edit_project.sections.description',
