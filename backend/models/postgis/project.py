@@ -1044,7 +1044,7 @@ class Project(db.Model):
 
     @staticmethod
     def get_all_countries():
-        query = db.session.query(func.unnest(Project.country)).distinct()
+        query = db.session.query(func.unnest(Project.country).label('country')).distinct().order_by('country')
         tags_dto = TagsDTO()
         tags_dto.tags = [r[0] for r in query]
         return tags_dto

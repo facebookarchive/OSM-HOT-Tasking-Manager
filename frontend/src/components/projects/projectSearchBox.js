@@ -11,7 +11,7 @@ export const ProjectSearchBox = ({
   className,
   isMobile,
   placeholder,
-  searchField = 'text'
+  searchField = 'text',
 }) => {
   const [isFocus, setFocus] = useState(false);
   // const [searchTerm, setSearchTerm] = useState(props.fullProjectsQuery.text);
@@ -22,7 +22,7 @@ export const ProjectSearchBox = ({
   useOnClickOutside(navRef, () => setFocus(false));
 
   const setQuerySearch = useCallback(
-    newValue =>
+    (newValue) =>
       setQuery(
         {
           ...fullProjectsQuery,
@@ -40,7 +40,7 @@ export const ProjectSearchBox = ({
 
   return (
     <nav ref={navRef} className={`${className || ''} mt1 mt2-ns`}>
-      <form className="relative">
+      <form onSubmit={(e) => e.preventDefault()} className="relative">
         <div>
           <SearchIcon
             onClick={() => inputRef.current.focus()}
@@ -53,7 +53,7 @@ export const ProjectSearchBox = ({
           autoComplete="off"
           value={fullProjectsQuery[searchField] || ''}
           onFocus={() => setFocus(true)}
-          onChange={event => {
+          onChange={(event) => {
             const value = event.target.value;
             setQuerySearch(value);
           }}
@@ -68,7 +68,7 @@ export const ProjectSearchBox = ({
           onClick={() => {
             setQuerySearch(undefined);
           }}
-          onBlur={e => {
+          onBlur={(e) => {
             setFocus(false);
           }}
           onFocus={() => setFocus(true)}
