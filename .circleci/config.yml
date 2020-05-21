@@ -36,7 +36,7 @@ jobs:
           cd $CIRCLE_WORKING_DIRECTORY
           # Install Python dependencies
           pip install virtualenv
-          virtualenv env
+          virtualenv $CIRCLE_WORKING_DIRECTORY/env
           $CIRCLE_WORKING_DIRECTORY/env/bin/pip install --upgrade pip
           $CIRCLE_WORKING_DIRECTORY/env/bin/pip install -r requirements.txt
     - run:
