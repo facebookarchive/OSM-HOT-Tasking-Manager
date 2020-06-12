@@ -133,7 +133,7 @@ class TestSplitService(unittest.TestCase):
         result = SplitService.split_task(splitTaskDTO)
 
         # assert
-        self.assertEqual(4, len(result.tasks))
+        self.assertEqual(3, len(result.tasks))
 
     @patch.object(Task, "get_tasks")
     def test_split_non_square_task(self, mock_task):
