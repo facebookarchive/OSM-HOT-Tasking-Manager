@@ -1,7 +1,7 @@
 import unittest
 
 from backend.services.messaging.template_service import (
-    templace_var_replacing,
+    template_var_replacing,
     get_template,
     clean_html,
 )
@@ -17,7 +17,7 @@ class TestTemplateService(unittest.TestCase):
             ["[ORG_CODE]", "HOT"],
             ["[ORG_NAME]", "Organization Test"],
         ]
-        processed_content = templace_var_replacing(content, replace_list)
+        processed_content = template_var_replacing(content, replace_list)
         # Assert
         self.assertIn("test_user", processed_content)
         self.assertIn("http://localhost:30/verify.html#1234", processed_content)
