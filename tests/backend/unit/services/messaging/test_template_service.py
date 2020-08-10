@@ -1,13 +1,12 @@
-import unittest
-
 from backend.services.messaging.template_service import (
     template_var_replacing,
     get_template,
     clean_html,
 )
+from tests.backend.base import BaseTestCase
 
 
-class TestTemplateService(unittest.TestCase):
+class TestTemplateService(BaseTestCase):
     def test_variable_replacing(self):
         # Act
         content = get_template("email_verification_en.html")
