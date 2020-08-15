@@ -24,6 +24,12 @@ class EnvironmentConfig:
     API_VERSION = os.getenv("TM_APP_API_VERSION", "v2")
     ORG_CODE = os.getenv("TM_ORG_CODE", "")
     ORG_NAME = os.getenv("TM_ORG_NAME", "")
+
+    # OSM Report service env variable
+    OEG_REPORTER_SERVICE_BASE_URL = os.getenv(
+        "OEG_REPORTER_SERVICE_BASE_URL", "http://127.0.0.1:5001/"
+    )
+
     # The default tag used in the OSM changeset comment
     DEFAULT_CHANGESET_COMMENT = os.getenv("TM_DEFAULT_CHANGESET_COMMENT", None)
 

@@ -18,6 +18,7 @@ from backend.services.license_service import LicenseService
 from backend.services.users.user_service import UserService
 from backend.services.organisation_service import OrganisationService
 from backend.services.team_service import TeamService
+from backend.services.oeg_report_service import OegReportService, OegReportServiceError
 
 
 class ProjectAdminServiceError(Exception):
@@ -128,6 +129,20 @@ class ProjectAdminService:
         ):
             project = ProjectAdminService._get_project_by_id(project_id)
             project.update(project_dto)
+
+            if (
+                project_dto.project_status == ProjectStatus.PUBLISHED.name
+                and project_dto.project_info.reported is False
+            ):
+                try:
+                    OegReportService().report_data_to_osm(project_id)
+                except OegReportServiceError as e:
+                    # Swallow exception as we don't want to blow up the server for this
+                    current_app.logger.error(str(e))
+                    return
+            else:
+                # implement update endpoint
+                pass
         else:
             raise ValueError(
                 str(project_id)
@@ -251,7 +266,9 @@ class ProjectAdminService:
             if attr == "per_task_instructions":
                 continue  # Not mandatory field
 
-            if not value:
+            if (
+                not value and attr != "reported"
+            ):  # Reported field uses False as default value
                 raise (
                     ProjectAdminServiceError(f"{attr} not provided for Default Locale")
                 )
