@@ -18,7 +18,7 @@ from backend.services.license_service import LicenseService
 from backend.services.users.user_service import UserService
 from backend.services.organisation_service import OrganisationService
 from backend.services.team_service import TeamService
-from backend.services.oeg_report_service import OegReportService, OegReportServiceError
+from backend.services.oeg_report_service import OegReportService
 
 
 class ProjectAdminServiceError(Exception):
@@ -128,21 +128,11 @@ class ProjectAdminService:
             authenticated_user_id, project_id
         ):
             project = ProjectAdminService._get_project_by_id(project_id)
+            current_project = project.as_dto_for_report()
             project.update(project_dto)
 
-            if (
-                project_dto.project_status == ProjectStatus.PUBLISHED.name
-                and project_dto.project_info.reported is False
-            ):
-                try:
-                    OegReportService().report_data_to_osm(project_id)
-                except OegReportServiceError as e:
-                    # Swallow exception as we don't want to blow up the server for this
-                    current_app.logger.error(str(e))
-                    return
-            else:
-                # implement update endpoint
-                pass
+            oeg_report_service = OegReportService()
+            oeg_report_service.report_data_to_osm(project_dto, current_project)
         else:
             raise ValueError(
                 str(project_id)
