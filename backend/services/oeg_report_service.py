@@ -46,18 +46,24 @@ class OegReportService:
             oeg_report_dto = OegReportDTO(report_data)
             oeg_report_dto.validate()
             oeg_report_data = oeg_report_dto.to_primitive(role="report")
+
             oeg_reporter_url = current_app.config["OEG_REPORTER_SERVICE_BASE_URL"]
+            oeg_reporter_token = current_app.config["OEG_REPORTER_AUTHORIZATION_TOKEN"]
             if (
                 project_dto.project_status == ProjectStatus.PUBLISHED.name
                 and not project_dto.project_info.reported
                 and organisation_enabled_report
+                and project_dto.project_info.locale == "en"
             ):
                 try:
                     # Report to git
                     response_git = requests.post(
                         f"{oeg_reporter_url}git/",
                         data=json.dumps(oeg_report_data),
-                        headers={"Content-Type": "application/json"},
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Token {oeg_reporter_token}",
+                        },
                     )
                     if response_git.status_code != 201:
                         current_app.logger.debug(
@@ -69,7 +75,10 @@ class OegReportService:
                     response_wiki = requests.post(
                         f"{oeg_reporter_url}wiki/",
                         data=json.dumps(oeg_report_data),
-                        headers={"Content-Type": "application/json"},
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Token {oeg_reporter_token}",
+                        },
                     )
                     if response_wiki.status_code != 201:
                         current_app.logger.debug(
@@ -95,6 +104,7 @@ class OegReportService:
                 project_dto.project_status == ProjectStatus.PUBLISHED.name
                 and project_dto.project_info.reported
                 and organisation_enabled_report
+                and project_dto.project_info.locale == "en"
             ):
                 try:
                     # Format update project report data
@@ -118,7 +128,10 @@ class OegReportService:
                     response_git = requests.patch(
                         f"{oeg_reporter_url}git/{platform_name}/{organisation_name}/{project_id}/",
                         data=json.dumps(update_report_data),
-                        headers={"Content-Type": "application/json"},
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Token {oeg_reporter_token}",
+                        },
                     )
                     if response_git.status_code != 201:
                         current_app.logger.debug(
@@ -130,7 +143,10 @@ class OegReportService:
                     response_wiki = requests.patch(
                         f"{oeg_reporter_url}wiki/{organisation_name}/{project_name}/",
                         data=json.dumps(update_report_data),
-                        headers={"Content-Type": "application/json"},
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Token {oeg_reporter_token}",
+                        },
                     )
                     if response_wiki.status_code != 201:
                         current_app.logger.debug(
@@ -170,12 +186,16 @@ class OegReportService:
         format it according to OegReportDTO
         """
         project_license = License.get_by_id(project["licenseId"])
-        project_license_dto = project_license.as_dto()
         project["license"] = project.pop("licenseId")
-        project_license_dto.validate()
 
-        project_license = project_license_dto.to_primitive(role="report")
-        return project_license["description"]
+        if project_license is None:
+            return ""
+        else:
+            project_license_dto = project_license.as_dto()
+            project_license_dto.validate()
+
+            project_license = project_license_dto.to_primitive(role="report")
+            return project_license["description"]
 
     def format_project_data(self, project_dto: ProjectDTO) -> dict:
         """ Format project data according to OegReportDTO """
