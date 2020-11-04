@@ -6,6 +6,7 @@ from schematics.types import (
     EmailType,
     LongType,
     BooleanType,
+    DateTimeType
 )
 from schematics.types.compound import ListType, ModelType, BaseType
 from backend.models.dtos.stats_dto import Pagination
@@ -58,6 +59,10 @@ class UserDTO(Model):
     is_email_verified = EmailType(
         serialized_name="isEmailVerified", serialize_when_none=False
     )
+    tasks_mapped = IntType(serialized_name='tasksMapped')
+    tasks_validated = IntType(serialized_name='tasksValidated')
+    tasks_invalidated = IntType(serialized_name='tasksInvalidated')
+
     is_expert = BooleanType(serialized_name="isExpert", serialize_when_none=False)
     twitter_id = StringType(serialized_name="twitterId")
     facebook_id = StringType(serialized_name="facebookId")
@@ -251,4 +256,42 @@ class UserTaskDTOs(Model):
         self.user_tasks = []
 
     user_tasks = ListType(ModelType(TaskDTO), serialized_name="tasks")
+    pagination = ModelType(Pagination)
+
+
+class AssignTasksDTO(Model):
+    """ DTO used to assign tasks to a user """
+    assignee_id = IntType(required=True, serialized_name='assigneeId')
+    assigner_id = IntType(required=True, serialized_name='assignerId')
+    project_id = IntType(required=True, serialized_name='projectId')
+    task_ids = ListType(IntType, required=True, serialized_name='taskIds')
+    preferred_locale = StringType(default='en', serialized_name='preferredLocale')
+
+
+class UnassignTasksDTO(Model):
+    """ DTO used to unassign tasks """
+    project_id = IntType(required=True, serialized_name='projectId')
+    task_ids = ListType(IntType, required=True, serialized_name='taskIds')
+    assigner_id = IntType(required=True, serialized_name='assignerId')
+
+
+class AssignedTask(Model):
+    """ Describes an assigned task with which user is involved """
+    task_id = IntType(required=True, serialized_name='taskId')
+    project_id = IntType(required=True, serialized_name='projectId')
+    project_name = StringType(serialized_name='projectName')
+    history_id = IntType(serialized_name='historyId')
+    closed = BooleanType()
+    assigned_date = DateTimeType(serialized_name='assignedDate')
+    task_status = StringType(serialized_name='taskStatus')
+
+
+class AssignedTasksDTO(Model):
+    """ DTO to get assigned tasks with which a user is involved """
+    def __init__(self):
+        """ Initialise all arrays to empty """
+        super().__init__()
+        self.assigned_tasks = []
+
+    assigned_tasks = ListType(ModelType(AssignedTask), serialized_name='assignedTasks')
     pagination = ModelType(Pagination)

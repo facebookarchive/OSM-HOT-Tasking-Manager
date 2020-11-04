@@ -7,18 +7,21 @@ from geoalchemy2 import shape
 
 from backend.models.dtos.mapping_dto import (
     TaskDTO,
+    TaskDTOs,
     MappedTaskDTO,
     LockTaskDTO,
     StopMappingTaskDTO,
     TaskCommentDTO,
 )
-from backend.models.postgis.statuses import MappingNotAllowed
+from backend.models.dtos.user_dto import AssignTasksDTO, UnassignTasksDTO
+from backend.models.postgis.project import Project
+from backend.models.postgis.statuses import MappingNotAllowed, ValidatingNotAllowed
 from backend.models.postgis.task import Task, TaskStatus, TaskHistory, TaskAction
 from backend.models.postgis.utils import NotFound, UserLicenseError
 from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
-
+from backend.services.validator_service import ValidatorServiceError
 
 class MappingServiceError(Exception):
     """ Custom Exception to notify callers an error occurred when handling mapping """
@@ -44,13 +47,16 @@ class MappingService:
 
     @staticmethod
     def get_task_as_dto(
+        user_id: int,
         task_id: int,
         project_id: int,
         preferred_local: str = "en",
+        logged_in_user_id: int = None
     ) -> TaskDTO:
         """ Get task as DTO for transmission over API """
-        task = MappingService.get_task(task_id, project_id)
+        task = MappingService.get_task(user_id, task_id, project_id)
         task_dto = task.as_dto_with_instructions(preferred_local)
+        task_dto.is_undoable = MappingService._is_task_undoable(logged_in_user_id, task)
         return task_dto
 
     @staticmethod
@@ -76,6 +82,34 @@ class MappingService:
         return False
 
     @staticmethod
+    def assert_user_can_map(project_id: int, user_id: int):
+        """ Raises error if the user cannot map the current project """
+
+        user_can_map, error_reason = ProjectService.is_user_permitted_to_map(
+            project_id, user_id
+        )
+
+        if not user_can_map:
+            if error_reason == MappingNotAllowed.USER_NOT_ACCEPTED_LICENSE:
+                raise UserLicenseError('User must accept license to map this task')
+            else:
+                raise MappingServiceError(f'Mapping not allowed because: {error_reason.name}')
+
+    @staticmethod
+    def assert_user_can_validate(project_id: int, user_id: int):
+        """ Raises error if the user cannot validate the current project """
+        user_can_validate, error_reason = ProjectService.is_user_permitted_to_validate(
+            project_id, user_id
+        )
+
+        if not user_can_validate:
+            if error_reason == ValidatingNotAllowed.USER_NOT_ACCEPTED_LICENSE:
+                raise UserLicenseError('User must accept license to map this task')
+            else:
+                raise ValidatatorServiceError(f'Validation not allowed because: {error_reason.name}')
+
+
+    @staticmethod
     def lock_task_for_mapping(lock_task_dto: LockTaskDTO) -> TaskDTO:
         """
         Sets the task_locked status to locked so no other user can work on it
@@ -83,6 +117,7 @@ class MappingService:
         :raises TaskServiceError
         :return: Updated task, or None if not found
         """
+
         task = MappingService.get_task(lock_task_dto.task_id, lock_task_dto.project_id)
 
         if not task.is_mappable():
@@ -125,7 +160,7 @@ class MappingService:
             mapped_task.project_id, mapped_task.task_id, True
         )
         StatsService.update_stats_after_task_state_change(
-            mapped_task.project_id, mapped_task.user_id, last_state, new_state
+            mapped_task.project_id, mapped_task.user_id, last_state, new_state, mapped_task.task_id
         )
 
         if mapped_task.comment:
@@ -382,3 +417,70 @@ class MappingService:
         project = ProjectService.get_project_by_id(project_id)
         project.tasks_bad_imagery = 0
         project.save()
+
+
+    @staticmethod
+    def assign_tasks(assign_tasks_dto: AssignTasksDTO) -> TaskDTOs:
+        """
+        Assigns tasks to a user so that user must either map or validate them
+        :params assign_tasks_dto: DTO with data needed to assign tasks
+        :raises TaskServiceError
+        :return Updated tasks, or None if not found
+        """
+        tasks_to_assign = []
+        for task_id in assign_tasks_dto.task_ids:
+            task = MappingService.get_task(task_id, assign_tasks_dto.project_id)
+            if task is None:
+                raise NotFound(f'Task {task_id} not found')
+
+            if task.assigned_to is not None:
+                raise MappingServiceError(f'Task {task_id} in assigned to another user')
+
+            # Confirm that Assignee can actually do the upcoming task
+            if task.task_status == TaskStatus.READY.value:
+                MappingService.assert_user_can_map(
+                    assign_tasks_dto.project_id, assign_tasks_dto.assignee_id
+                )
+            if task.task_status == TaskStatus.MAPPED.value:
+                MappingService.assert_user_can_validate(
+                    assign_tasks_dto.project_id, assign_tasks_dto.assignee_id
+                )
+            tasks_to_assign.append(task)
+
+        dtos = []
+        for task in tasks_to_assign:
+            task.assign_task(assign_tasks_dto.assignee_id, assign_tasks_dto.assigner_id)
+            dtos.append(task.as_dto_with_instructions(assign_tasks_dto.preferred_locale))
+        task_dtos = TaskDTOs()
+        task_dtos.tasks = dtos
+        return task_dtos
+
+    @staticmethod
+    def unassign_tasks(unassign_tasks_dto: UnassignTasksDTO) -> TaskDTOs:
+        """
+        Unassigns selected tasks
+        :params unassign_tasks_dto: DTO with data needed to unassign tasks
+        :raises TaskServiceError
+        :return Updated tasks
+        """
+        tasks_to_unassign = []
+        for task_id in unassign_tasks_dto.task_ids:
+            task = MappingService.get_task(task_id, unassign_tasks_dto.project_id)
+
+            if task is None:
+                raise NotFound(f'Task {task_id} not found')
+
+            if task.locked_by is not None:
+                raise MappingServiceError(f'Task {task_id} in currently locked and cannot be unassigned')
+
+        tasks_to_unassign.append(task)
+        dtos = []
+        for task in tasks_to_unassign:
+            task.unassign_task(unassign_tasks_dto.assigner_id)
+            dtos.append(task.as_dto_with_instructions(unassign_tasks_dto.preferred_locale))
+
+        task_dtos = TaskDTOs()
+        task_dtos.tasks = dtos
+
+        return task_dtos
+

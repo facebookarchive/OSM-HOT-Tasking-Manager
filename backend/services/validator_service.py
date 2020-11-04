@@ -21,6 +21,7 @@ from backend.models.postgis.task import (
 )
 from backend.models.postgis.utils import NotFound, UserLicenseError, timestamp
 from backend.models.postgis.project_info import ProjectInfo
+from backend.models.postgis.project import Project
 from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
@@ -65,7 +66,6 @@ class ValidatorService:
                 raise ValidatorServiceError(
                     "Tasks cannot be validated by the same user who marked task as mapped or badimagery"
                 )
-
             tasks_to_lock.append(task)
 
         user_can_validate, error_reason = ProjectService.is_user_permitted_to_validate(
@@ -166,6 +166,7 @@ class ValidatorService:
                     validated_dto.user_id,
                     prev_status,
                     task_to_unlock["new_state"],
+                    task.id
                 )
             task_mapping_issues = ValidatorService.get_task_mapping_issues(
                 task_to_unlock

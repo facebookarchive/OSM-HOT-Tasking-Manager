@@ -337,15 +337,14 @@ class ProjectService:
     @staticmethod
     def is_user_permitted_to_map(project_id: int, user_id: int):
         """ Check if the user is allowed to map the on the project in scope """
+
         if UserService.is_user_blocked(user_id):
             return False, MappingNotAllowed.USER_NOT_ON_ALLOWED_LIST
-
         project = ProjectService.get_project_by_id(project_id)
         if project.license_id:
             if not UserService.has_user_accepted_license(user_id, project.license_id):
                 return False, MappingNotAllowed.USER_NOT_ACCEPTED_LICENSE
         mapping_permission = project.mapping_permission
-
         is_manager_permission = (
             False  # is_admin or is_author or is_org_manager or is_manager_team
         )
@@ -364,7 +363,6 @@ class ProjectService:
             is_restriction = ProjectService.evaluate_mapping_permission(
                 project_id, user_id, mapping_permission
             )
-
         tasks = Task.get_locked_tasks_for_user(user_id)
         if len(tasks.locked_tasks) > 0:
             return False, MappingNotAllowed.USER_ALREADY_HAS_TASK_LOCKED
@@ -384,7 +382,6 @@ class ProjectService:
             is_manager_permission or is_allowed_user or not is_restriction
         ):
             return False, MappingNotAllowed.USER_NOT_ON_ALLOWED_LIST
-
         return True, "User allowed to map"
 
     @staticmethod
