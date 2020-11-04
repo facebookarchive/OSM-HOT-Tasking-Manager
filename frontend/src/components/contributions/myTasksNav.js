@@ -88,6 +88,9 @@ export const MyTasksNav = props => {
         >
           <FormattedMessage {...messages.archived} />
         </Link>
+        <Link to="?status=Assigned" className={`di mh1 ${isActiveButton('Assigned', contributionsQuery)} ${linkCombo}`}>
+          Tasks Assign to You
+        </Link>
       </div>
       {props.children}
     </header>

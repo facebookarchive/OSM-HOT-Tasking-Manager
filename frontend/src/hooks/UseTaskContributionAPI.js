@@ -69,7 +69,8 @@ const dataFetchReducer = (state, action) => {
         ...state,
         isLoading: false,
         isError: true,
-      };
+        statusCode:action.payload.error.data.error,
+       };
     default:
       console.log(action);
       throw new Error();

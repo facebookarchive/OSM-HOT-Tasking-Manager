@@ -43,6 +43,9 @@
     "react-calendar-heatmap": "^1.8.1",
     "react-chartjs-2": "^2.10.0",
     "react-click-outside": "^3.0.1",
+    "react-data-table-component": "^6.11.5",	
+    "react-data-table-component-extensions": "^1.5.0",	
+    "react-datepicker": "^3.2.2",
     "react-dom": "^16.13.1",
     "react-dropzone": "^11.2.0",
     "react-final-form": "^6.5.1",
@@ -58,6 +61,7 @@
     "redux-thunk": "^2.3.0",
     "short-number": "^1.0.7",
     "shpjs": "^3.6.0",
+    "styled-components": "^5.2.0",
     "tachyons": "^4.12.0",
     "use-query-params": "^1.1.8",
     "webfontloader": "^1.6.28"
