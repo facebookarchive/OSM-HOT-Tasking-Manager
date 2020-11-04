@@ -19,7 +19,7 @@ import { LockIcon, ListIcon, ZoomPlusIcon, CloseIcon, InternalLinkIcon,ProfilePi
 import { PaginatorLine, howManyPages } from '../paginator';
 import { Dropdown } from '../dropdown';
 import { CustomButton } from '../button';
-import { pushToLocalJSONAPI, fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { pushToLocalJSONAPI } from '../../network/genericJSONRequest';
 export function TaskStatus({ status, lockHolder }: Object) {
   const isReadyOrLockedForMapping = ['READY', 'LOCKED_FOR_MAPPING'].includes(status);
   const dotSize = isReadyOrLockedForMapping ? '0.875rem' : '1rem';

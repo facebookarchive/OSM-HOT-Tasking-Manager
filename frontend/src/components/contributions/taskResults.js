@@ -19,14 +19,11 @@ export const TaskResults = (props) => {
     isAssignedFound = isAssigned.indexOf("ASSIGNED") !==-1? true: false; //true
   }
 
-const [resultTasks, setResultTasks] = useState([]);
 const [userData, setUserData] = useState({});
 
 const token = useSelector((state) => state.auth.get('token'));
 const userDetails = useSelector((state) => state.auth.get('userDetails'));
 const userName=userDetails.username;
-function  handleRowClick(row, event)  {
-    }
 
     useEffect(() => {
       getTasks();
