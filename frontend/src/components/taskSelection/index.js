@@ -78,15 +78,12 @@ export function TaskSelection({ project, type, loading }: Object) {
     project.projectId !== undefined,
   );
   const getUsers = useCallback((id) => {
-
     fetchLocalJSONAPI(`users/`, token)
-        .then((res) => {
-
-            setUsers(res.users);
-        })
-        .catch((e) => console.log("call back failed in task index file" + e));
-
-}, []);
+      .then((res) => {
+        setUsers(res.users);
+      })
+      .catch((e) => console.log('call back failed in task index file' + e));
+  }, []);
 
   const getActivities = useCallback((id) => {
     if (id) {
@@ -109,7 +106,7 @@ export function TaskSelection({ project, type, loading }: Object) {
     getActivities(project.projectId);
     getContributions(project.projectId);
     getUsers();
-  }, [getActivities, getContributions,getUsers, project.projectId]);
+  }, [getActivities, getContributions, getUsers, project.projectId]);
   // refresh activities each 60 seconds if page is visible to user
   useInterval(() => {
     if (document.visibilityState === 'visible') {

@@ -18,7 +18,7 @@ const isActiveButton = (buttonName, contributionQuery) => {
   }
 };
 
-export const MyTasksNav = props => {
+export const MyTasksNav = (props) => {
   const [contributionsQuery, setContributionsQuery] = useTaskContributionQueryParams();
 
   const linkCombo = 'link ph3 f6 pv2 ba b--grey-light';
@@ -38,7 +38,7 @@ export const MyTasksNav = props => {
           <div className="dib">
             <div className="mv2 dib"></div>
             <FormattedMessage {...messages.searchProject}>
-              {msg => {
+              {(msg) => {
                 return (
                   <ProjectSearchBox
                     className="dib fl mh1"
@@ -88,7 +88,10 @@ export const MyTasksNav = props => {
         >
           <FormattedMessage {...messages.archived} />
         </Link>
-        <Link to="?status=Assigned" className={`di mh1 ${isActiveButton('Assigned', contributionsQuery)} ${linkCombo}`}>
+        <Link
+          to="?status=Assigned"
+          className={`di mh1 ${isActiveButton('Assigned', contributionsQuery)} ${linkCombo}`}
+        >
           Tasks Assign to You
         </Link>
       </div>

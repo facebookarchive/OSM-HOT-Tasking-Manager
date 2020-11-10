@@ -1,4 +1,4 @@
-import React ,{ useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormattedMessage, FormattedNumber } from 'react-intl';
 import ReactPlaceholder from 'react-placeholder';
 import 'react-placeholder/lib/reactPlaceholder.css';
@@ -9,49 +9,49 @@ import DataTable from 'react-data-table-component';
 import DataTableExtensions from 'react-data-table-component-extensions';
 import 'react-data-table-component-extensions/dist/index.css';
 import { Link } from '@reach/router';
-import {  fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
 import { useSelector } from 'react-redux';
 export const TaskResults = (props) => {
   const state = props.state;
-  let isAssigned=state.statusCode;
+  let isAssigned = state.statusCode;
   let isAssignedFound;
-  if(isAssigned){
-    isAssignedFound = isAssigned.indexOf("ASSIGNED") !==-1? true: false; //true
+  if (isAssigned) {
+    isAssignedFound = isAssigned.indexOf('ASSIGNED') !== -1 ? true : false; //true
   }
 
-const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({});
 
-const token = useSelector((state) => state.auth.get('token'));
-const userDetails = useSelector((state) => state.auth.get('userDetails'));
-const userName=userDetails.username;
+  const token = useSelector((state) => state.auth.get('token'));
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const userName = userDetails.username;
 
-    useEffect(() => {
-      getTasks();
-    }, []);
+  useEffect(() => {
+    getTasks();
+  }, []);
 
-    const getTasks = async () => {
-     //  const response = await fetchLocalJSONAPI(`user/${userName}/assigned-tasks/?closed=false`, token);
-		const response = await fetchLocalJSONAPI(`user/${userName}/assigned-tasks/?pageSize=1000&closed=false`, token);
-        const jsonData = await response.assignedTasks;
-       setUserData(jsonData);
-     
-    };
-        let data=[];
-  
-     for (var i = 0; i < userData.length; i++) {
-      var obj = {};
-      obj.id = i + 1;
-      obj.projectName = userData[i].projectName;
-      obj.project = userData[i].projectId;
-      obj.taskId = userData[i].taskId;
-      obj.status = userData[i].taskStatus;
-  
-      obj.projectState = userData[i].taskStatus;
-       data.push(obj);
-  
+  const getTasks = async () => {
+    //  const response = await fetchLocalJSONAPI(`user/${userName}/assigned-tasks/?closed=false`, token);
+    const response = await fetchLocalJSONAPI(
+      `user/${userName}/assigned-tasks/?pageSize=1000&closed=false`,
+      token,
+    );
+    const jsonData = await response.assignedTasks;
+    setUserData(jsonData);
+  };
+  let data = [];
+
+  for (var i = 0; i < userData.length; i++) {
+    var obj = {};
+    obj.id = i + 1;
+    obj.projectName = userData[i].projectName;
+    obj.project = userData[i].projectId;
+    obj.taskId = userData[i].taskId;
+    obj.status = userData[i].taskStatus;
+
+    obj.projectState = userData[i].taskStatus;
+    data.push(obj);
   }
- const columns = [
-
+  const columns = [
     {
       name: 'Project Name',
       selector: 'projectName',
@@ -72,10 +72,12 @@ const userName=userDetails.username;
       sortable: true,
       grow: 2,
       minWidth: '100px',
-      cell: row => <Link
-      
-      to={`/projects/${row.project}/tasks?page=1&search=${row.taskId}`}
-            > {row.taskId} </Link>
+      cell: (row) => (
+        <Link to={`/projects/${row.project}/tasks?page=1&search=${row.taskId}`}>
+          {' '}
+          {row.taskId}{' '}
+        </Link>
+      ),
     },
     {
       name: 'Status',
@@ -91,26 +93,25 @@ const userName=userDetails.username;
       grow: 2,
       minWidth: '200px',
     },
-];
-const tableData = {
-  columns,
-  data,
-};
-const customStyles = {
-  headCells: {
-    style: {
-      fontSize: '15px',
-      fontWeight: 'bold',
-       },
-  },
-
-  cells: {
-    style: {
-      fontSize: '14px',
-    
+  ];
+  const tableData = {
+    columns,
+    data,
+  };
+  const customStyles = {
+    headCells: {
+      style: {
+        fontSize: '15px',
+        fontWeight: 'bold',
+      },
     },
-  },
-};
+
+    cells: {
+      style: {
+        fontSize: '14px',
+      },
+    },
+  };
 
   return (
     <div className={props.className}>
@@ -129,8 +130,8 @@ const customStyles = {
           </p>
         )
       )}
-     
-     {state.isError  && !isAssignedFound && (
+
+      {state.isError && !isAssignedFound && (
         <div className="bg-tan pa4 mt3">
           <FormattedMessage {...messages.errorLoadingTasks} />
           <div className="pa2">
@@ -141,31 +142,27 @@ const customStyles = {
         </div>
       )}
 
-      {state.isError && isAssignedFound  && (
+      {state.isError && isAssignedFound && (
         <div className="bg-tan pa4 mt3">
-
-          <DataTableExtensions
-            {...tableData}
-            print={false}
-            >
+          <DataTableExtensions {...tableData} print={false}>
             <DataTable
-                title =  "Tasks Assigned to you "
-                columns={columns}
-                data={data}
-                defaultSortField="title"
-                pagination
-                highlightOnHover
-                customStyles={customStyles}
-                />
+              title="Tasks Assigned to you "
+              columns={columns}
+              data={data}
+              defaultSortField="title"
+              pagination
+              highlightOnHover
+              customStyles={customStyles}
+            />
           </DataTableExtensions>
-       </div>
+        </div>
       )}
       {!state.isError && (
-      <div className={`cf db`}>
-        <ReactPlaceholder ready={!state.isLoading} type="media" rows={10}>
-          <TaskCards pageOfCards={state.tasks} />
-        </ReactPlaceholder>
-      </div>
+        <div className={`cf db`}>
+          <ReactPlaceholder ready={!state.isLoading} type="media" rows={10}>
+            <TaskCards pageOfCards={state.tasks} />
+          </ReactPlaceholder>
+        </div>
       )}
     </div>
   );
