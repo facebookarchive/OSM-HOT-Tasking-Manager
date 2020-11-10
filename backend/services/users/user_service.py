@@ -27,7 +27,12 @@ from backend.models.postgis.message import Message
 from backend.models.postgis.project import Project
 from backend.models.postgis.project_info import ProjectInfo
 from backend.models.postgis.user import User, UserRole, MappingLevel, UserEmail
-from backend.models.postgis.task import TaskHistory, TaskAssignmentHistory, TaskAction, Task
+from backend.models.postgis.task import (
+    TaskHistory,
+    TaskAssignmentHistory,
+    TaskAction,
+    Task,
+)
 from backend.models.dtos.user_dto import UserTaskDTOs
 from backend.models.dtos.stats_dto import Pagination
 from backend.models.postgis.statuses import TaskStatus, ProjectStatus
@@ -815,12 +820,15 @@ class UserService:
         page=1,
         page_size=10,
         sort_by="assigned_date",
-        sort_direction="desc"
+        sort_direction="desc",
     ) -> AssignedTasksDTO:
         """ Get assigned tasks either assigned to or assigned by the user """
         user = UserService.get_user_by_username(username)
-        query = TaskAssignmentHistory.query.filter_by(assigner_id=user.id) if as_assigner else \
-                TaskAssignmentHistory.query.filter_by(assignee_id=user.id)
+        query = (
+            TaskAssignmentHistory.query.filter_by(assigner_id=user.id)
+            if as_assigner
+            else TaskAssignmentHistory.query.filter_by(assignee_id=user.id)
+        )
 
         if closed is not None:
             query = query.filter_by(is_closed=closed)
@@ -831,7 +839,9 @@ class UserService:
         if task_status is not None:
             query = query.filter_by(task_status=task_status)
 
-        results = query.order_by(text(sort_by + " " + sort_direction)).paginate(page, page_size, True)
+        results = query.order_by(text(sort_by + " " + sort_direction)).paginate(
+            page, page_size, True
+        )
 
         project_names = {}
         assigned_tasks_dto = AssignedTasksDTO()
@@ -844,7 +854,9 @@ class UserService:
             dto.assigned_date = entry.assigned_date
             dto.task_status = TaskStatus(entry.task_status).name
             if dto.project_id not in project_names:
-                project_names[dto.project_id] = ProjectInfo.get_dto_for_locale(dto.project_id, preferred_locale).name
+                project_names[dto.project_id] = ProjectInfo.get_dto_for_locale(
+                    dto.project_id, preferred_locale
+                ).name
             dto.project_name = project_names[dto.project_id]
 
             assigned_tasks_dto.assigned_tasks.append(dto)

@@ -690,8 +690,9 @@ def add_api_endpoints(app):
     api.add_resource(UsersRestAPI, format_url("users/<int:user_id>/"))
     api.add_resource(AssignTasksAPI, format_url("project/<int:project_id>/assign"))
     api.add_resource(UnassignTasksAPI, format_url("project/<int:project_id>/unassign"))
-    api.add_resource(UserAssignedTasks, format_url("user/<string:username>/assigned-tasks"))
-
+    api.add_resource(
+        UserAssignedTasks, format_url("user/<string:username>/assigned-tasks")
+    )
 
     api.add_resource(
         UsersQueriesUsernameFilterAPI,

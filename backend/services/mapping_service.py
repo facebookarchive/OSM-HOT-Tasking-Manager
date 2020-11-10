@@ -23,6 +23,7 @@ from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
 from backend.services.validator_service import ValidatorServiceError
 
+
 class MappingServiceError(Exception):
     """ Custom Exception to notify callers an error occurred when handling mapping """
 
@@ -51,7 +52,7 @@ class MappingService:
         task_id: int,
         project_id: int,
         preferred_local: str = "en",
-        logged_in_user_id: int = None
+        logged_in_user_id: int = None,
     ) -> TaskDTO:
         """ Get task as DTO for transmission over API """
         task = MappingService.get_task(user_id, task_id, project_id)
@@ -91,9 +92,11 @@ class MappingService:
 
         if not user_can_map:
             if error_reason == MappingNotAllowed.USER_NOT_ACCEPTED_LICENSE:
-                raise UserLicenseError('User must accept license to map this task')
+                raise UserLicenseError("User must accept license to map this task")
             else:
-                raise MappingServiceError(f'Mapping not allowed because: {error_reason.name}')
+                raise MappingServiceError(
+                    f"Mapping not allowed because: {error_reason.name}"
+                )
 
     @staticmethod
     def assert_user_can_validate(project_id: int, user_id: int):
@@ -104,10 +107,11 @@ class MappingService:
 
         if not user_can_validate:
             if error_reason == ValidatingNotAllowed.USER_NOT_ACCEPTED_LICENSE:
-                raise UserLicenseError('User must accept license to map this task')
+                raise UserLicenseError("User must accept license to map this task")
             else:
-                raise ValidatatorServiceError(f'Validation not allowed because: {error_reason.name}')
-
+                raise ValidatatorServiceError(
+                    f"Validation not allowed because: {error_reason.name}"
+                )
 
     @staticmethod
     def lock_task_for_mapping(lock_task_dto: LockTaskDTO) -> TaskDTO:
@@ -160,7 +164,11 @@ class MappingService:
             mapped_task.project_id, mapped_task.task_id, True
         )
         StatsService.update_stats_after_task_state_change(
-            mapped_task.project_id, mapped_task.user_id, last_state, new_state, mapped_task.task_id
+            mapped_task.project_id,
+            mapped_task.user_id,
+            last_state,
+            new_state,
+            mapped_task.task_id,
         )
 
         if mapped_task.comment:
@@ -418,7 +426,6 @@ class MappingService:
         project.tasks_bad_imagery = 0
         project.save()
 
-
     @staticmethod
     def assign_tasks(assign_tasks_dto: AssignTasksDTO) -> TaskDTOs:
         """
@@ -431,10 +438,10 @@ class MappingService:
         for task_id in assign_tasks_dto.task_ids:
             task = MappingService.get_task(task_id, assign_tasks_dto.project_id)
             if task is None:
-                raise NotFound(f'Task {task_id} not found')
+                raise NotFound(f"Task {task_id} not found")
 
             if task.assigned_to is not None:
-                raise MappingServiceError(f'Task {task_id} in assigned to another user')
+                raise MappingServiceError(f"Task {task_id} in assigned to another user")
 
             # Confirm that Assignee can actually do the upcoming task
             if task.task_status == TaskStatus.READY.value:
@@ -450,7 +457,9 @@ class MappingService:
         dtos = []
         for task in tasks_to_assign:
             task.assign_task(assign_tasks_dto.assignee_id, assign_tasks_dto.assigner_id)
-            dtos.append(task.as_dto_with_instructions(assign_tasks_dto.preferred_locale))
+            dtos.append(
+                task.as_dto_with_instructions(assign_tasks_dto.preferred_locale)
+            )
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
         return task_dtos
@@ -468,19 +477,22 @@ class MappingService:
             task = MappingService.get_task(task_id, unassign_tasks_dto.project_id)
 
             if task is None:
-                raise NotFound(f'Task {task_id} not found')
+                raise NotFound(f"Task {task_id} not found")
 
             if task.locked_by is not None:
-                raise MappingServiceError(f'Task {task_id} in currently locked and cannot be unassigned')
+                raise MappingServiceError(
+                    f"Task {task_id} in currently locked and cannot be unassigned"
+                )
 
         tasks_to_unassign.append(task)
         dtos = []
         for task in tasks_to_unassign:
             task.unassign_task(unassign_tasks_dto.assigner_id)
-            dtos.append(task.as_dto_with_instructions(unassign_tasks_dto.preferred_locale))
+            dtos.append(
+                task.as_dto_with_instructions(unassign_tasks_dto.preferred_locale)
+            )
 
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
 
         return task_dtos
-

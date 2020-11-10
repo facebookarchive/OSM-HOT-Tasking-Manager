@@ -166,7 +166,7 @@ class ValidatorService:
                     validated_dto.user_id,
                     prev_status,
                     task_to_unlock["new_state"],
-                    task.id
+                    task.id,
                 )
             task_mapping_issues = ValidatorService.get_task_mapping_issues(
                 task_to_unlock

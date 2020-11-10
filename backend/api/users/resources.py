@@ -1,14 +1,18 @@
 from flask_restful import Resource, current_app, request
 from schematics.exceptions import DataError
 
-from backend.models.dtos.user_dto import UserSearchQuery, UserDTO, AssignTasksDTO, UnassignTasksDTO
+from backend.models.dtos.user_dto import (
+    UserSearchQuery,
+    UserDTO,
+    AssignTasksDTO,
+    UnassignTasksDTO,
+)
 from backend.services.users.authentication_service import token_auth, tm
 from backend.services.users.user_service import UserService, UserServiceError, NotFound
 from backend.services.mapping_service import MappingServiceError, MappingService
 from backend.services.validator_service import ValidatorServiceError
 from backend.models.postgis.utils import UserLicenseError
 from backend.services.project_service import ProjectService
-
 
 
 class UserAPI(Resource):
@@ -44,12 +48,14 @@ class UserAPI(Resource):
                 description: Internal Server Error
         """
         try:
-            user_dto = UserService.get_user_dto_by_username(username, tm.authenticated_user_id)
+            user_dto = UserService.get_user_dto_by_username(
+                username, tm.authenticated_user_id
+            )
             return user_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -146,24 +152,27 @@ class UserUpdateAPI(Resource):
         """
         try:
             user_dto = UserDTO(request.get_json())
-            if user_dto.email_address == '':
-                user_dto.email_address = None  # Replace empty string with None so validation doesn't break
+            if user_dto.email_address == "":
+                user_dto.email_address = (
+                    None  # Replace empty string with None so validation doesn't break
+                )
 
             user_dto.validate()
         except DataError as e:
-            current_app.logger.error(f'error validating request: {str(e)}')
+            current_app.logger.error(f"error validating request: {str(e)}")
             return str(e), 400
 
         try:
-            verification_sent = UserService.update_user_details(tm.authenticated_user_id, user_dto)
+            verification_sent = UserService.update_user_details(
+                tm.authenticated_user_id, user_dto
+            )
             return verification_sent, 200
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
-
 
 
 class UsersAllAPI(Resource):
@@ -230,7 +239,6 @@ class UsersAllAPI(Resource):
 
 
 class AssignTasksAPI(Resource):
-
     @tm.pm_only()
     @token_auth.login_required
     def post(self, project_id):
@@ -291,14 +299,16 @@ class AssignTasksAPI(Resource):
         try:
             assign_tasks_dto = AssignTasksDTO(request.get_json())
             assign_tasks_dto.assigner_id = tm.authenticated_user_id
-            user_id = UserService.get_user_by_username(request.args.get('username')).id
+            user_id = UserService.get_user_by_username(request.args.get("username")).id
             assign_tasks_dto.assignee_id = user_id
             assign_tasks_dto.project_id = project_id
-            assign_tasks_dto.preferred_locale = request.environ.get('HTTP_ACCEPT_LANGUAGE')
+            assign_tasks_dto.preferred_locale = request.environ.get(
+                "HTTP_ACCEPT_LANGUAGE"
+            )
             assign_tasks_dto.validate()
 
         except DataError as e:
-            current_app.logger.error(f'Error validating request: {str(e)}')
+            current_app.logger.error(f"Error validating request: {str(e)}")
             return str(e), 400
 
         try:
@@ -311,13 +321,12 @@ class AssignTasksAPI(Resource):
         except UserLicenseError:
             return {"Error": "User not accepted license terms"}, 409
         except Exception as e:
-            error_msg = f'Task Assign API - unhandled error: {str(e)}'
+            error_msg = f"Task Assign API - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"Error": error_msg}, 500
 
 
 class UnassignTasksAPI(Resource):
-
     @tm.pm_only()
     @token_auth.login_required
     def post(self, project_id):
@@ -373,10 +382,12 @@ class UnassignTasksAPI(Resource):
             unassign_tasks_dto = UnassignTasksDTO(request.get_json())
             unassign_tasks_dto.project_id = project_id
             unassign_tasks_dto.assigner_id = tm.authenticated_user_id
-            unassign_tasks_dto.preferred_locale = request.environ.get('HTTP_ACCEPT_LANGUAGE')
+            unassign_tasks_dto.preferred_locale = request.environ.get(
+                "HTTP_ACCEPT_LANGUAGE"
+            )
             unassign_tasks_dto.validate()
         except DataError as e:
-            current_app.logger.error(f'Error validating request: {str(e)}')
+            current_app.logger.error(f"Error validating request: {str(e)}")
             return str(e), 400
 
         try:
@@ -389,13 +400,12 @@ class UnassignTasksAPI(Resource):
         except UserLicenseError:
             return {"Error": "User not accepted license terms"}, 409
         except Exception as e:
-            error_msg = f'Task UnAssign API - unhandled error: {str(e)}'
+            error_msg = f"Task UnAssign API - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"Error": error_msg}, 500
 
 
 class UserAssignedTasks(Resource):
-
     @tm.pm_only(False)
     @token_auth.login_required
     def get(self, username):
@@ -462,45 +472,47 @@ class UserAssignedTasks(Resource):
         """
         try:
             sort_column_map = {
-                'assignedDate': 'assigned_date',
-                'projectId': 'project_id'
+                "assignedDate": "assigned_date",
+                "projectId": "project_id",
             }
-            sort_column = sort_column_map.get(request.args.get('sortBy'), sort_column_map['assignedDate'])
+            sort_column = sort_column_map.get(
+                request.args.get("sortBy"), sort_column_map["assignedDate"]
+            )
 
             # closed needs to be set to True, False, or None
             closed = None
-            if request.args.get('closed') == 'true':
+            if request.args.get("closed") == "true":
                 closed = True
-            elif request.args.get('closed') == 'false':
+            elif request.args.get("closed") == "false":
                 closed = False
 
             # task status needs to be set to None or one of the statuses
-            task_status = request.args.get('taskStatus') or None
+            task_status = request.args.get("taskStatus") or None
 
             # sort direction should only be desc or asc
-            if request.args.get('sortDirection') in ('asc', 'desc'):
-                sort_direction = request.args.get('sortDirection')
+            if request.args.get("sortDirection") in ("asc", "desc"):
+                sort_direction = request.args.get("sortDirection")
             else:
-                sort_direction = 'desc'
+                sort_direction = "desc"
 
             assigned_tasks = UserService.get_user_assigned_tasks(
-                request.args.get('asAssigner') == 'true',
+                request.args.get("asAssigner") == "true",
                 username,
-                request.environ.get('HTTP_ACCEPT_LANGUAGE'),
+                request.environ.get("HTTP_ACCEPT_LANGUAGE"),
                 closed,
                 task_status,
-                request.args.get('project', None, type=int),
-                request.args.get('page', None, type=int),
-                request.args.get('pageSize', None, type=int),
+                request.args.get("project", None, type=int),
+                request.args.get("page", None, type=int),
+                request.args.get("pageSize", None, type=int),
                 sort_column,
-                sort_direction
+                sort_direction,
             )
 
             return assigned_tasks.to_primitive(), 200
         except NotFound:
             return {"Error": "No assigned tasks"}, 404
         except Exception as e:
-            error_msg = f'Assigned Tasks API - unhandled error: {str(e)}'
+            error_msg = f"Assigned Tasks API - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"Error": error_msg}, 500
 
@@ -858,7 +870,7 @@ class UserOSMAPI(Resource):
         except UserServiceError as e:
             return {"Error": str(e)}, 502
         except Exception as e:
-            error_msg = f'User OSM GET - unhandled error: {str(e)}'
+            error_msg = f"User OSM GET - unhandled error: {str(e)}"
             current_app.logger.error(error_msg)
             return {"error": error_msg}, 500
 
@@ -894,14 +906,17 @@ class UserMappedProjects(Resource):
                 description: Internal Server Error
         """
         try:
-            locale = request.environ.get('HTTP_ACCEPT_LANGUAGE') if request.environ.get(
-                'HTTP_ACCEPT_LANGUAGE') else 'en'
+            locale = (
+                request.environ.get("HTTP_ACCEPT_LANGUAGE")
+                if request.environ.get("HTTP_ACCEPT_LANGUAGE")
+                else "en"
+            )
             user_dto = UserService.get_mapped_projects(username, locale)
             return user_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -956,7 +971,7 @@ class UserSetRole(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -1011,7 +1026,7 @@ class UserSetLevel(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -1052,14 +1067,16 @@ class UserSetExpertMode(Resource):
                 description: Internal Server Error
         """
         try:
-            UserService.set_user_is_expert(tm.authenticated_user_id, is_expert == 'true')
+            UserService.set_user_is_expert(
+                tm.authenticated_user_id, is_expert == "true"
+            )
             return {"Success": "Expert mode updated"}, 200
         except UserServiceError:
             return {"Error": "Not allowed"}, 400
         except NotFound:
             return {"Error": "User not found"}, 404
         except Exception as e:
-            error_msg = f'UserSetExpert POST - unhandled error: {str(e)}'
+            error_msg = f"UserSetExpert POST - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
 
@@ -1104,7 +1121,6 @@ class UserAcceptLicense(Resource):
         except NotFound:
             return {"Error": "User or mapping not found"}, 404
         except Exception as e:
-            error_msg = f'User GET - unhandled error: {str(e)}'
+            error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
-
