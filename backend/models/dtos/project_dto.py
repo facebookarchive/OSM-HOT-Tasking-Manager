@@ -79,7 +79,8 @@ def is_known_editor(value):
         raise ValidationError(
             f"Unknown editor: {value} Valid values are {Editors.ID.name}, "
             f"{Editors.JOSM.name}, {Editors.POTLATCH_2.name}, "
-            f"{Editors.FIELD_PAPERS.name}"
+            f"{Editors.FIELD_PAPERS.name}, "
+            f"{Editors.RAPID.name} "
         )
 
 
