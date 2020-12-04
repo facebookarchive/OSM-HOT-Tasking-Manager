@@ -17,6 +17,9 @@ export function openEditor(
   if (editor === 'ID') {
     return getIdUrl(project, center, zoom, selectedTasks, '?editor=ID');
   }
+  if (editor === 'RAPID') {
+    return getIdUrl(project, center, zoom, selectedTasks, '?editor=RAPID');
+  }
   if (windowObjectReference == null || windowObjectReference.closed) {
     windowObjectReference = window.open('', `iD-${project}-${selectedTasks}`);
   }

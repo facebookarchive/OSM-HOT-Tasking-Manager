@@ -3,6 +3,11 @@ import { ID_EDITOR_URL, POTLATCH2_EDITOR_URL } from '../config';
 export function getEditors(filterList, customEditor) {
   let editors = [
     {
+      label: 'RAPID',
+      value: 'RAPID',
+      url: 'https://mapwith.ai/rapid',
+    },
+    {
       label: 'iD Editor',
       value: 'ID',
       url: ID_EDITOR_URL,
@@ -24,7 +29,7 @@ export function getEditors(filterList, customEditor) {
     },
   ];
   if (filterList) {
-    editors = editors.filter(i => filterList.includes(i.value));
+    editors = editors.filter((i) => filterList.includes(i.value));
   }
   if (customEditor && filterList.includes('CUSTOM')) {
     editors.push({ label: customEditor.name, value: 'CUSTOM', url: customEditor.url });

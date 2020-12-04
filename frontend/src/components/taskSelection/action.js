@@ -33,6 +33,7 @@ import { ResourcesTab } from './resourcesTab';
 import { ActionTabsNav } from './actionTabsNav';
 
 const Editor = React.lazy(() => import('../editor'));
+const NewEditor = React.lazy(() => import('../rapidEditor'));
 
 export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, action, editor }) {
   useSetProjectPageTitleTag(project);
@@ -119,6 +120,7 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
         [window.innerWidth, window.innerHeight],
         null,
       );
+
       if (url) {
         navigate(`./${url}`);
       } else {
@@ -142,13 +144,14 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
     } else {
       navigate(`./?editor=${arr[0].value}`);
     }
+    window.location.reload();
   };
 
   return (
     <Portal>
       <div className="cf w-100 vh-minus-77-ns overflow-y-hidden">
         <div className={`fl h-100 relative ${showSidebar ? 'w-70' : 'w-100-minus-4rem'}`}>
-          {editor === 'ID' ? (
+          {['ID', 'RAPID'].includes(editor) ? (
             <React.Suspense
               fallback={
                 <div className={`w7 h5 center`}>
@@ -161,13 +164,23 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                 </div>
               }
             >
-              <Editor
-                setDisable={setDisable}
-                comment={project.changesetComment}
-                presets={project.idPresets}
-                imagery={formatImageryUrlCallback(project.imagery)}
-                gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
-              />
+              {editor === 'ID' ? (
+                <Editor
+                  editorRef={editorRef}
+                  setEditorRef={setEditorRef}
+                  setDisable={setDisable}
+                  comment={project.changesetComment}
+                  presets={project.idPresets}
+                />
+              ) : (
+                <NewEditor
+                  editorRef={editorRef}
+                  setEditorRef={setEditorRef}
+                  setDisable={setDisable}
+                  comment={project.changesetComment}
+                  presets={project.idPresets}
+                />
+              )}
             </React.Suspense>
           ) : (
             <ReactPlaceholder
@@ -195,7 +208,9 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
               rows={3}
               ready={typeof project.projectId === 'number' && project.projectId > 0}
             >
-              {activeEditor === 'ID' && <SidebarToggle setShowSidebar={setShowSidebar} />}
+              {(activeEditor === 'ID' || activeEditor === 'RAPID') && (
+                <SidebarToggle setShowSidebar={setShowSidebar} editorRef={editorRef} />
+              )}
               <HeaderLine
                 author={project.author}
                 projectId={project.projectId}
