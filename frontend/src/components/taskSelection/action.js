@@ -33,7 +33,7 @@ import { ResourcesTab } from './resourcesTab';
 import { ActionTabsNav } from './actionTabsNav';
 
 const Editor = React.lazy(() => import('../editor'));
-const NewEditor = React.lazy(() => import('../rapidEditor'));
+const RapEditor = React.lazy(() => import('../rapidEditor'));
 
 export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, action, editor }) {
   useSetProjectPageTitleTag(project);
@@ -173,7 +173,7 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                   presets={project.idPresets}
                 />
               ) : (
-                <NewEditor
+                <RapEditor
                   editorRef={editorRef}
                   setEditorRef={setEditorRef}
                   setDisable={setDisable}
