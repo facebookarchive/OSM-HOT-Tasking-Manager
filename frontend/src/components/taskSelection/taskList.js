@@ -195,20 +195,11 @@ function TaskItem({
                     <button className="close" onClick={close}>
                       &times;
                     </button>
-                    <h3 style={{ textAlign: 'left', color: '#007bff', padding: '0 0 0 4px' }}>
-                      {assignTaskStatus}{' '}
-                    </h3>
-                    <h3 style={{ textAlign: 'left', color: '#e85e6c' }}>{assignTaskStatusError}</h3>
-                    <h3 style={{ textAlign: 'left', color: '#007bff', padding: '0 0 0 4px' }}>
-                      {unAssignTaskStatus}{' '}
-                    </h3>
-                    <h3 style={{ textAlign: 'left', color: '#e85e6c' }}>
-                      {unAssignTaskStatusError}
-                    </h3>
-                    <h1
-                      className="pb2 ma0 barlow-condensed blue-dark"
-                      style={{ textAlign: 'left', padding: '0 0 0 4px' }}
-                    >
+                    <h3 className="assign-success">{assignTaskStatus} </h3>
+                    <h3 className="assign-error">{assignTaskStatusError}</h3>
+                    <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                    <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                    <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
                       <FormattedMessage {...messages.taskassignmentTitle} />
                       <b> {data.taskId}</b>
                       <FormattedMessage {...messages.taskassignmentTitle1} />
@@ -228,17 +219,20 @@ function TaskItem({
                           );
                         }}
                       </FormattedMessage>
-                      <div style={{ textAlign: 'right' }}>
+                      <div>
                         <br />
-                        <Button className="bg-red white" onClick={() => {}}>
+                        <Button className="bg-red white bg-red-float" onClick={() => {}}>
                           <FormattedMessage {...messages.taskassignmentCancel} />
                         </Button>
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <Button className="bg-red white" onClick={() => assignUser()}>
+
+                        <Button className="bg-red white bg-red-float" onClick={() => assignUser()}>
                           <FormattedMessage {...messages.taskassignment} />
                         </Button>
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <Button className="bg-red white" onClick={() => unAssignUser()}>
+
+                        <Button
+                          className="bg-red white bg-red-float"
+                          onClick={() => unAssignUser()}
+                        >
                           <FormattedMessage {...messages.taskassignmentUnAssign} />
                         </Button>
                       </div>

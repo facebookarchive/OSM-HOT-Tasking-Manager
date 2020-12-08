@@ -101,6 +101,24 @@ html {
   width: 0.5rem;
 }
 
+.bg-red-float {
+  float:right;
+  margin-left: 15px;
+}
+.assign-success{
+  text-align: justify;
+  color: $blue-light; 
+  padding: '0 0 0 4px'
+}
+.assign-error{
+  text-align: justify;
+  color: $red; 
+  
+}
+.divPopHeader{
+  text-align: justify;
+}
+
 /*
    Add shadow on hover, building on what is already in Tachyons
    adjust for the lighter shadow from design
