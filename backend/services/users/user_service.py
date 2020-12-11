@@ -1,8 +1,6 @@
 from cachetools import TTLCache, cached
 from flask import current_app
 import datetime
-from functools import reduce
-import dateutil.parser
 from sqlalchemy.sql.expression import literal
 from sqlalchemy import func, or_, desc, and_, distinct, cast, Time, text
 from backend import db
@@ -273,7 +271,6 @@ class UserService:
 
         user_task_dtos = UserTaskDTOs()
         task_id_list = base_query.subquery()
-
         tasks = Task.query.join(
             task_id_list,
             and_(
@@ -293,7 +290,6 @@ class UserService:
             tasks = tasks.filter_by(project_id=project_id)
 
         results = tasks.paginate(page, page_size, True)
-
         task_list = []
 
         for task, action_date in results.items:
@@ -325,7 +321,6 @@ class UserService:
             .subquery()
             .alias("actions_table")
         )
-
         # Get only rows with the given actions.
         filtered_actions = (
             TaskHistory.query.with_entities(
@@ -403,6 +398,7 @@ class UserService:
             .group_by("trn")
             .subquery()
         )
+
         total_validation_time = db.session.query(
             func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
         ).scalar()

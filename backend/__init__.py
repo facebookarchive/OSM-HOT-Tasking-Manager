@@ -82,7 +82,7 @@ def initialise_logger(app):
         os.makedirs(log_dir)
 
     file_handler = RotatingFileHandler(
-        log_dir + "/taskingmanager.log", "a", 2 * 1024 * 1024, 3
+        log_dir + "/tasking-manager.log", "a", 2 * 1024 * 1024, 3
     )
     file_handler.setLevel(log_level)
     file_handler.setFormatter(
@@ -227,8 +227,6 @@ def add_api_endpoints(app):
     # Users API endpoint
     from backend.api.users.resources import (
         UsersRestAPI,
-        UserAPI,
-        UserUpdateAPI,
         UsersAllAPI,
         UsersQueriesUsernameAPI,
         UsersQueriesUsernameFilterAPI,
@@ -237,17 +235,8 @@ def add_api_endpoints(app):
         UsersQueriesFavoritesAPI,
         UsersQueriesInterestsAPI,
         UsersRecommendedProjectsAPI,
-        UserOSMAPI,
-        UserMappedProjects,
-        UserSetRole,
-        UserSetLevel,
-        UserSetExpertMode,
-        UserAcceptLicense,
-        AssignTasksAPI,
-        UnassignTasksAPI,
-        UserAssignedTasks,
     )
-    from backend.api.users.tasks import UsersTasksAPI
+    from backend.api.users.tasks import UsersTasksAPI, UserAssignedTasksAPI
     from backend.api.users.actions import (
         UsersActionsSetUsersAPI,
         UsersActionsSetLevelAPI,
@@ -256,6 +245,8 @@ def add_api_endpoints(app):
         UsersActionsVerifyEmailAPI,
         UsersActionsRegisterEmailAPI,
         UsersActionsSetInterestsAPI,
+        UserActionsAssignTasksAPI,
+        UserActionsUnassignTasksAPI,
     )
     from backend.api.users.openstreetmap import UsersOpenStreetMapAPI
     from backend.api.users.statistics import (
@@ -688,11 +679,6 @@ def add_api_endpoints(app):
     # Users REST endpoint
     api.add_resource(UsersAllAPI, format_url("users/"))
     api.add_resource(UsersRestAPI, format_url("users/<int:user_id>/"))
-    api.add_resource(AssignTasksAPI, format_url("project/<int:project_id>/assign"))
-    api.add_resource(UnassignTasksAPI, format_url("project/<int:project_id>/unassign"))
-    api.add_resource(
-        UserAssignedTasks, format_url("user/<string:username>/assigned-tasks")
-    )
 
     api.add_resource(
         UsersQueriesUsernameFilterAPI,
@@ -714,6 +700,14 @@ def add_api_endpoints(app):
     api.add_resource(UsersActionsSetUsersAPI, format_url("users/me/actions/set-user/"))
 
     api.add_resource(
+        UserActionsAssignTasksAPI, format_url("project/<int:project_id>/assign")
+    )
+
+    api.add_resource(
+        UserActionsUnassignTasksAPI, format_url("project/<int:project_id>/unassign")
+    )
+
+    api.add_resource(
         UsersActionsSetLevelAPI,
         format_url("users/<string:username>/actions/set-level/<string:level>/"),
     )
@@ -729,6 +723,11 @@ def add_api_endpoints(app):
     )
 
     api.add_resource(UsersTasksAPI, format_url("users/<int:user_id>/tasks/"))
+
+    api.add_resource(
+        UserAssignedTasksAPI, format_url("user/<string:username>/assigned-tasks")
+    )
+
     api.add_resource(
         UsersActionsVerifyEmailAPI, format_url("users/me/actions/verify-email/")
     )

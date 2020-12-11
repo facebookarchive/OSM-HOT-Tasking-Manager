@@ -48,16 +48,14 @@ class MappingService:
 
     @staticmethod
     def get_task_as_dto(
-        user_id: int,
         task_id: int,
         project_id: int,
         preferred_local: str = "en",
-        logged_in_user_id: int = None,
     ) -> TaskDTO:
         """ Get task as DTO for transmission over API """
-        task = MappingService.get_task(user_id, task_id, project_id)
+        task = MappingService.get_task(task_id, project_id)
         task_dto = task.as_dto_with_instructions(preferred_local)
-        task_dto.is_undoable = MappingService._is_task_undoable(logged_in_user_id, task)
+
         return task_dto
 
     @staticmethod
@@ -109,7 +107,7 @@ class MappingService:
             if error_reason == ValidatingNotAllowed.USER_NOT_ACCEPTED_LICENSE:
                 raise UserLicenseError("User must accept license to map this task")
             else:
-                raise ValidatatorServiceError(
+                raise ValidatorServiceError(
                     f"Validation not allowed because: {error_reason.name}"
                 )
 
@@ -121,11 +119,13 @@ class MappingService:
         :raises TaskServiceError
         :return: Updated task, or None if not found
         """
-
+        project = Project.get(lock_task_dto.project_id)
         task = MappingService.get_task(lock_task_dto.task_id, lock_task_dto.project_id)
 
         if not task.is_mappable():
             raise MappingServiceError("Task in invalid state for mapping")
+        if project.enforce_assignment and not task.can_assign_to(lock_task_dto.user_id):
+            raise MappingServiceError("Task assigned to another user")
 
         user_can_map, error_reason = ProjectService.is_user_permitted_to_map(
             lock_task_dto.project_id, lock_task_dto.user_id
@@ -164,11 +164,7 @@ class MappingService:
             mapped_task.project_id, mapped_task.task_id, True
         )
         StatsService.update_stats_after_task_state_change(
-            mapped_task.project_id,
-            mapped_task.user_id,
-            last_state,
-            new_state,
-            mapped_task.task_id,
+            mapped_task.project_id, mapped_task.user_id, last_state, new_state
         )
 
         if mapped_task.comment:

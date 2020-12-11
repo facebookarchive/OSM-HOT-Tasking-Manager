@@ -45,6 +45,7 @@ class ValidatorService:
         """
         # Loop supplied tasks to check they can all be locked for validation
         tasks_to_lock = []
+        project = Project.get(validation_dto.project_id)
         for task_id in validation_dto.task_ids:
             task = Task.get(task_id, validation_dto.project_id)
 
@@ -66,6 +67,11 @@ class ValidatorService:
                 raise ValidatorServiceError(
                     "Tasks cannot be validated by the same user who marked task as mapped or badimagery"
                 )
+            if project.enforce_assignment and not task.assign_check(
+                validation_dto.user_id
+            ):
+                raise ValidatorServiceError("Task assigned to another user")
+
             tasks_to_lock.append(task)
 
         user_can_validate, error_reason = ProjectService.is_user_permitted_to_validate(
@@ -166,7 +172,6 @@ class ValidatorService:
                     validated_dto.user_id,
                     prev_status,
                     task_to_unlock["new_state"],
-                    task.id,
                 )
             task_mapping_issues = ValidatorService.get_task_mapping_issues(
                 task_to_unlock

@@ -59,9 +59,6 @@ class UserDTO(Model):
     is_email_verified = EmailType(
         serialized_name="isEmailVerified", serialize_when_none=False
     )
-    tasks_mapped = IntType(serialized_name="tasksMapped")
-    tasks_validated = IntType(serialized_name="tasksValidated")
-    tasks_invalidated = IntType(serialized_name="tasksInvalidated")
 
     is_expert = BooleanType(serialized_name="isExpert", serialize_when_none=False)
     twitter_id = StringType(serialized_name="twitterId")

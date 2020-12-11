@@ -16,7 +16,6 @@ from backend.models.dtos.validator_dto import (
     MappedTasksByUser,
     MappedTasks,
     InvalidatedTask,
-    InvalidatedTasks,
 )
 from backend.models.dtos.project_dto import (
     ProjectComment,
@@ -1140,10 +1139,7 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 assignedTo=task.assigned_to,
             )
-            feature = geojson.Feature(
-                geometry=task_geometry,
-                properties=task_properties,
-            )
+            feature = geojson.Feature(properties=task_properties)
             tasks_features.append(feature)
 
         return geojson.FeatureCollection(tasks_features)
