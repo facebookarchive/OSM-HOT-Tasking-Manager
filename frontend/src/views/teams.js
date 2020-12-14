@@ -11,6 +11,7 @@ import { useFetch } from '../hooks/UseFetch';
 import { useEditTeamAllowed } from '../hooks/UsePermissions';
 import { useSetTitleTag } from '../hooks/UseMetaTags';
 import { fetchLocalJSONAPI, pushToLocalJSONAPI } from '../network/genericJSONRequest';
+import { exporttoCSVFile } from '../network/genericCSVExport';
 import DataTable from 'react-data-table-component';
 import { Button } from '../components/button';
 import moment from 'moment';
@@ -196,46 +197,6 @@ export function MyTeamsUserSatsIndetailed() {
 
     dataUserBasedStats.push(obj);
   }
-  const exporttoCsv = (dataArray, fileName) => {
-    const link = document.createElement('a');
-    let csv = convertArrayOfObjectsToCSV(dataArray);
-    if (csv == null) return;
-
-    const filename = fileName + 'export.csv';
-
-    if (!csv.match(/^data:text\/csv/i)) {
-      csv = `data:text/csv;charset=utf-8,${csv}`;
-    }
-
-    link.setAttribute('href', encodeURI(csv));
-    link.setAttribute('download', filename);
-    link.click();
-  };
-  function convertArrayOfObjectsToCSV(array) {
-    let result;
-
-    const columnDelimiter = ',';
-    const lineDelimiter = '\n';
-    const keys = Object.keys(array[0]);
-
-    result = '';
-    result += keys.join(columnDelimiter);
-    result += lineDelimiter;
-
-    array.forEach((item) => {
-      let ctr = 0;
-      keys.forEach((key) => {
-        if (ctr > 0) result += columnDelimiter;
-
-        result += item[key];
-
-        ctr++;
-      });
-      result += lineDelimiter;
-    });
-
-    return result;
-  }
 
   function submitUserSelected(Values) {
     selectedUserName = Values.value;
@@ -328,7 +289,7 @@ export function MyTeamsUserSatsIndetailed() {
             <td>
               <Button
                 className="bg-red white"
-                onClick={() => exporttoCsv(dataUserBasedStats, 'User Level')}
+                onClick={() => exporttoCSVFile(dataUserBasedStats, 'User Level')}
               >
                 Export Results
               </Button>

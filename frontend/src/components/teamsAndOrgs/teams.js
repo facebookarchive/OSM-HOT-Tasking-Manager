@@ -5,6 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import ReactPlaceholder from 'react-placeholder';
 import { Form, Field } from 'react-final-form';
 import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { exporttoCSVFile } from '../../network/genericCSVExport';
 import messages from './messages';
 import { useEditTeamAllowed } from '../../hooks/UsePermissions';
 import { UserAvatar, UserAvatarList } from '../user/avatar';
@@ -608,46 +609,6 @@ export function TeamsStats() {
       minWidth: '200px',
     },
   ];
-  const exporttoCsv = (dataArray, fileName) => {
-    const link = document.createElement('a');
-    let csv = convertArrayOfObjectsToCSV(dataArray);
-    if (csv == null) return;
-
-    const filename = fileName + 'export.csv';
-
-    if (!csv.match(/^data:text\/csv/i)) {
-      csv = `data:text/csv;charset=utf-8,${csv}`;
-    }
-
-    link.setAttribute('href', encodeURI(csv));
-    link.setAttribute('download', filename);
-    link.click();
-  };
-  function convertArrayOfObjectsToCSV(array) {
-    let result;
-
-    const columnDelimiter = ',';
-    const lineDelimiter = '\n';
-    const keys = Object.keys(array[0]);
-
-    result = '';
-    result += keys.join(columnDelimiter);
-    result += lineDelimiter;
-
-    array.forEach((item) => {
-      let ctr = 0;
-      keys.forEach((key) => {
-        if (ctr > 0) result += columnDelimiter;
-
-        result += item[key];
-
-        ctr++;
-      });
-      result += lineDelimiter;
-    });
-
-    return result;
-  }
 
   function handleRowClick(row, event) {
     setSelectedUser(row.UserName);
@@ -720,7 +681,7 @@ export function TeamsStats() {
               <p>
                 <Button
                   className="bg-red white"
-                  onClick={() => exporttoCsv(dataSummaryResponse, 'Summary')}
+                  onClick={() => exporttoCSVFile(dataSummaryResponse, 'Summary')}
                 >
                   Export Results
                 </Button>
@@ -743,7 +704,7 @@ export function TeamsStats() {
               <p>
                 <Button
                   className="bg-red white"
-                  onClick={() => exporttoCsv(dataMappedResponse, 'Mapped')}
+                  onClick={() => exporttoCSVFile(dataMappedResponse, 'Mapped')}
                 >
                   Export Results
                 </Button>
@@ -763,7 +724,7 @@ export function TeamsStats() {
               <p>
                 <Button
                   className="bg-red white"
-                  onClick={() => exporttoCsv(dataValidatedResponse, 'Validated')}
+                  onClick={() => exporttoCSVFile(dataValidatedResponse, 'Validated')}
                 >
                   Export Results
                 </Button>
