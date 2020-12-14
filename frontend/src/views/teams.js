@@ -5,12 +5,15 @@ import ReactPlaceholder from 'react-placeholder';
 import { TextBlock, RectShape } from 'react-placeholder/lib/placeholders';
 import { FormattedMessage } from 'react-intl';
 import { Form } from 'react-final-form';
-
+import Select from 'react-select';
 import messages from './messages';
 import { useFetch } from '../hooks/UseFetch';
 import { useEditTeamAllowed } from '../hooks/UsePermissions';
 import { useSetTitleTag } from '../hooks/UseMetaTags';
 import { fetchLocalJSONAPI, pushToLocalJSONAPI } from '../network/genericJSONRequest';
+import DataTable from 'react-data-table-component';
+import { Button } from '../components/button';
+import moment from 'moment';
 import {
   getMembersDiff,
   filterActiveMembers,
@@ -24,16 +27,337 @@ import {
   TeamForm,
   TeamsManagement,
   TeamSideBar,
+  TeamsStats,
 } from '../components/teamsAndOrgs/teams';
 import { MessageMembers } from '../components/teamsAndOrgs/messageMembers';
 import { Projects } from '../components/teamsAndOrgs/projects';
 import { FormSubmitButton, CustomButton } from '../components/button';
 import { DeleteModal } from '../components/deleteModal';
 import { NotFound } from './notFound';
+import { useLocation } from '@reach/router';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import { isObject } from '@turf/helpers';
 
 export function ManageTeams() {
   useSetTitleTag('Manage teams');
   return <ListTeams managementView={true} />;
+}
+
+export function MyTeamsUserSatsIndetailed() {
+  useSetTitleTag('My teams MyTeamsUserSatsIndetailed ');
+
+  useEffect(() => {
+    getUserNameBasedStats();
+    getUserNames();
+  }, []);
+
+  const token = useSelector((state) => state.auth.get('token'));
+
+  const [userNames, setUserNames] = useState({});
+
+  const getUserNames = async () => {
+    const response = await fetchLocalJSONAPI(`users/`, token);
+
+    const jsonData = await response.users;
+    //const jsonDataForDays = await response.day;
+    setUserNames(jsonData);
+  };
+
+  const location = useLocation();
+  let selectUserStats = [];
+  for (var i = 0; i < userNames.length; i++) {
+    var obj = {};
+    obj.value = userNames[i].username;
+    obj.label = userNames[i].username;
+    selectUserStats.push(obj);
+  }
+
+  let selectTaskSatus = [
+    { value: 'MAPPED', label: 'MAPPED' },
+    { value: 'VALIDATED', label: 'VALIDATED' },
+  ];
+  const maxDateApp = new Date();
+  const customStyles = {
+    headCells: {
+      style: {
+        fontSize: '15px',
+        fontWeight: 'bold',
+      },
+    },
+
+    cells: {
+      style: {
+        fontSize: '14px',
+      },
+    },
+  };
+
+  const popUpTableColumns = [
+    {
+      name: 'Task Url',
+      selector: 'TaskUrl',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+      cell: (row) => (
+        <Link to={`/projects/${row.TaskUrl}/tasks?page=1&search=${row.TaskId}`}>
+          Project {row.TaskUrl} - Task {row.TaskId}
+        </Link>
+      ),
+    },
+    {
+      name: 'Task',
+      selector: 'TaskId',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+      omit: 'yes',
+    },
+    {
+      name: 'Current State',
+      selector: 'CurrentState',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+
+    {
+      name: ' Task Finish time ',
+      selector: 'TaskFinishTime',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Time spent on task (hh:mm:ss)',
+      selector: 'TimeSpentOnTask',
+      sortable: true,
+      grow: 2,
+
+      minWidth: '100px',
+    },
+    {
+      name: 'Validator',
+      selector: 'Reviewer',
+      sortable: true,
+      grow: 2,
+      minWidth: '200px',
+    },
+  ];
+  var dateObj = new Date();
+
+  // subtract one day from current time
+  dateObj.setDate(dateObj.getDate() - 7);
+  // const [value, onChange] = useState([new Date(), new Date()]);
+  let [value, onChange] = useState([dateObj, new Date()]);
+  let [selectedUserName, setSelectedUserName] = useState(null);
+  let [selectedTaskStatus, setSelectedTaskStatus] = useState(null);
+  const [teamMetricsStats, setTeamMetricsStats] = useState({});
+
+  const params = new URLSearchParams(location.search);
+
+  // You can access specific parameters:
+  let selectedStringName = params.get('name');
+  let selectedStatus = params.get('status');
+
+  let varSelectedUser = { value: selectedStringName, label: selectedStringName };
+  let defaultelectedStatus = { value: selectedStatus, label: selectedStatus };
+  let userNameSelected = varSelectedUser.value;
+
+  var convertSeconds = (sec) => {
+    var hrs = Math.floor(sec / 3600);
+    var min = Math.floor((sec - hrs * 3600) / 60);
+    var seconds = sec - hrs * 3600 - min * 60;
+    seconds = Math.round(seconds * 100) / 100;
+
+    var result = hrs < 10 ? '0' + hrs : hrs;
+    result += ':' + (min < 10 ? '0' + min : min);
+    result += ':' + (seconds < 10 ? '0' + seconds : seconds);
+    return result;
+  };
+  const getUserNameBasedStats = async () => {
+    var startDateFormatted = moment(value[0]).format('YYYY-MM -DD');
+
+    var endDateFormatted = moment(value[1]).format('YYYY-MM -DD');
+
+    const response = await fetchLocalJSONAPI(
+      `users/${userNameSelected}/tasks/?status=${selectedStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`,
+      token,
+    );
+    //const response = await fetchLocalJSONAPI(`users/${userName}/tasks/?status=MAPPED`, token);
+
+    const jsonData = await response.tasks;
+    //const jsonDataForDays = await response.day;
+    setTeamMetricsStats(jsonData);
+  };
+  let dataUserBasedStats = [];
+  //totaltime, mappingTotal, ValidationTotal;
+
+  for (let i = 0; i < teamMetricsStats.length; i++) {
+    let obj = {};
+
+    obj.TaskUrl = teamMetricsStats[i].project_id;
+    obj.TaskId = teamMetricsStats[i].tasks_id;
+    // obj.TimeinOSMTM = convertSeconds(teamMetricsStats[i].time_spent_mapping);
+    obj.CurrentState = teamMetricsStats[i].task_status;
+    obj.TaskFinishTime = moment(teamMetricsStats[i].action_date).format('DD-MM-YYYY HH:mm:ss');
+
+    obj.TimeSpentOnTask = convertSeconds(teamMetricsStats[i].total_time_spent);
+    obj.Reviewer = teamMetricsStats[i].reviewer;
+
+    dataUserBasedStats.push(obj);
+  }
+  const exporttoCsv = (dataArray, fileName) => {
+    const link = document.createElement('a');
+    let csv = convertArrayOfObjectsToCSV(dataArray);
+    if (csv == null) return;
+
+    const filename = fileName + 'export.csv';
+
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = `data:text/csv;charset=utf-8,${csv}`;
+    }
+
+    link.setAttribute('href', encodeURI(csv));
+    link.setAttribute('download', filename);
+    link.click();
+  };
+  function convertArrayOfObjectsToCSV(array) {
+    let result;
+
+    const columnDelimiter = ',';
+    const lineDelimiter = '\n';
+    const keys = Object.keys(array[0]);
+
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+
+    array.forEach((item) => {
+      let ctr = 0;
+      keys.forEach((key) => {
+        if (ctr > 0) result += columnDelimiter;
+
+        result += item[key];
+
+        ctr++;
+      });
+      result += lineDelimiter;
+    });
+
+    return result;
+  }
+
+  function submitUserSelected(Values) {
+    selectedUserName = Values.value;
+    let taskStatus = '';
+    if (selectedTaskStatus) {
+      if (isObject(selectedTaskStatus)) {
+        taskStatus = selectedTaskStatus.value;
+      } else {
+        taskStatus = selectedTaskStatus;
+      }
+    } else {
+      taskStatus = 'MAPPED';
+    }
+    generateUserBasedMetricsStats(selectedUserName, taskStatus, value[0], value[1]);
+    //generateUserBasedMetricsStats();
+  }
+  function submitTaskSelected(Values) {
+    selectedTaskStatus = Values.value;
+    let userNameselected = '';
+    if (selectedUserName) {
+      userNameselected = selectedUserName.value;
+    } else {
+      userNameselected = userNameSelected;
+    }
+
+    generateUserBasedMetricsStats(userNameselected, selectedTaskStatus, value[0], value[1]);
+  }
+  var generateUserBasedMetricsStats = (userName, taskStatus, startDate, endDate) => {
+    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
+
+    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
+
+    let url = `users/${userName}/tasks/?status=${taskStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+    fetchLocalJSONAPI(url, token)
+      .then((res) => {
+        // setTeamMetricsStats(res.team);
+        const responseData = res.tasks;
+        setTeamMetricsStats(responseData);
+      })
+      .catch((e) => console.log('call back failed in task index file' + e));
+  };
+
+  return (
+    <div className="mv4">
+      <div class="cf shadow-4 pv3 ph2 bg-white">
+        <table>
+          <tr>
+            <td>
+              <label className="pt3 pb2">Select a User :</label>
+            </td>
+            <td style={{ width: 200 }}>
+              <Select
+                id="userselect"
+                classNamePrefix="react-select"
+                defaultValue={varSelectedUser}
+                options={selectUserStats}
+                onChange={(value) => {
+                  setSelectedUserName(value);
+                  submitUserSelected(value);
+                }}
+              />
+            </td>
+            <td>
+              <label className="pt3 pb2">Task Type :</label>
+            </td>
+            <td style={{ width: 200 }}>
+              <Select
+                id="userselectTask"
+                classNamePrefix="react-select"
+                defaultValue={defaultelectedStatus}
+                options={selectTaskSatus}
+                onChange={(value) => {
+                  setSelectedTaskStatus(value);
+                  submitTaskSelected(value);
+                }}
+              />
+            </td>
+            <td>
+              <label className="pt3 pb2 " style={{ marginLeft: '200px' }}>
+                Date Range :
+              </label>
+            </td>
+            <td style={{ width: 300 }}>
+              <DateRangePicker
+                onChange={onChange}
+                value={value}
+                maxDate={maxDateApp}
+                className="rangepicker"
+              />
+            </td>
+            <td>
+              <Button
+                className="bg-red white"
+                onClick={() => exporttoCsv(dataUserBasedStats, 'User Level')}
+              >
+                Export Results
+              </Button>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <DataTable
+        columns={popUpTableColumns}
+        data={dataUserBasedStats}
+        defaultSortField="title"
+        pagination
+        highlightOnHover
+        customStyles={customStyles}
+      />
+    </div>
+  );
 }
 
 export function MyTeams() {
@@ -88,6 +412,7 @@ export function ListTeams({ managementView = false }: Object) {
         userTeamsOnly={userTeamsOnly}
         setUserTeamsOnly={setUserTeamsOnly}
       />
+      <TeamsStats />
     </ReactPlaceholder>
   );
 }

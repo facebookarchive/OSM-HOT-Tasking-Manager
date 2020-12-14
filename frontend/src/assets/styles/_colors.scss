@@ -103,6 +103,18 @@ Background colors
 /*
 Background colors hover
 */
+
+.rangepicker{
+  color: $blue-grey;
+  border:thin solid  $grey-light
+}
+.rangepicker input {
+	color:$blue-grey
+}
+.rangepicker button {
+	fill: $red;
+}
+
 .hover-bg-red:hover,
 .hover-bg-red:focus {
   background-color: $red;

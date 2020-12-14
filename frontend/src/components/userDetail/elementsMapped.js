@@ -2,8 +2,16 @@ import React from 'react';
 import humanizeDuration from 'humanize-duration';
 import ReactTooltip from 'react-tooltip';
 import { FormattedMessage } from 'react-intl';
-
+import { Tabs, TabList, Tab, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
 import messages from './messages';
+import { useState, useEffect } from 'react';
+import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { useSelector } from 'react-redux';
+import { Button } from '../button';
+import { Line } from 'react-chartjs-2';
+import Select from 'react-select';
+import moment from 'moment';
 import {
   ClockIcon,
   RoadIcon,
@@ -15,6 +23,9 @@ import {
   ValidatedIcon,
 } from '../svgIcons';
 import { StatsCardContent } from '../statsCardContent';
+import DataTable from 'react-data-table-component';
+import 'react-data-table-component-extensions/dist/index.css';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 
 const getFieldData = (field) => {
   const iconClass = 'h-50 w-50';
@@ -72,6 +83,281 @@ const Element = ({ field, value }) => {
 };
 
 export const TaskStats = ({ userStats, username }) => {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [userMetricsStats, setUserMetricsStats] = useState({});
+  const [userMetricsGraphData, setUserMetricsGraphData] = useState({});
+  const token = useSelector((state) => state.auth.get('token'));
+  const [projectNames, setProjectNames] = useState({});
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const userName = userDetails.username;
+
+  useEffect(() => {
+    getUserMetricsStats();
+    getProjectNames();
+  }, []);
+
+  var convertSeconds = (sec) => {
+    var hrs = Math.floor(sec / 3600);
+    var min = Math.floor((sec - hrs * 3600) / 60);
+    var seconds = sec - hrs * 3600 - min * 60;
+    seconds = Math.round(seconds * 100) / 100;
+
+    var result = hrs < 10 ? '0' + hrs : hrs;
+    result += ':' + (min < 10 ? '0' + min : min);
+    result += ':' + (seconds < 10 ? '0' + seconds : seconds);
+    return result;
+  };
+
+  const maxDateApp = new Date();
+
+  var dateObj = new Date();
+
+  // subtract seven days from current time
+  dateObj.setDate(dateObj.getDate() - 7);
+
+  const [value, onChange] = useState([dateObj, new Date()]);
+  const startDate = moment(value[0]).format('YYYY-MM -DD');
+  const endDate = moment(value[1]).format('YYYY-MM -DD');
+  const getProjectNames = async () => {
+    const response = await fetchLocalJSONAPI(`projects/`, token);
+    const jsonData = await response.results;
+    setProjectNames(jsonData);
+  };
+  let selectItems = [{ value: 'All', label: 'All' }];
+  for (var i = 0; i < projectNames.length; i++) {
+    var obj = {};
+    obj.value = projectNames[i].projectId;
+    obj.label = projectNames[i].name;
+    selectItems.push(obj);
+  }
+
+  const getUserMetricsStats = async () => {
+    const response = await fetchLocalJSONAPI(
+      `users/${userName}/userstaskmapped/?start_date=${startDate}&end_date=${endDate}`,
+      token,
+    );
+    const jsonData = await response.task;
+    const jsonDataForDays = await response.day;
+    setUserMetricsStats(jsonData);
+    setUserMetricsGraphData(jsonDataForDays);
+  };
+
+  const columnsSummary = [
+    {
+      name: 'Project Name',
+      selector: 'ProjectName',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+
+    {
+      name: 'Total Time (hh:mm:ss) ',
+      selector: 'TimeinOSMTM',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Mapping Total',
+      selector: 'MappingTotal',
+      sortable: true,
+      grow: 2,
+
+      minWidth: '100px',
+    },
+    {
+      name: 'Validation Total',
+      selector: 'ValidationTotal',
+      sortable: true,
+      grow: 2,
+
+      minWidth: '200px',
+    },
+  ];
+
+  let graphDays = [];
+  let graphMappedValues = [];
+  let graphValidationValues = [];
+
+  for (let i = 0; i < userMetricsGraphData.length; i++) {
+    let date = '';
+    let mapped = '';
+    let validated = '';
+    date = moment(userMetricsGraphData[i].date).format('DD-MMM');
+
+    mapped = userMetricsGraphData[i].tasks_mapped;
+    validated = userMetricsGraphData[i].tasks_validated;
+    graphDays.push(date);
+    graphMappedValues.push(mapped);
+    graphValidationValues.push(validated);
+  }
+
+  let dataSummaryResponse = [];
+  for (let i = 0; i < userMetricsStats.length; i++) {
+    let obj = {};
+    obj.id = i + 1;
+    obj.ProjectName = userMetricsStats[i].project_name;
+    obj.TimeinOSMTM = convertSeconds(userMetricsStats[i].time_spent_mapping);
+    obj.MappingTotal = userMetricsStats[i].tasks_mapped;
+    obj.ValidationTotal = userMetricsStats[i].tasks_validated;
+
+    dataSummaryResponse.push(obj);
+  }
+  let dataMappedResponse = [];
+  for (let i = 0; i < userMetricsStats.length; i++) {
+    let obj = {};
+    obj.id = i + 1;
+    obj.ProjectName = userMetricsStats[i].project_name;
+    obj.TasksDone = userMetricsStats[i].tasks_mapped;
+    obj.TotalTaskstime = convertSeconds(userMetricsStats[i].time_spent_mapping);
+    obj.AverageTimePerTask = convertSeconds(userMetricsStats[i].average_time_spent_mapping);
+
+    dataMappedResponse.push(obj);
+  }
+  let dataValidatedResponse = [];
+  for (let i = 0; i < userMetricsStats.length; i++) {
+    let obj = {};
+    obj.id = i + 1;
+    obj.ProjectName = userMetricsStats[i].project_name;
+    obj.TasksDone = userMetricsStats[i].tasks_validated;
+    obj.TotalTaskstime = convertSeconds(userMetricsStats[i].time_spent_validating);
+    obj.AverageTimePerTask = convertSeconds(userMetricsStats[i].average_time_spent_validating);
+
+    dataValidatedResponse.push(obj);
+  }
+
+  const columnsForMapped = [
+    {
+      name: 'Project Name',
+      selector: 'ProjectName',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+
+    {
+      name: 'Tasks Done ',
+      selector: 'TasksDone',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Total Tasks time (hh:mm:ss)',
+      selector: 'TotalTaskstime',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Average time per task(hh:mm:ss)',
+      selector: 'AverageTimePerTask',
+      sortable: true,
+      grow: 2,
+      minWidth: '200px',
+    },
+  ];
+
+  function convertArrayOfObjectsToCSV(array) {
+    let result;
+
+    const columnDelimiter = ',';
+    const lineDelimiter = '\n';
+    const keys = Object.keys(array[0]);
+
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+
+    array.forEach((item) => {
+      let ctr = 0;
+      keys.forEach((key) => {
+        if (ctr > 0) result += columnDelimiter;
+
+        result += item[key];
+
+        ctr++;
+      });
+      result += lineDelimiter;
+    });
+
+    return result;
+  }
+  const state = {
+    labels: graphDays,
+    datasets: [
+      {
+        label: 'Mapped',
+        fill: false,
+        lineTension: 0.5,
+
+        borderWidth: 2,
+        data: graphMappedValues,
+      },
+      {
+        label: 'Validated',
+        fill: false,
+        lineTension: 0.5,
+        backgroundColor: 'rgb(173, 230, 239)',
+        borderColor: 'rgb(173, 230, 239)',
+        borderWidth: 2,
+        data: graphValidationValues,
+      },
+    ],
+  };
+
+  const exporttoCsv = (dataArray, fileName) => {
+    const link = document.createElement('a');
+    let csv = convertArrayOfObjectsToCSV(dataArray);
+    if (csv == null) return;
+
+    const filename = userName + '-' + fileName + 'export.csv';
+
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = `data:text/csv;charset=utf-8,${csv}`;
+    }
+
+    link.setAttribute('href', encodeURI(csv));
+    link.setAttribute('download', filename);
+    link.click();
+  };
+
+  function submitSelected(Values) {
+    generateUserMetricsStats(Values.value, value[0], value[1]);
+  }
+  var generateUserMetricsStats = (projId, startDate, endDate) => {
+    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
+    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
+
+    let url = '';
+    if (projId === 'All') {
+      url = `users/${userName}/userstaskmapped/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+    } else {
+      url = `users/${userName}/userstaskmapped/?project_id=${projId}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+    }
+    fetchLocalJSONAPI(url, token)
+      .then((res) => {
+        setUserMetricsStats(res.task);
+        setUserMetricsGraphData(res.day);
+      })
+      .catch((e) => console.log('call back failed in task index file' + e));
+  };
+
+  const customStyles = {
+    headCells: {
+      style: {
+        fontSize: '15px',
+        fontWeight: 'bold',
+      },
+    },
+
+    cells: {
+      style: {
+        fontSize: '14px',
+      },
+    },
+  };
   return (
     <div className="cf w-100 relative base-font blue-grey">
       <div className="w-50-ns w-100 pa2 fl">
@@ -151,6 +437,137 @@ export const TaskStats = ({ userStats, username }) => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="mv4">
+          <div className="cf shadow-4 pv3 ph2 bg-white" style={{ marginTop: 250 }}>
+            <div>
+              <h2>Your Metrics</h2>
+            </div>
+            <table>
+              <tr>
+                <td>
+                  <label className="pt3 pb2">Please Select Date Range :</label>
+                </td>
+                <td>
+                  <DateRangePicker
+                    onChange={onChange}
+                    value={value}
+                    maxDate={maxDateApp}
+                    className="rangepicker"
+                  />
+                </td>
+
+                <td>
+                  <label className="pt3 pb2 " style={{ marginLeft: '420px', marginTop: 150 }}>
+                    Select your Project :
+                  </label>
+                </td>
+                <td style={{ width: 300 }}>
+                  <Select
+                    classNamePrefix="react-select"
+                    defaultValue={selectItems[0]}
+                    onChange={(value) => {
+                      setSelectedOption(value);
+                      submitSelected(value);
+                    }}
+                    options={selectItems}
+                  />
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div className="cf shadow-4 pv3 ph2 bg-white">
+            <Tabs>
+              <TabList>
+                <Tab>Summary</Tab>
+
+                <Tab>Mapped</Tab>
+                <Tab>Validated</Tab>
+              </TabList>
+
+              <TabPanel>
+                <p>
+                  <Button
+                    className="bg-red white"
+                    onClick={() => exporttoCsv(dataSummaryResponse, 'Summary')}
+                  >
+                    Export Results
+                  </Button>
+                  <DataTable
+                    title="Your Tasks Summary"
+                    columns={columnsSummary}
+                    data={dataSummaryResponse}
+                    defaultSortField="title"
+                    pagination
+                    highlightOnHover
+                    customStyles={customStyles}
+                  />
+                  <br />
+                  <br />
+
+                  <Line
+                    height="50vw"
+                    responsive="true"
+                    data={state}
+                    options={{
+                      title: {
+                        display: true,
+                        text: 'Daily Counts',
+                        fontSize: 20,
+                      },
+                      legend: {
+                        display: true,
+                        position: 'right',
+                      },
+                    }}
+                  />
+                </p>
+              </TabPanel>
+              <TabPanel>
+                <p>
+                  <Button
+                    className="bg-red white"
+                    onClick={() => exporttoCsv(dataMappedResponse, 'Mapped')}
+                  >
+                    Export Results
+                  </Button>
+
+                  <DataTable
+                    title="Your Weekly Mapping Statistics "
+                    columns={columnsForMapped}
+                    data={dataMappedResponse}
+                    defaultSortField="title"
+                    pagination
+                    highlightOnHover
+                    customStyles={customStyles}
+                  />
+                </p>
+              </TabPanel>
+              <TabPanel>
+                <p>
+                  <Button
+                    className="bg-red white"
+                    onClick={() => exporttoCsv(dataValidatedResponse, 'Validation')}
+                  >
+                    Export Results
+                  </Button>
+
+                  <DataTable
+                    title="Your Weekly Validating Statistics "
+                    columns={columnsForMapped}
+                    data={dataValidatedResponse}
+                    defaultSortField="title"
+                    pagination
+                    highlightOnHover
+                    customStyles={customStyles}
+                  />
+                </p>
+              </TabPanel>
+            </Tabs>
           </div>
         </div>
       </div>

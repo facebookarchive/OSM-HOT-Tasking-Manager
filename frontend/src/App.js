@@ -29,7 +29,14 @@ import { Welcome } from './views/welcome';
 import { Settings } from './views/settings';
 import { ManagementPageIndex, ManagementSection } from './views/management';
 import { ListOrganisations, CreateOrganisation, EditOrganisation } from './views/organisations';
-import { MyTeams, ManageTeams, CreateTeam, EditTeam, TeamDetail } from './views/teams';
+import {
+  MyTeams,
+  ManageTeams,
+  CreateTeam,
+  EditTeam,
+  TeamDetail,
+  MyTeamsUserSatsIndetailed,
+} from './views/teams';
 import { ListCampaigns, CreateCampaign, EditCampaign } from './views/campaigns';
 import { ListInterests, CreateInterest, EditInterest } from './views/interests';
 import { ListLicenses, CreateLicense, EditLicense } from './views/licenses';
@@ -88,6 +95,7 @@ let App = (props) => {
                   <ContributionsPage path="tasks/*" />
                   <UserProjectsPage path="projects/*" />
                   <MyTeams path="teams/*" />
+                  <MyTeamsUserSatsIndetailed path="teamUserLevelDetailed/*" />
                 </ContributionsPageIndex>
                 <UserDetail path="users/:username" />
                 <NotificationsPage path="inbox">

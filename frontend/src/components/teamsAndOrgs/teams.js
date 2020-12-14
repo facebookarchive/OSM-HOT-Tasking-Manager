@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from '@reach/router';
 import { FormattedMessage } from 'react-intl';
 import ReactPlaceholder from 'react-placeholder';
 import { Form, Field } from 'react-final-form';
-
+import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
 import messages from './messages';
 import { useEditTeamAllowed } from '../../hooks/UsePermissions';
 import { UserAvatar, UserAvatarList } from '../user/avatar';
@@ -12,6 +12,13 @@ import { AddButton, ViewAllLink, Management, VisibilityBox, InviteOnlyBox } from
 import { SwitchToggle, RadioField, OrganisationSelect } from '../formInputs';
 import { EditModeControl } from './editMode';
 import { Button, EditButton } from '../button';
+import { Tabs, TabList, Tab, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+import DataTable from 'react-data-table-component';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import 'react-calendar/dist/Calendar.css';
+import Select from 'react-select';
+import moment from 'moment';
 
 export function TeamsManagement({
   teams,
@@ -369,6 +376,442 @@ export function TeamsBoxList({ teams }: Object) {
         </>
       )}
     </>
+  );
+}
+export function TeamsStats() {
+  // const mappingTeams = teams.filter((team) => team.role === 'MAPPER');
+  // const validationTeams = teams.filter((team) => team.role === 'VALIDATOR');
+  const token = useSelector((state) => state.auth.get('token'));
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const userName = userDetails.username;
+  const userId = userDetails.id;
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedUser, setSelectedUser] = useState({});
+  const maxDateApp = new Date();
+  var dateObj = new Date();
+  dateObj.setDate(dateObj.getDate() - 7);
+
+  const [value, onChange] = useState([dateObj, new Date()]);
+  const [teamMetricsStats, setTeamMetricsStats] = useState({});
+  const [teamNames, setTeamNames] = useState({});
+
+  const startDate = moment(value[0]).format('YYYY-MM -DD');
+
+  const endDate = moment(value[1]).format('YYYY-MM -DD');
+
+  useEffect(() => {
+    getTeamMetricsStats();
+    getTeamNames();
+  }, []);
+
+  const getTeamNames = async () => {
+    const response = await fetchLocalJSONAPI(`teams/?member=${userId}`, token);
+
+    const jsonData = await response.teams;
+    //const jsonDataForDays = await response.day;
+    setTeamNames(jsonData);
+
+    console.log('team names are ***', jsonData);
+  };
+
+  let selectItems = [{ value: 'All', label: 'All' }];
+  //selectItems
+  for (var i = 0; i < teamNames.length; i++) {
+    var obj = {};
+    obj.value = teamNames[i].teamId;
+    obj.label = teamNames[i].name;
+    selectItems.push(obj);
+  }
+  const getTeamMetricsStats = async () => {
+    const response = await fetchLocalJSONAPI(
+      `users/${userName}/usersteamstats/?start_date=${startDate}&end_date=${endDate}`,
+      token,
+    );
+
+    const jsonData = await response.team;
+    //const jsonDataForDays = await response.day;
+    setTeamMetricsStats(jsonData);
+
+    console.log('user metrics stats are ***', jsonData);
+  };
+  console.log('team  metrics stats are ***', teamMetricsStats);
+  var convertSeconds = (sec) => {
+    var hrs = Math.floor(sec / 3600);
+    var min = Math.floor((sec - hrs * 3600) / 60);
+    var seconds = sec - hrs * 3600 - min * 60;
+    seconds = Math.round(seconds * 100) / 100;
+
+    var result = hrs < 10 ? '0' + hrs : hrs;
+    result += ':' + (min < 10 ? '0' + min : min);
+    result += ':' + (seconds < 10 ? '0' + seconds : seconds);
+    return result;
+  };
+
+  let dataSummaryResponse = [];
+  //totaltime, mappingTotal, ValidationTotal;
+
+  for (let i = 0; i < teamMetricsStats.length; i++) {
+    let obj = {};
+
+    obj.userid = teamMetricsStats[i].user_id;
+    obj.UserName = teamMetricsStats[i].user_name;
+    obj.TimeinOSMTM = convertSeconds(teamMetricsStats[i].time_spent_mapping);
+    obj.MappingTotal = teamMetricsStats[i].tasks_mapped;
+    obj.ValidationTotal = teamMetricsStats[i].tasks_validated;
+
+    dataSummaryResponse.push(obj);
+  }
+  let dataMappedResponse = [];
+  for (let i = 0; i < teamMetricsStats.length; i++) {
+    let obj = {};
+
+    obj.UserName = teamMetricsStats[i].user_name;
+    obj.TasksDone = teamMetricsStats[i].tasks_mapped;
+    obj.TotalTaskstime = convertSeconds(teamMetricsStats[i].time_spent_mapping);
+    obj.AverageTimePerTask = convertSeconds(teamMetricsStats[i].average_time_spent_mapping);
+
+    dataMappedResponse.push(obj);
+  }
+  let dataValidatedResponse = [];
+  for (let i = 0; i < teamMetricsStats.length; i++) {
+    let obj = {};
+    obj.UserName = teamMetricsStats[i].user_name;
+    obj.TasksDone = teamMetricsStats[i].tasks_validated;
+    obj.TotalTaskstime = convertSeconds(teamMetricsStats[i].time_spent_validating);
+    obj.AverageTimePerTask = convertSeconds(teamMetricsStats[i].average_time_spent_validating);
+
+    dataValidatedResponse.push(obj);
+  }
+
+  const columnsSummary = [
+    {
+      name: 'User Name',
+      selector: 'UserName',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+      cell: (row) => (
+        <Link to={`/contributions/teamUserLevelDetailed?name=${row.UserName}&status=MAPPED`}>
+          {' '}
+          {row.UserName}{' '}
+        </Link>
+      ),
+    },
+
+    {
+      name: 'Total Time (hh:mm:ss) ',
+      selector: 'TimeinOSMTM',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Mapping Total',
+      selector: 'MappingTotal',
+      sortable: true,
+      grow: 2,
+
+      minWidth: '100px',
+    },
+    {
+      name: 'Validation Total',
+      selector: 'ValidationTotal',
+      sortable: true,
+      grow: 2,
+
+      minWidth: '200px',
+    },
+  ];
+
+  function submitSelected(Values) {
+    console.log('param sent is', Values.value);
+    console.log('start time is', value[0]);
+    console.log('end time is', value[1]);
+
+    generateTeamMetricsStats(Values.value, value[0], value[1]);
+  }
+  var generateTeamMetricsStats = (teamId, startDate, endDate) => {
+    // console.log('select box value inside api call is', selectBoxValue.value);
+    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
+
+    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
+
+    //  const response = await fetchLocalJSONAPI(
+    //   `users/${userName}/userstaskmapped/ ?project_id=6&start_date=${startDateFormatted}&end_date=${endDateFormatted}`,
+    //   token,
+    // );
+
+    // const jsonData = await response.task;
+    //const response = await fetchLocalJSONAPI(`users/HanumanthMapper/usersteamstats/`, token);
+
+    let url = '';
+    if (teamId === 'All') {
+      url = `users/${userName}/usersteamstats/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+      //url = `users/${userName}/userstaskmapped/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+    } else {
+      url = `users/${userName}/usersteamstats/?team_id=${teamId}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
+    }
+    fetchLocalJSONAPI(url, token)
+      .then((res) => {
+        //  setUserMetricsStats(res.team);
+        setTeamMetricsStats(res.team);
+        //setUserMetricsGraphData(res.day);
+      })
+      .catch((e) => console.log('call back failed in task index file' + e));
+  };
+  const columnsForValidated = [
+    {
+      name: 'User Name',
+      selector: 'UserName',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+      cell: (row) => (
+        <Link to={`/contributions/teamUserLevelDetailed?name=${row.UserName}&status=VALIDATED`}>
+          {row.UserName}
+        </Link>
+      ),
+    },
+
+    {
+      name: 'Tasks Done ',
+      selector: 'TasksDone',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Total Tasks time (hh:mm:ss)',
+      selector: 'TotalTaskstime',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Average time per task(hh:mm:ss)',
+      selector: 'AverageTimePerTask',
+      sortable: true,
+      grow: 2,
+      minWidth: '200px',
+    },
+  ];
+  const columnsForMapped = [
+    {
+      name: 'User Name',
+      selector: 'UserName',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+      cell: (row) => (
+        <Link to={`/contributions/teamUserLevelDetailed?name=${row.UserName}&status=MAPPED`}>
+          {row.UserName}
+        </Link>
+      ),
+    },
+
+    {
+      name: 'Tasks Done ',
+      selector: 'TasksDone',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Total Tasks time (hh:mm:ss)',
+      selector: 'TotalTaskstime',
+      sortable: true,
+      grow: 2,
+      minWidth: '100px',
+    },
+    {
+      name: 'Average time per task(hh:mm:ss)',
+      selector: 'AverageTimePerTask',
+      sortable: true,
+      grow: 2,
+      minWidth: '200px',
+    },
+  ];
+  const exporttoCsv = (dataArray, fileName) => {
+    console.log('array data', dataArray);
+    console.log('afile name is', fileName);
+    console.log('Start Date', value[0]);
+    console.log('End Date is', value[1]);
+    const link = document.createElement('a');
+    let csv = convertArrayOfObjectsToCSV(dataArray);
+    if (csv == null) return;
+
+    const filename = fileName + 'export.csv';
+
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = `data:text/csv;charset=utf-8,${csv}`;
+    }
+
+    link.setAttribute('href', encodeURI(csv));
+    link.setAttribute('download', filename);
+    link.click();
+  };
+  function convertArrayOfObjectsToCSV(array) {
+    let result;
+
+    const columnDelimiter = ',';
+    const lineDelimiter = '\n';
+    const keys = Object.keys(array[0]);
+
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+
+    array.forEach((item) => {
+      let ctr = 0;
+      keys.forEach((key) => {
+        if (ctr > 0) result += columnDelimiter;
+
+        result += item[key];
+
+        ctr++;
+      });
+      result += lineDelimiter;
+    });
+
+    return result;
+  }
+
+  function handleRowClick(row, event) {
+    console.log('row event clicked', row.UserName);
+    setSelectedUser(row.UserName);
+    console.log('inside handle Row click for popup 1112', selectedUser);
+  }
+
+  const customStyles = {
+    headCells: {
+      style: {
+        fontSize: '15px',
+        fontWeight: 'bold',
+      },
+    },
+
+    cells: {
+      style: {
+        fontSize: '14px',
+      },
+    },
+  };
+  return (
+    <div>
+      <div className="mv4">
+        <div className="cf shadow-4 pv3 ph2 bg-white" style={{ marginTop: 50 }}>
+          <div>
+            <h2>Team Metrics</h2>
+          </div>
+          <table>
+            <tr>
+              <td>
+                <label className="pt3 pb2">Please Select Date Range :</label>
+              </td>
+              <td>
+                <DateRangePicker
+                  onChange={onChange}
+                  value={value}
+                  maxDate={maxDateApp}
+                  className="rangepicker"
+                />
+              </td>
+
+              <td>
+                <label className="pt3 pb2 " style={{ marginLeft: '420px', marginTop: 150 }}>
+                  Select your Team :
+                </label>
+              </td>
+              <td style={{ width: 300 }}>
+                <Select
+                  classNamePrefix="react-select"
+                  defaultValue={selectItems[0]}
+                  onChange={(value) => {
+                    setSelectedOption(value);
+                    submitSelected(value);
+                  }}
+                  options={selectItems}
+                />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div className="cf shadow-4 pv3 ph2 bg-white">
+          <Tabs>
+            <TabList>
+              <Tab>Summary</Tab>
+
+              <Tab>Mapped</Tab>
+              <Tab>Validated</Tab>
+            </TabList>
+
+            <TabPanel>
+              <p>
+                <Button
+                  className="bg-red white"
+                  onClick={() => exporttoCsv(dataSummaryResponse, 'Summary')}
+                >
+                  Export Results
+                </Button>
+
+                <DataTable
+                  title="Your Tasks Summary"
+                  columns={columnsSummary}
+                  data={dataSummaryResponse}
+                  defaultSortField="title"
+                  pagination
+                  highlightOnHover
+                  customStyles={customStyles}
+                  onRowClicked={handleRowClick}
+                />
+                <br />
+                <br />
+              </p>
+            </TabPanel>
+            <TabPanel>
+              <p>
+                <Button
+                  className="bg-red white"
+                  onClick={() => exporttoCsv(dataMappedResponse, 'Mapped')}
+                >
+                  Export Results
+                </Button>
+
+                <DataTable
+                  title="Your Weekly Editing Statistics "
+                  columns={columnsForMapped}
+                  data={dataMappedResponse}
+                  defaultSortField="title"
+                  pagination
+                  highlightOnHover
+                  customStyles={customStyles}
+                />
+              </p>
+            </TabPanel>
+            <TabPanel>
+              <p>
+                <Button
+                  className="bg-red white"
+                  onClick={() => exporttoCsv(dataValidatedResponse, 'Validated')}
+                >
+                  Export Results
+                </Button>
+
+                <DataTable
+                  title="Your Weekly Reviewing Statistics "
+                  columns={columnsForValidated}
+                  data={dataValidatedResponse}
+                  defaultSortField="title"
+                  pagination
+                  highlightOnHover
+                  customStyles={customStyles}
+                />
+              </p>
+            </TabPanel>
+          </Tabs>
+        </div>
+      </div>
+    </div>
   );
 }
 
