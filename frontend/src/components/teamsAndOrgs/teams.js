@@ -408,10 +408,7 @@ export function TeamsStats() {
     const response = await fetchLocalJSONAPI(`teams/?member=${userId}`, token);
 
     const jsonData = await response.teams;
-    //const jsonDataForDays = await response.day;
     setTeamNames(jsonData);
-
-    console.log('team names are ***', jsonData);
   };
 
   let selectItems = [{ value: 'All', label: 'All' }];
@@ -431,10 +428,7 @@ export function TeamsStats() {
     const jsonData = await response.team;
     //const jsonDataForDays = await response.day;
     setTeamMetricsStats(jsonData);
-
-    console.log('user metrics stats are ***', jsonData);
   };
-  console.log('team  metrics stats are ***', teamMetricsStats);
   var convertSeconds = (sec) => {
     var hrs = Math.floor(sec / 3600);
     var min = Math.floor((sec - hrs * 3600) / 60);
@@ -448,7 +442,6 @@ export function TeamsStats() {
   };
 
   let dataSummaryResponse = [];
-  //totaltime, mappingTotal, ValidationTotal;
 
   for (let i = 0; i < teamMetricsStats.length; i++) {
     let obj = {};
@@ -524,38 +517,22 @@ export function TeamsStats() {
   ];
 
   function submitSelected(Values) {
-    console.log('param sent is', Values.value);
-    console.log('start time is', value[0]);
-    console.log('end time is', value[1]);
-
     generateTeamMetricsStats(Values.value, value[0], value[1]);
   }
   var generateTeamMetricsStats = (teamId, startDate, endDate) => {
-    // console.log('select box value inside api call is', selectBoxValue.value);
     var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
 
     var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
 
-    //  const response = await fetchLocalJSONAPI(
-    //   `users/${userName}/userstaskmapped/ ?project_id=6&start_date=${startDateFormatted}&end_date=${endDateFormatted}`,
-    //   token,
-    // );
-
-    // const jsonData = await response.task;
-    //const response = await fetchLocalJSONAPI(`users/HanumanthMapper/usersteamstats/`, token);
-
     let url = '';
     if (teamId === 'All') {
       url = `users/${userName}/usersteamstats/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
-      //url = `users/${userName}/userstaskmapped/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
     } else {
       url = `users/${userName}/usersteamstats/?team_id=${teamId}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
     }
     fetchLocalJSONAPI(url, token)
       .then((res) => {
-        //  setUserMetricsStats(res.team);
         setTeamMetricsStats(res.team);
-        //setUserMetricsGraphData(res.day);
       })
       .catch((e) => console.log('call back failed in task index file' + e));
   };
@@ -632,10 +609,6 @@ export function TeamsStats() {
     },
   ];
   const exporttoCsv = (dataArray, fileName) => {
-    console.log('array data', dataArray);
-    console.log('afile name is', fileName);
-    console.log('Start Date', value[0]);
-    console.log('End Date is', value[1]);
     const link = document.createElement('a');
     let csv = convertArrayOfObjectsToCSV(dataArray);
     if (csv == null) return;
@@ -677,9 +650,7 @@ export function TeamsStats() {
   }
 
   function handleRowClick(row, event) {
-    console.log('row event clicked', row.UserName);
     setSelectedUser(row.UserName);
-    console.log('inside handle Row click for popup 1112', selectedUser);
   }
 
   const customStyles = {

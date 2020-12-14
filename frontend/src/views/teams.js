@@ -52,14 +52,12 @@ export function MyTeamsUserSatsIndetailed() {
   }, []);
 
   const token = useSelector((state) => state.auth.get('token'));
-
   const [userNames, setUserNames] = useState({});
-
   const getUserNames = async () => {
     const response = await fetchLocalJSONAPI(`users/`, token);
 
     const jsonData = await response.users;
-    //const jsonDataForDays = await response.day;
+
     setUserNames(jsonData);
   };
 
@@ -146,9 +144,8 @@ export function MyTeamsUserSatsIndetailed() {
   ];
   var dateObj = new Date();
 
-  // subtract one day from current time
+  // subtract seven day from current time
   dateObj.setDate(dateObj.getDate() - 7);
-  // const [value, onChange] = useState([new Date(), new Date()]);
   let [value, onChange] = useState([dateObj, new Date()]);
   let [selectedUserName, setSelectedUserName] = useState(null);
   let [selectedTaskStatus, setSelectedTaskStatus] = useState(null);
@@ -184,24 +181,16 @@ export function MyTeamsUserSatsIndetailed() {
       `users/${userNameSelected}/tasks/?status=${selectedStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`,
       token,
     );
-    //const response = await fetchLocalJSONAPI(`users/${userName}/tasks/?status=MAPPED`, token);
-
     const jsonData = await response.tasks;
-    //const jsonDataForDays = await response.day;
     setTeamMetricsStats(jsonData);
   };
   let dataUserBasedStats = [];
-  //totaltime, mappingTotal, ValidationTotal;
-
   for (let i = 0; i < teamMetricsStats.length; i++) {
     let obj = {};
-
     obj.TaskUrl = teamMetricsStats[i].project_id;
     obj.TaskId = teamMetricsStats[i].tasks_id;
-    // obj.TimeinOSMTM = convertSeconds(teamMetricsStats[i].time_spent_mapping);
     obj.CurrentState = teamMetricsStats[i].task_status;
     obj.TaskFinishTime = moment(teamMetricsStats[i].action_date).format('DD-MM-YYYY HH:mm:ss');
-
     obj.TimeSpentOnTask = convertSeconds(teamMetricsStats[i].total_time_spent);
     obj.Reviewer = teamMetricsStats[i].reviewer;
 
@@ -282,7 +271,6 @@ export function MyTeamsUserSatsIndetailed() {
     let url = `users/${userName}/tasks/?status=${taskStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
     fetchLocalJSONAPI(url, token)
       .then((res) => {
-        // setTeamMetricsStats(res.team);
         const responseData = res.tasks;
         setTeamMetricsStats(responseData);
       })
