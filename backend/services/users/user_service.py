@@ -1,6 +1,8 @@
 from cachetools import TTLCache, cached
 from flask import current_app
 import datetime
+from functools import reduce
+import dateutil.parser
 from sqlalchemy.sql.expression import literal
 from sqlalchemy import func, or_, desc, and_, distinct, cast, Time
 from backend import db
@@ -16,11 +18,16 @@ from backend.models.dtos.user_dto import (
     UserRegisterEmailDTO,
     UserCountryContributed,
     UserCountriesContributed,
+    UserMappedDTO,
+    UserTeamStatsDTO,
+    UserSpecificDTO,
+    
 )
 from backend.models.dtos.interests_dto import InterestsListDTO, InterestDTO
 from backend.models.postgis.interests import Interest, project_interests
 from backend.models.postgis.message import Message
 from backend.models.postgis.project import Project
+from backend.models.postgis.project_info import ProjectInfo
 from backend.models.postgis.user import User, UserRole, MappingLevel, UserEmail
 from backend.models.postgis.task import TaskHistory, TaskAction, Task
 from backend.models.dtos.user_dto import UserTaskDTOs
@@ -33,7 +40,9 @@ from backend.services.messaging.template_service import (
     get_template,
     template_var_replacing,
 )
-
+from backend.models.postgis.team import TeamMembers, Team
+from backend.models.postgis.user import User
+from datetime import timedelta
 
 user_filter_cache = TTLCache(maxsize=1024, ttl=600)
 
@@ -138,6 +147,8 @@ class UserService:
             return []
 
         return projects_mapped
+
+
 
     @staticmethod
     def register_user(osm_id, username, changeset_count, picture_url, email):
@@ -263,7 +274,6 @@ class UserService:
 
         user_task_dtos = UserTaskDTOs()
         task_id_list = base_query.subquery()
-
         tasks = Task.query.join(
             task_id_list,
             and_(
@@ -283,7 +293,6 @@ class UserService:
             tasks = tasks.filter_by(project_id=project_id)
 
         results = tasks.paginate(page, page_size, True)
-
         task_list = []
 
         for task, action_date in results.items:
@@ -798,3 +807,1525 @@ class UserService:
             dto.interests.append(int_dto)
 
         return dto
+
+    @staticmethod
+    def get_tasks_mapped(
+        username,
+        start_date: datetime.datetime = None,
+        end_date: datetime.datetime = None,
+        project_id: int = None,
+    ):
+        user = UserService.get_user_by_username(username)
+        tasks_dto = UserMappedDTO()
+
+        actions = [
+            TaskStatus.VALIDATED.name,
+            TaskStatus.INVALIDATED.name,
+            TaskStatus.MAPPED.name,
+        ] 
+        
+        actions_table = (
+            db.session.query(literal(TaskStatus.VALIDATED.name).label("action_text"))
+            .union(
+                db.session.query(
+                    literal(TaskStatus.INVALIDATED.name).label("action_text")
+                ),
+                db.session.query(literal(TaskStatus.MAPPED.name).label("action_text")),
+            )
+            .subquery()
+            .alias("actions_table")
+        )
+
+        days_list = []
+        
+        def date_function(start_date:datetime.datetime=None, end_date:datetime.datetime=None, project_id: int=None):
+            days = []
+            
+            for i in range((end_date-start_date).days):
+                days.append(start_date)
+                start_date += datetime.timedelta(days=1)
+            
+            if ((start_date and end_date)and not project_id):
+                for i in range(len(days)):
+                
+                    for j in range(len(days)):
+                        proj_ids = (TaskHistory.query.with_entities(TaskHistory.project_id).filter(TaskHistory.action_date>=days[i])
+                                        .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1)).group_by(TaskHistory.project_id)).all()
+                        projid=[lis[0] for lis in proj_ids]
+                        
+                        avg_time_spent_mapping = 0
+                        avg_time_spent_validating = 0
+                        total_time_spent = 0
+                        time_spent_mapping = 0
+                        time_spent_validating = 0
+                        total_mapping_time = 0
+                        total_validation_time = 0
+                        
+                        filtered_actions = (
+                            TaskHistory.query.with_entities(
+                                TaskHistory.user_id,
+                                TaskHistory.project_id,
+                                TaskHistory.task_id,
+                                TaskHistory.action_text,
+                                TaskHistory.action_date,
+                            )
+                            .filter(TaskHistory.action_text.in_(actions))
+                            .filter(TaskHistory.user_id==user.id)
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1))
+                            
+                            .subquery()
+                            .alias("filtered_actions")
+                            
+                        )
+                    
+                        user_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id == user.id) 
+                            .subquery()
+                            .alias("user_tasks")
+                        )
+
+                        others_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id != user.id)
+                            .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                            .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                            .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                            
+                            .subquery()
+                            .alias("others_tasks")
+                            )
+                        
+                        user_stats = (
+                            db.session.query(
+                                actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                            )
+                            .outerjoin(
+                                user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                            )
+                            .group_by(actions_table.c.action_text)
+                            
+                        )
+
+                        others_stats = (
+                            db.session.query(
+                                func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                                func.count(others_tasks.c.action_text),
+                            )
+                            .outerjoin(
+                                others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                            )
+                            .group_by(actions_table.c.action_text)
+                        )
+                        
+                        res = user_stats.union(others_stats).all()
+                        results = {key: value for key, value in res} 
+                        
+                        query = (
+                            TaskHistory.query.with_entities(
+                                func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                                func.max(TaskHistory.action_text).label("tm"),
+                            )
+                            .filter(TaskHistory.user_id == user.id)
+                            .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1))
+                            .group_by("trn", TaskHistory.project_id)
+                            .subquery()
+                        )
+                        total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                        ).scalar()
+                
+
+                
+                        if total_validation_time:
+                            time_spent_validating = total_validation_time.total_seconds()
+                            avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                            total_time_spent += time_spent_validating
+
+                        total_mapping_time = (
+                            db.session.query(
+                                func.sum(
+                                    cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                                )
+                            )
+                            
+                            .filter(
+                                or_(
+                                    TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                    TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                                )
+                            )
+                            .filter(TaskHistory.user_id == user.id)
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1)) 
+                            
+                            .scalar()
+                            
+                        )
+                        if total_mapping_time:
+                            time_spent_mapping = total_mapping_time.total_seconds()
+                            avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                            total_time_spent += time_spent_mapping
+
+                        days_list.append({"date":str(days[i]),
+                        "project_id":projid, 
+                        "tasks_mapped":(results["MAPPED"]), 
+                        "tasks_validated":(results["VALIDATED"]),
+                        "tasks_invalidated":(results["INVALIDATED"]), 
+                        "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+                        "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+                        "total_time_spent":total_time_spent,
+                        "time_spent_mapping":time_spent_mapping, 
+                        "average_time_spent_mapping":avg_time_spent_mapping,
+                        "time_spent_validating":time_spent_validating, 
+                        "average_time_spent_validating":avg_time_spent_validating})
+                        break
+
+            elif((start_date and end_date)and project_id):
+                for i in range(len(days)):
+        
+                    for j in range(len(days)):
+
+                        avg_time_spent_mapping = 0
+                        avg_time_spent_validating = 0
+                        total_time_spent = 0
+                        time_spent_mapping = 0
+                        time_spent_validating = 0
+                        total_mapping_time = 0
+                        total_validation_time = 0
+                        
+                        filtered_actions = (
+                            TaskHistory.query.with_entities(
+                                TaskHistory.user_id,
+                                TaskHistory.project_id,
+                                TaskHistory.task_id,
+                                TaskHistory.action_text,
+                                TaskHistory.action_date,
+                            )
+                            .filter(TaskHistory.action_text.in_(actions))
+                            .filter(TaskHistory.project_id == project_id)
+                            .filter(TaskHistory.user_id==user.id)
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1))
+                            
+                            .subquery()
+                            .alias("filtered_actions")
+                            
+                        )
+                    
+                        user_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id == user.id) 
+                            .subquery()
+                            .alias("user_tasks")
+                        )
+
+                        others_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id != user.id)
+                            .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                            .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                            .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                            
+                            .subquery()
+                            .alias("others_tasks")
+                            )
+                        
+                        user_stats = (
+                            db.session.query(
+                                actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                            )
+                            .outerjoin(
+                                user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                            )
+                            .group_by(actions_table.c.action_text)
+                            
+                        )
+
+                        others_stats = (
+                            db.session.query(
+                                func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                                func.count(others_tasks.c.action_text),
+                            )
+                            .outerjoin(
+                                others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                            )
+                            .group_by(actions_table.c.action_text)
+                        )
+                        
+                        res = user_stats.union(others_stats).all()
+                        results = {key: value for key, value in res} 
+                        
+                        query = (
+                            TaskHistory.query.with_entities(
+                                func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                                func.max(TaskHistory.action_text).label("tm"),
+                            )
+                            .filter(TaskHistory.user_id == user.id)
+                            .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                            .filter(TaskHistory.project_id==project_id)
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1))
+                            .group_by("trn", TaskHistory.project_id)
+                            .subquery()
+                        )
+                        total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                        ).scalar()
+                
+
+                
+                        if total_validation_time:
+                            time_spent_validating = total_validation_time.total_seconds()
+                            avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                            total_time_spent += time_spent_validating
+
+                        total_mapping_time = (
+                            db.session.query(
+                                func.sum(
+                                    cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                                )
+                            )
+                            
+                            .filter(
+                                or_(
+                                    TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                    TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                                )
+                            )
+                            .filter(TaskHistory.user_id == user.id)
+                            .filter(TaskHistory.action_date>=days[i])
+                            .filter(TaskHistory.action_date<=days[i]+datetime.timedelta(days=1))
+                            .filter(TaskHistory.project_id == project_id) 
+                            
+                            .scalar()
+                            
+                        )
+                        if total_mapping_time:
+                            time_spent_mapping = total_mapping_time.total_seconds()
+                            avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                            total_time_spent += time_spent_mapping
+
+                        
+                        days_list.append({"date":str(days[i]),
+                        "project_id":project_id, 
+                        "tasks_mapped":(results["MAPPED"]), 
+                        "tasks_validated":(results["VALIDATED"]),
+                        "tasks_invalidated":(results["INVALIDATED"]), 
+                        "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+                        "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+                        "total_time_spent":total_time_spent,
+                        "time_spent_mapping":time_spent_mapping, 
+                        "average_time_spent_mapping":avg_time_spent_mapping,
+                        "time_spent_validating":time_spent_validating, 
+                        "average_time_spent_validating":avg_time_spent_validating})
+                        break    
+                return days_list  
+
+        
+        task_list=[]
+        
+        if (project_id and (start_date and end_date)):
+            date_function(start_date, end_date, project_id)
+            
+            proj_query = ProjectInfo.query.with_entities(ProjectInfo.name).filter(ProjectInfo.project_id==project_id)
+            proj_name=[lis[0] for lis in proj_query]
+
+            avg_time_spent_mapping = 0
+            avg_time_spent_validating = 0
+            total_time_spent = 0
+            time_spent_mapping = 0
+            time_spent_validating = 0
+            total_mapping_time = 0
+            total_validation_time = 0
+
+            filtered_actions = (
+                TaskHistory.query.with_entities(
+                    TaskHistory.user_id,
+                    TaskHistory.project_id,
+                    TaskHistory.task_id,
+                    TaskHistory.action_text,
+                    TaskHistory.action_date,
+                )
+                .filter(TaskHistory.action_text.in_(actions))
+                .filter(TaskHistory.project_id == project_id)
+                .filter(TaskHistory.action_date>=start_date)
+                .filter(TaskHistory.action_date<=end_date)
+                .subquery()
+                .alias("filtered_actions")
+                
+            )
+            user_tasks = (
+                    db.session.query(filtered_actions)
+                    .filter(filtered_actions.c.user_id == user.id) 
+                    .subquery()
+                    .alias("user_tasks")
+                )
+
+            others_tasks = (
+                db.session.query(filtered_actions)
+                .filter(filtered_actions.c.user_id != user.id)
+                .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                
+                .subquery()
+                .alias("others_tasks")
+                )
+            
+            user_stats = (
+                db.session.query(
+                    actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                )
+                .outerjoin(
+                    user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                )
+                .group_by(actions_table.c.action_text)
+                
+            )
+
+            others_stats = (
+                db.session.query(
+                    func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                    func.count(others_tasks.c.action_text),
+                )
+                .outerjoin(
+                    others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                )
+                .group_by(actions_table.c.action_text)
+            )
+            
+            res = user_stats.union(others_stats).all()
+            results = {key: value for key, value in res}
+
+            query = (
+                TaskHistory.query.with_entities(
+                    func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                    func.max(TaskHistory.action_text).label("tm"),
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                .filter(TaskHistory.project_id == project_id)
+                .filter(TaskHistory.action_date>=start_date)
+                .filter(TaskHistory.action_date<=end_date)
+                .group_by("trn")
+                .subquery()
+            )
+
+            total_validation_time = db.session.query(
+                func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+            ).scalar()
+        
+            if total_validation_time:
+                time_spent_validating = total_validation_time.total_seconds()
+                avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                total_time_spent += time_spent_validating
+
+            total_mapping_time = (
+                db.session.query(
+                    func.sum(
+                        cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                    )
+                )
+                
+                .filter(
+                    or_(
+                        TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                        TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                    )
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.project_id==project_id)
+                .filter(TaskHistory.action_date>=start_date)
+                .filter(TaskHistory.action_date<=end_date)
+                
+                .scalar()
+                
+            )
+            if total_mapping_time:
+                time_spent_mapping = total_mapping_time.total_seconds()
+                avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                total_time_spent += time_spent_mapping
+
+            task_list.append({"project_id":project_id, 
+            "project_name":proj_name[0],
+            "tasks_mapped":(results["MAPPED"]), 
+            "tasks_validated":(results["VALIDATED"]),
+            "tasks_invalidated":(results["INVALIDATED"]), 
+            "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+            "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+            "total_time_spent":total_time_spent,
+            "time_spent_mapping":time_spent_mapping, 
+            "average_time_spent_mapping":avg_time_spent_mapping,
+            "time_spent_validating":time_spent_validating, 
+            "average_time_spent_validating":avg_time_spent_validating})
+
+        elif(project_id and not (start_date and end_date)):
+            proj_query = ProjectInfo.query.with_entities(ProjectInfo.name).filter(ProjectInfo.project_id==project_id)
+            proj_name=[lis[0] for lis in proj_query]
+
+            avg_time_spent_mapping = 0
+            avg_time_spent_validating = 0
+            total_time_spent = 0
+            time_spent_mapping = 0
+            time_spent_validating = 0
+            total_mapping_time = 0
+            total_validation_time = 0
+
+            filtered_actions = (
+                TaskHistory.query.with_entities(
+                    TaskHistory.user_id,
+                    TaskHistory.project_id,
+                    TaskHistory.task_id,
+                    TaskHistory.action_text,
+                )
+            
+                .filter(TaskHistory.action_text.in_(actions))
+                .filter(TaskHistory.project_id == project_id)
+                .subquery()
+                .alias("filtered_actions")
+                
+            )
+
+            user_tasks = (
+                    db.session.query(filtered_actions)
+                    .filter(filtered_actions.c.user_id == user.id) 
+                    .subquery()
+                    .alias("user_tasks")
+                )
+
+            others_tasks = (
+                db.session.query(filtered_actions)
+                .filter(filtered_actions.c.user_id != user.id)
+                .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                
+                .subquery()
+                .alias("others_tasks")
+                )
+            
+            user_stats = (
+                db.session.query(
+                    actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                )
+                .outerjoin(
+                    user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                )
+                .group_by(actions_table.c.action_text)
+                
+            )
+
+            others_stats = (
+                db.session.query(
+                    func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                    func.count(others_tasks.c.action_text),
+                )
+                .outerjoin(
+                    others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                )
+                .group_by(actions_table.c.action_text)
+            )
+            
+            res = user_stats.union(others_stats).all()
+            results = {key: value for key, value in res}
+
+            query = (
+                TaskHistory.query.with_entities(
+                    func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                    func.max(TaskHistory.action_text).label("tm"),
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                .filter(TaskHistory.project_id == project_id)
+                .group_by("trn")
+                .subquery()
+            )
+            
+            total_validation_time = db.session.query(
+                func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                ).scalar()
+        
+            if total_validation_time:
+                time_spent_validating = total_validation_time.total_seconds()
+                avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                total_time_spent += time_spent_validating
+            
+            total_mapping_time = (
+                db.session.query(
+                    func.sum(
+                        cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                    )
+                )
+                
+                .filter(
+                    or_(
+                        TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                        TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                    )
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.project_id==project_id)
+                .scalar()
+            )
+            if total_mapping_time:
+                time_spent_mapping = total_mapping_time.total_seconds()
+                avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                total_time_spent += time_spent_mapping
+
+            task_list.append({"project_id":project_id, 
+            "project_name":proj_name[0],
+            "tasks_mapped":(results["MAPPED"]), 
+            "tasks_validated":(results["VALIDATED"]),
+            "tasks_invalidated":(results["INVALIDATED"]), 
+            "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+            "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+            "total_time_spent":total_time_spent,
+            "time_spent_mapping":time_spent_mapping, 
+            "average_time_spent_mapping":avg_time_spent_mapping,
+            "time_spent_validating":time_spent_validating, 
+            "average_time_spent_validating":avg_time_spent_validating})
+        
+        if((start_date and end_date)and not project_id):
+            date_function(start_date, end_date, project_id)
+            
+            proj_ids = (TaskHistory.query.with_entities(TaskHistory.project_id).filter(TaskHistory.action_date>=start_date)
+                                    .filter(TaskHistory.action_date<=end_date).group_by(TaskHistory.project_id)).all()
+            proj_id = [lis[0] for lis in proj_ids]
+
+            for j in range(len(proj_id)):
+                proj_query = ProjectInfo.query.with_entities(ProjectInfo.name).filter(ProjectInfo.project_id==proj_id[j])
+                proj_name=[lis[0] for lis in proj_query]
+
+                for i in range(len(proj_id)):
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                            TaskHistory.action_date,
+                        )
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.project_id == proj_id[j])
+                        .filter(TaskHistory.user_id==user.id)
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        
+                        .subquery()
+                        .alias("filtered_actions")
+                        
+                    )
+                
+                    user_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id == user.id) 
+                        .subquery()
+                        .alias("user_tasks")
+                    )
+
+                    others_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id != user.id)
+                        .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                        .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                        .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                        
+                        .subquery()
+                        .alias("others_tasks")
+                        )
+                    
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                        
+                    )
+
+                    others_stats = (
+                        db.session.query(
+                            func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                            func.count(others_tasks.c.action_text),
+                        )
+                        .outerjoin(
+                            others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                    )
+                    
+                    res = user_stats.union(others_stats).all()
+                    results = {key: value for key, value in res} 
+                    
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.project_id==proj_id[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .group_by("trn", TaskHistory.project_id)
+                        .subquery()
+                    )
+                    total_validation_time = db.session.query(
+                    func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                    ).scalar()
+            
+
+            
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating
+
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .filter(TaskHistory.project_id == proj_id[j]) 
+                        
+                        .scalar()
+                        
+                    )
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+
+                    task_list.append({"project_id":(proj_id[j]),
+                    "project_name":proj_name[0], 
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "tasks_invalidated":(results["INVALIDATED"]), 
+                    "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+                    "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+                    
+
+        elif(not (start_date and end_date) and not project_id):
+            project_query = TaskHistory.query.with_entities(TaskHistory.project_id).group_by(TaskHistory.project_id).all()
+            proj_id = [lis[0] for lis in project_query]
+            
+            for j in range(len(proj_id)):
+                proj_query = ProjectInfo.query.with_entities(ProjectInfo.name).filter(ProjectInfo.project_id==proj_id[j])
+                proj_name=[lis[0] for lis in proj_query]
+           
+                for i in range(len(proj_id)):
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                        )
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.project_id == proj_id[j])
+                        .subquery()
+                        .alias("filtered_actions")
+                    )
+            
+                    user_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id == user.id) 
+                        .subquery()
+                        .alias("user_tasks")
+                    )
+
+                    others_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id != user.id)
+                        .filter(filtered_actions.c.task_id == user_tasks.c.task_id)
+                        .filter(filtered_actions.c.project_id == user_tasks.c.project_id)
+                        .filter(filtered_actions.c.action_text != TaskStatus.MAPPED.name)
+                        
+                        .subquery()
+                        .alias("others_tasks")
+                        )
+                    
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                        
+                    )
+
+                    others_stats = (
+                        db.session.query(
+                            func.concat(actions_table.c.action_text, "_BY_OTHERS"),
+                            func.count(others_tasks.c.action_text),
+                        )
+                        .outerjoin(
+                            others_tasks, actions_table.c.action_text == others_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                    )
+                    
+                    res = user_stats.union(others_stats).all()
+                    results = {key: value for key, value in res}
+
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.project_id==proj_id[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .group_by("trn")
+                        .subquery()
+                    )
+                    
+                    total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                    ).scalar()
+        
+
+                    
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating 
+
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.project_id==proj_id[j])
+                        
+                        .scalar()
+                        
+                    )
+
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/results["MAPPED"]) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+
+                    task_list.append({"project_id":(proj_id[j]),
+                    "project_name":proj_name[0], 
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "tasks_invalidated":(results["INVALIDATED"]), 
+                    "tasks_validated_by_others":(results["VALIDATED_BY_OTHERS"]),
+                    "tasks_invalidated_by_others":(results["INVALIDATED_BY_OTHERS"]), 
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+        
+        tasks_dto.task = task_list
+        tasks_dto.day = days_list
+
+        return tasks_dto
+
+
+    @staticmethod
+    def get_teams_stats(
+        username,
+        start_date: datetime.datetime = None,
+        end_date: datetime.datetime = None,
+        team_id: int = None,
+    ):
+        user = UserService.get_user_by_username(username)
+        teams_dto = UserTeamStatsDTO()
+
+        actions = [
+            TaskStatus.VALIDATED.name,
+            TaskStatus.MAPPED.name,
+        ] 
+        
+    
+        actions_table = (
+            db.session.query(literal(TaskStatus.VALIDATED.name).label("action_text"))
+            .union(
+                db.session.query(literal(TaskStatus.MAPPED.name).label("action_text")),
+            )
+            .subquery()
+            .alias("actions_table")
+        )
+        team_list=[]
+        
+        
+        UserQuery = TeamMembers.query.with_entities(TeamMembers.user_id).filter(TeamMembers.team_id==team_id).group_by(TeamMembers.user_id).all()
+        UserList = [lis[0] for lis in UserQuery]
+    
+        if (team_id and (start_date and end_date)):
+            
+            for j in range(len(UserList)):
+                teamname_query=Team.query.with_entities(Team.name).filter(Team.id==team_id)
+                teamname=[lis[0] for lis in teamname_query]
+
+                username_query=User.query.with_entities(User.username).filter(User.id==UserList[j])
+                username=[lis[0] for lis in username_query]
+
+                for i in range(len(UserList)):
+            
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                            TaskHistory.action_date,
+                        )
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.user_id==UserList[j])
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .subquery()
+                        .alias("filtered_actions")
+                        
+                    )
+                    user_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id == UserList[j]) 
+                            .subquery()
+                            .alias("user_tasks")
+                    )
+
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                    )
+
+                    res = user_stats.all()
+                    results = {key: value for key, value in res}
+
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == UserList[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .group_by("trn")
+                        .subquery()
+                    )
+
+                    total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                    ).scalar()
+                
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating
+
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == UserList[j])
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .scalar()
+                    )
+
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+
+                    team_list.append({"team_id":team_id,
+                    "team_name":teamname[0],
+                    "user_id":UserList[j],
+                    "user_name":username[0],
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+
+        elif(team_id and not (start_date and end_date)):
+
+            for j in range(len(UserList)):
+                teamname_query=Team.query.with_entities(Team.name).filter(Team.id==team_id)
+                teamname=[lis[0] for lis in teamname_query]
+
+                username_query=User.query.with_entities(User.username).filter(User.id==UserList[j])
+                username=[lis[0] for lis in username_query]
+
+                for i in range(len(UserList)):
+            
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                        )
+                    
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.user_id==UserList[j])
+                        .subquery()
+                        .alias("filtered_actions")
+                        
+                    )
+
+                    user_tasks = (
+                            db.session.query(filtered_actions)
+                            .filter(filtered_actions.c.user_id == UserList[j]) 
+                            .subquery()
+                            .alias("user_tasks")
+                    )
+
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                        
+                    )
+
+                    res = user_stats.all()
+                    results = {key: value for key, value in res}
+
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == UserList[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .group_by("trn")
+                        .subquery()
+                    )
+                    
+                    total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                        ).scalar()
+                
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating
+                    
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == UserList[j])
+                        .scalar()
+                    )
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+
+                    team_list.append({"team_id":team_id,
+                    "team_name":teamname[0],
+                    "user_id":UserList[j],
+                    "user_name":username[0], 
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+        
+        user_query = TeamMembers.query.with_entities(TeamMembers.user_id).group_by(TeamMembers.user_id).all()
+        user_list = [lis[0] for lis in user_query]
+        
+        if((start_date and end_date)and not team_id): 
+            
+            for j in range(len(user_list)):
+                username_query=User.query.with_entities(User.username).filter(User.id==user_list[j])
+                username=[lis[0] for lis in username_query]
+
+                for i in range(len(user_list)):
+                    team_query = TeamMembers.query.with_entities(TeamMembers.team_id).filter(TeamMembers.user_id==user_list[j]).group_by(TeamMembers.team_id).all()
+                    t_id = [lis[0] for lis in team_query]
+                    
+                    teamname=[]
+                    for var in t_id: 
+                        teamname_query=Team.query.with_entities(Team.name).filter(Team.id==var).all()
+                        teamname.append(teamname_query)
+                    teamname=[lis[0] for lis in teamname]
+                    teamname=[lis[0] for lis in teamname]
+
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                            TaskHistory.action_date,
+                        )
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.user_id==user_list[j])
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)                      
+                        .subquery()
+                        .alias("filtered_actions")
+                    )
+                
+                    user_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id == user_list[j]) 
+                        .subquery()
+                        .alias("user_tasks")
+                    )
+                    
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                        
+                    )
+    
+                    res = user_stats.all()
+                    results = {key: value for key, value in res} 
+                    
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == user_list[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date)
+                        .group_by("trn", TaskHistory.project_id)
+                        .subquery()
+                    )
+                    total_validation_time = db.session.query(
+                    func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                    ).scalar()
+            
+
+            
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating
+
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == user_list[j])
+                        .filter(TaskHistory.action_date>=start_date)
+                        .filter(TaskHistory.action_date<=end_date) 
+                        
+                        .scalar()
+                        
+                    )
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/int(results["MAPPED"])) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+
+                    team_list.append({"team_id":t_id,
+                    "team_name":teamname,
+                    "user_id":user_list[j],
+                    "user_name":username[0], 
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+                
+        
+        elif(not (start_date and end_date) and not team_id):
+        
+            for j in range(len(user_list)):
+                username_query=User.query.with_entities(User.username).filter(User.id==user_list[j])
+                username=[lis[0] for lis in username_query]
+
+                for i in range(len(user_list)):
+                    team_query = TeamMembers.query.with_entities(TeamMembers.team_id).filter(TeamMembers.user_id==user_list[j]).group_by(TeamMembers.team_id).all()
+                    t_id = [lis[0] for lis in team_query]
+                    
+                    teamname=[]
+                    for var in t_id: 
+                        teamname_query=Team.query.with_entities(Team.name).filter(Team.id==var).all()
+                        teamname.append(teamname_query)
+                
+                    teamname=[lis[0] for lis in teamname]
+                    teamname=[lis[0] for lis in teamname]
+
+                    avg_time_spent_mapping = 0
+                    avg_time_spent_validating = 0
+                    total_time_spent = 0
+                    time_spent_mapping = 0
+                    time_spent_validating = 0
+                    total_mapping_time = 0
+                    total_validation_time = 0
+                    
+                    filtered_actions = (
+                        TaskHistory.query.with_entities(
+                            TaskHistory.user_id,
+                            TaskHistory.project_id,
+                            TaskHistory.task_id,
+                            TaskHistory.action_text,
+                        )
+                        .filter(TaskHistory.action_text.in_(actions))
+                        .filter(TaskHistory.user_id == user_list[j])
+                        .subquery()
+                        .alias("filtered_actions")
+                    )
+            
+                    user_tasks = (
+                        db.session.query(filtered_actions)
+                        .filter(filtered_actions.c.user_id == user_list[j]) 
+                        .subquery()
+                        .alias("user_tasks")
+                    )
+                    
+                    user_stats = (
+                        db.session.query(
+                            actions_table.c.action_text, func.count(user_tasks.c.action_text)
+                        )
+                        .outerjoin(
+                            user_tasks, actions_table.c.action_text == user_tasks.c.action_text
+                        )
+                        .group_by(actions_table.c.action_text)
+                        
+                    )
+                
+                    res = user_stats.all()
+                    results = {key: value for key, value in res}
+
+                    query = (
+                        TaskHistory.query.with_entities(
+                            func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                            func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.user_id == user_list[j])
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .group_by("trn")
+                        .subquery()
+                    )
+                    
+                    total_validation_time = db.session.query(
+                        func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                    ).scalar()
+        
+
+                    
+                    if total_validation_time:
+                        time_spent_validating = total_validation_time.total_seconds()
+                        avg_time_spent_validating += (time_spent_validating/results["VALIDATED"]) if int(results["VALIDATED"]) != 0 else 0
+                        total_time_spent += time_spent_validating 
+
+                    total_mapping_time = (
+                        db.session.query(
+                            func.sum(
+                                cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.user_id == user_list[j])
+                        .scalar()
+                    )
+
+                    if total_mapping_time:
+                        time_spent_mapping = total_mapping_time.total_seconds()
+                        avg_time_spent_mapping += (time_spent_mapping/results["MAPPED"]) if int(results["MAPPED"]) != 0 else 0
+                        total_time_spent += time_spent_mapping
+                
+                    team_list.append({"team_id":t_id,
+                    "team_name":teamname,   
+                    "user_id":user_list[j],
+                    "user_name":username[0], 
+                    "tasks_mapped":(results["MAPPED"]), 
+                    "tasks_validated":(results["VALIDATED"]),
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "average_time_spent_mapping":avg_time_spent_mapping,
+                    "time_spent_validating":time_spent_validating, 
+                    "average_time_spent_validating":avg_time_spent_validating})
+                    break
+                
+        teams_dto.team = team_list
+
+        return teams_dto
+    
+    @staticmethod
+    def get_user_specific_task(
+        username: str,
+        start_date: datetime.datetime = None,
+        end_date: datetime.datetime = None,
+        task_status: str = None,
+    ):
+
+        user = UserService.get_user_by_username(username)
+        task_dto = UserSpecificDTO()
+        task_list=[]
+
+        actions = [
+            TaskStatus.VALIDATED.name,
+            TaskStatus.MAPPED.name,
+            TaskStatus.INVALIDATED.name,
+            TaskStatus.BADIMAGERY.name
+        ] 
+        action_list=[
+            TaskStatus.LOCKED_FOR_MAPPING.name,
+            TaskStatus.LOCKED_FOR_VALIDATION.name,
+        ]
+
+        task_query = (TaskHistory.query.with_entities(TaskHistory.task_id)
+            .filter(TaskHistory.user_id==user.id)
+            .group_by(TaskHistory.task_id)
+        ).all()
+
+        pro_query=(TaskHistory.query.with_entities(TaskHistory.project_id)
+            .filter(TaskHistory.user_id==user.id)
+            .group_by(TaskHistory.project_id)
+        ).all()
+
+        pro_list=[lis[0] for lis in pro_query]
+        taskid_list=[var[0] for var in task_query]
+
+        for j in range(len(pro_list)):
+            for i in range(len(taskid_list)):
+                review_query=Task.query.with_entities(Task.validated_by).filter(Task.project_id==pro_list[j]).filter(Task.id==taskid_list[i]).all()
+                review_list=[lis[0] for lis in review_query]
+                
+                date_query=(TaskHistory.query.with_entities(TaskHistory.action_date).filter(TaskHistory.project_id==pro_list[j])
+                    .filter(TaskHistory.task_id==taskid_list[i])
+                    .filter(TaskHistory.user_id==user.id)
+                    .filter(TaskHistory.action_text.in_(actions))
+                ).all()
+                date_list=[lis[0] for lis in date_query]
+        
+                time_spent_mapping=0
+                time_spent_validating=0
+                total_time_spent=0
+
+                base_query=(TaskHistory.query.with_entities(
+                    TaskHistory.task_id,
+                    TaskHistory.project_id, 
+                    TaskHistory.action_text,
+                    )
+                    .filter(TaskHistory.project_id==pro_list[j])
+                    .filter(TaskHistory.task_id==taskid_list[i])
+                    .filter(TaskHistory.user_id==user.id)
+                    .filter(TaskHistory.action_text.in_(actions))
+                )
+
+                if task_status:
+                    if task_status.upper() in actions:
+                        base_query = base_query.filter(TaskHistory.action_text == TaskStatus[task_status.upper()].name)
+                        if (start_date and end_date):
+                            base_query = base_query.filter(TaskHistory.action_date >= start_date).filter(TaskHistory.action_date <= end_date)
+                    elif task_status.upper() in action_list:
+                        date_query=(TaskHistory.query.with_entities(TaskHistory.action_date).filter(TaskHistory.project_id==pro_list[j])
+                            .filter(TaskHistory.task_id==taskid_list[i])
+                            .filter(TaskHistory.user_id==user.id)
+                            .filter(TaskHistory.action.in_(action_list))
+                        ).all()
+                        date_list=[lis[0] for lis in date_query]
+                        base_query=(TaskHistory.query.with_entities(
+                            TaskHistory.task_id,
+                            TaskHistory.project_id, 
+                            TaskHistory.action,
+                            )
+                            .filter(TaskHistory.project_id==pro_list[j])
+                            .filter(TaskHistory.task_id==taskid_list[i])
+                            .filter(TaskHistory.user_id==user.id)
+                            .filter(TaskHistory.action.in_(action_list))
+                        )
+                        base_query=base_query.filter(TaskHistory.action==TaskStatus[task_status.upper()].name)
+                        if (start_date and end_date):
+                            base_query = base_query.filter(TaskHistory.action_date >= start_date).filter(TaskHistory.action_date <= end_date)
+                if (start_date and end_date):
+                    base_query = base_query.filter(TaskHistory.action_date >= start_date).filter(TaskHistory.action_date <= end_date)
+
+                base_query=base_query.all()
+            
+                query = (
+                    TaskHistory.query.with_entities(
+                        func.date_trunc("minute", TaskHistory.action_date).label("trn"),
+                        func.max(TaskHistory.action_text).label("tm"),
+                        )
+                        .filter(TaskHistory.project_id==pro_list[j])
+                        .filter(TaskHistory.task_id==taskid_list[i])
+                        .filter(TaskHistory.user_id == user.id)
+                        .filter(TaskHistory.action == "LOCKED_FOR_VALIDATION")
+                        .group_by("trn")
+                        .subquery()
+                )
+
+                total_validation_time = db.session.query(
+                    func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
+                ).scalar()
+                
+                if total_validation_time:
+                    time_spent_validating = total_validation_time.total_seconds()
+                    total_time_spent += time_spent_validating
+                
+                total_mapping_time = (
+                    db.session.query(
+                        func.sum(
+                            cast(func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"), Time)
+                            )
+                        )
+                        .filter(
+                            or_(
+                                TaskHistory.action == TaskAction.LOCKED_FOR_MAPPING.name,
+                                TaskHistory.action == TaskAction.AUTO_UNLOCKED_FOR_MAPPING.name,
+                            )
+                        )
+                        .filter(TaskHistory.project_id==pro_list[j])
+                        .filter(TaskHistory.task_id==taskid_list[i])
+                        .filter(TaskHistory.user_id == user.id)
+                        .scalar()
+                )
+                if total_mapping_time:
+                    time_spent_mapping = total_mapping_time.total_seconds()
+                    total_time_spent += time_spent_mapping
+
+                task_status_list=[lis[2] for lis in base_query]
+                    
+                if len(base_query):
+                    task_list.append({"user_name":username,
+                    "project_id":pro_list[j], 
+                    "tasks_id":taskid_list[i],      
+                    "task_status":task_status_list[0],
+                    "action_date":str(date_list[0]), 
+                    "total_time_spent":total_time_spent,
+                    "time_spent_mapping":time_spent_mapping, 
+                    "time_spent_validating":time_spent_validating,
+                    "reviewer":review_list[0]}) 
+                
+        task_dto.tasks = task_list
+
+        return task_dto

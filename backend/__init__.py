@@ -250,6 +250,9 @@ def add_api_endpoints(app):
     from backend.api.users.statistics import (
         UsersStatisticsAPI,
         UsersStatisticsInterestsAPI,
+        UsersTaskMappedAPI,
+        UsersTeamStatsAPI,
+        UserSpecificAPI,
     )
 
     # System API endpoint
@@ -518,7 +521,6 @@ def add_api_endpoints(app):
         TasksActionsSplitAPI,
         format_url("projects/<int:project_id>/tasks/actions/split/<int:task_id>/"),
     )
-
     # Comments REST endoints
     api.add_resource(
         CommentsProjectsRestAPI,
@@ -677,6 +679,7 @@ def add_api_endpoints(app):
     # Users REST endpoint
     api.add_resource(UsersAllAPI, format_url("users/"))
     api.add_resource(UsersRestAPI, format_url("users/<int:user_id>/"))
+    
     api.add_resource(
         UsersQueriesUsernameFilterAPI,
         format_url("users/queries/filter/<string:username>/"),
@@ -712,6 +715,7 @@ def add_api_endpoints(app):
     )
 
     api.add_resource(UsersTasksAPI, format_url("users/<int:user_id>/tasks/"))
+
     api.add_resource(
         UsersActionsVerifyEmailAPI, format_url("users/me/actions/verify-email/")
     )
@@ -723,6 +727,16 @@ def add_api_endpoints(app):
     api.add_resource(
         UsersStatisticsAPI, format_url("users/<string:username>/statistics/")
     )
+
+    api.add_resource(
+        UsersTaskMappedAPI, format_url("users/<string:username>/userstaskmapped/")
+    )
+
+    api.add_resource(
+        UsersTeamStatsAPI, format_url("users/<string:username>/usersteamstats/")
+    )
+
+    api.add_resource(UserSpecificAPI, format_url("users/<string:username>/tasks/"))
 
     # User RecommendedProjects endpoint
     api.add_resource(

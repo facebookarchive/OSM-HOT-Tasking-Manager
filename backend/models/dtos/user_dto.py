@@ -58,6 +58,7 @@ class UserDTO(Model):
     is_email_verified = EmailType(
         serialized_name="isEmailVerified", serialize_when_none=False
     )
+
     is_expert = BooleanType(serialized_name="isExpert", serialize_when_none=False)
     twitter_id = StringType(serialized_name="twitterId")
     facebook_id = StringType(serialized_name="facebookId")
@@ -125,7 +126,7 @@ class UserContributionDTO(Model):
 
 class UserStatsDTO(Model):
     """ DTO containing statistics about the user """
-
+   
     total_time_spent = IntType(serialized_name="totalTimeSpent")
     time_spent_mapping = IntType(serialized_name="timeSpentMapping")
     time_spent_validating = IntType(serialized_name="timeSpentValidating")
@@ -144,7 +145,6 @@ class UserStatsDTO(Model):
     contributions_interest = ListType(
         ModelType(InterestDTO), serialized_name="ContributionsByInterest"
     )
-
 
 class UserOSMDTO(Model):
     """ DTO containing OSM details for the user """
@@ -252,3 +252,20 @@ class UserTaskDTOs(Model):
 
     user_tasks = ListType(ModelType(TaskDTO), serialized_name="tasks")
     pagination = ModelType(Pagination)
+
+class UserMappedDTO(Model):
+    """ DTO containing statistics about the user """
+
+    task = ListType(IntType(serialized_name="task"))
+    day = ListType(IntType(serialized_name="day"))
+
+class UserTeamStatsDTO(Model):
+    """ DTO containing statistics about the teams """
+
+    team = ListType(IntType(serialized_name="team"))
+
+
+class UserSpecificDTO(Model):
+    """ DTO containing stats about the user """
+
+    tasks = ListType(IntType(serialized_name="tasks"))
