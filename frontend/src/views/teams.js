@@ -11,7 +11,11 @@ import { useFetch } from '../hooks/UseFetch';
 import { useEditTeamAllowed } from '../hooks/UsePermissions';
 import { useSetTitleTag } from '../hooks/UseMetaTags';
 import { fetchLocalJSONAPI, pushToLocalJSONAPI } from '../network/genericJSONRequest';
-import { exporttoCSVFile } from '../network/genericCSVExport';
+import {
+  exporttoCSVFile,
+  convertStartDateTime,
+  convertEndDateTime,
+} from '../network/genericCSVExport';
 import DataTable from 'react-data-table-component';
 import { Button } from '../components/button';
 import moment from 'moment';
@@ -72,8 +76,12 @@ export function MyTeamsUserSatsIndetailed() {
   }
 
   let selectTaskSatus = [
-    { value: 'MAPPED', label: 'MAPPED' },
-    { value: 'VALIDATED', label: 'VALIDATED' },
+    { value: 'MAPPED', label: 'Mapped' },
+    { value: 'LOCKED_FOR_MAPPING', label: 'Locked For Mapping ' },
+    { value: 'VALIDATED', label: 'Validated' },
+    { value: 'LOCKED_FOR_VALIDATION', label: 'Locked For Validation ' },
+    { value: 'INVALIDATED', label: 'In Validated' },
+    { value: 'BADIMAGERY', label: 'BadImagery' },
   ];
   const maxDateApp = new Date();
   const customStyles = {
@@ -121,8 +129,8 @@ export function MyTeamsUserSatsIndetailed() {
     },
 
     {
-      name: ' Task Finish time ',
-      selector: 'TaskFinishTime',
+      name: ' Status Change Time',
+      selector: 'StatusChangeTime',
       sortable: true,
       grow: 2,
       minWidth: '100px',
@@ -174,9 +182,12 @@ export function MyTeamsUserSatsIndetailed() {
     return result;
   };
   const getUserNameBasedStats = async () => {
-    var startDateFormatted = moment(value[0]).format('YYYY-MM -DD');
+    // var startDateFormatted = moment(value[0]).format('YYYY-MM -DD');
 
-    var endDateFormatted = moment(value[1]).format('YYYY-MM -DD');
+    // var endDateFormatted = moment(value[1]).format('YYYY-MM -DD');
+    var startDateFormatted = convertStartDateTime(value[0]);
+
+    var endDateFormatted = convertEndDateTime(value[1]);
 
     const response = await fetchLocalJSONAPI(
       `users/${userNameSelected}/tasks/?status=${selectedStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`,
@@ -191,7 +202,8 @@ export function MyTeamsUserSatsIndetailed() {
     obj.TaskUrl = teamMetricsStats[i].project_id;
     obj.TaskId = teamMetricsStats[i].tasks_id;
     obj.CurrentState = teamMetricsStats[i].task_status;
-    obj.TaskFinishTime = moment(teamMetricsStats[i].action_date).format('DD-MM-YYYY HH:mm:ss');
+
+    obj.StatusChangeTime = moment(teamMetricsStats[i].action_date).format('DD-MM-YYYY HH:mm:ss');
     obj.TimeSpentOnTask = convertSeconds(teamMetricsStats[i].total_time_spent);
     obj.Reviewer = teamMetricsStats[i].reviewer;
 
@@ -225,10 +237,8 @@ export function MyTeamsUserSatsIndetailed() {
     generateUserBasedMetricsStats(userNameselected, selectedTaskStatus, value[0], value[1]);
   }
   var generateUserBasedMetricsStats = (userName, taskStatus, startDate, endDate) => {
-    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
-
-    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
-
+    var startDateFormatted = convertStartDateTime(startDate);
+    var endDateFormatted = convertEndDateTime(endDate);
     let url = `users/${userName}/tasks/?status=${taskStatus}&start_date=${startDateFormatted}&end_date=${endDateFormatted}`;
     fetchLocalJSONAPI(url, token)
       .then((res) => {
@@ -259,7 +269,7 @@ export function MyTeamsUserSatsIndetailed() {
               />
             </td>
             <td>
-              <label className="pt3 pb2">Task Type :</label>
+              <label className="pt3 pb2">Task Status :</label>
             </td>
             <td style={{ width: 200 }}>
               <Select
@@ -274,7 +284,7 @@ export function MyTeamsUserSatsIndetailed() {
               />
             </td>
             <td>
-              <label className="pt3 pb2 " style={{ marginLeft: '200px' }}>
+              <label className="pt3 pb2 " style={{ marginLeft: '170px' }}>
                 Date Range :
               </label>
             </td>

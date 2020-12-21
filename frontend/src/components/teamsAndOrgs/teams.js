@@ -5,7 +5,11 @@ import { FormattedMessage } from 'react-intl';
 import ReactPlaceholder from 'react-placeholder';
 import { Form, Field } from 'react-final-form';
 import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
-import { exporttoCSVFile } from '../../network/genericCSVExport';
+import {
+  exporttoCSVFile,
+  convertStartDateTime,
+  convertEndDateTime,
+} from '../../network/genericCSVExport';
 import messages from './messages';
 import { useEditTeamAllowed } from '../../hooks/UsePermissions';
 import { UserAvatar, UserAvatarList } from '../user/avatar';
@@ -19,7 +23,6 @@ import DataTable from 'react-data-table-component';
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import 'react-calendar/dist/Calendar.css';
 import Select from 'react-select';
-import moment from 'moment';
 
 export function TeamsManagement({
   teams,
@@ -396,21 +399,28 @@ export function TeamsStats() {
   const [teamMetricsStats, setTeamMetricsStats] = useState({});
   const [teamNames, setTeamNames] = useState({});
 
-  const startDate = moment(value[0]).format('YYYY-MM -DD');
+  let startDateTime = convertStartDateTime(value[0]);
+  let endDateTime = convertEndDateTime(value[1]);
+  const getTeamMetricsStats = async () => {
+    const response = await fetchLocalJSONAPI(
+      `users/${userName}/usersteamstats/?start_date=${startDateTime}&end_date=${endDateTime}`,
+      token,
+    );
 
-  const endDate = moment(value[1]).format('YYYY-MM -DD');
-
-  useEffect(() => {
-    getTeamMetricsStats();
-    getTeamNames();
-  }, []);
-
+    const jsonData = await response.team;
+    setTeamMetricsStats(jsonData);
+  };
   const getTeamNames = async () => {
     const response = await fetchLocalJSONAPI(`teams/?member=${userId}`, token);
 
     const jsonData = await response.teams;
     setTeamNames(jsonData);
   };
+
+  useEffect(() => {
+    getTeamMetricsStats();
+    getTeamNames();
+  }, []);
 
   let selectItems = [{ value: 'All', label: 'All' }];
   //selectItems
@@ -420,16 +430,7 @@ export function TeamsStats() {
     obj.label = teamNames[i].name;
     selectItems.push(obj);
   }
-  const getTeamMetricsStats = async () => {
-    const response = await fetchLocalJSONAPI(
-      `users/${userName}/usersteamstats/?start_date=${startDate}&end_date=${endDate}`,
-      token,
-    );
 
-    const jsonData = await response.team;
-    //const jsonDataForDays = await response.day;
-    setTeamMetricsStats(jsonData);
-  };
   var convertSeconds = (sec) => {
     var hrs = Math.floor(sec / 3600);
     var min = Math.floor((sec - hrs * 3600) / 60);
@@ -521,9 +522,12 @@ export function TeamsStats() {
     generateTeamMetricsStats(Values.value, value[0], value[1]);
   }
   var generateTeamMetricsStats = (teamId, startDate, endDate) => {
-    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
+    // var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
 
-    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
+    // var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
+    var startDateFormatted = convertStartDateTime(startDate);
+
+    var endDateFormatted = convertEndDateTime(endDate);
 
     let url = '';
     if (teamId === 'All') {

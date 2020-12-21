@@ -12,7 +12,11 @@ import { Button } from '../button';
 import { Line } from 'react-chartjs-2';
 import Select from 'react-select';
 import moment from 'moment';
-import { exporttoCSVFile } from '../../network/genericCSVExport';
+import {
+  exporttoCSVFile,
+  convertStartDateTime,
+  convertEndDateTime,
+} from '../../network/genericCSVExport';
 import {
   ClockIcon,
   RoadIcon,
@@ -117,8 +121,6 @@ export const TaskStats = ({ userStats, username }) => {
   dateObj.setDate(dateObj.getDate() - 7);
 
   const [value, onChange] = useState([dateObj, new Date()]);
-  const startDate = moment(value[0]).format('YYYY-MM -DD');
-  const endDate = moment(value[1]).format('YYYY-MM -DD');
   const getProjectNames = async () => {
     const response = await fetchLocalJSONAPI(`projects/`, token);
     const jsonData = await response.results;
@@ -131,6 +133,8 @@ export const TaskStats = ({ userStats, username }) => {
     obj.label = projectNames[i].name;
     selectItems.push(obj);
   }
+  const startDate = convertStartDateTime(value[0]);
+  const endDate = convertEndDateTime(value[1]);
 
   const getUserMetricsStats = async () => {
     const response = await fetchLocalJSONAPI(
@@ -287,9 +291,8 @@ export const TaskStats = ({ userStats, username }) => {
     generateUserMetricsStats(Values.value, value[0], value[1]);
   }
   var generateUserMetricsStats = (projId, startDate, endDate) => {
-    var startDateFormatted = moment(startDate).format('YYYY-MM -DD');
-    var endDateFormatted = moment(endDate).format('YYYY-MM -DD');
-
+    var startDateFormatted = convertStartDateTime(startDate);
+    var endDateFormatted = convertEndDateTime(endDate);
     let url = '';
     if (projId === 'All') {
       url = `users/${userName}/userstaskmapped/?start_date=${startDateFormatted}&end_date=${endDateFormatted}`;

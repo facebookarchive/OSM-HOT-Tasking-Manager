@@ -1,17 +1,20 @@
+import moment from 'moment';
 export function exporttoCSVFile(dataArray, fileName) {
-  const link = document.createElement('a');
-  let csv = convertArrayOfObjectsToCSV(dataArray);
-  if (csv == null) return;
+  if (dataArray && dataArray.length > 0) {
+    const link = document.createElement('a');
+    let csv = convertArrayOfObjectsToCSV(dataArray);
+    if (csv == null) return;
 
-  const filename = fileName + 'export.csv';
+    const filename = fileName + 'export.csv';
 
-  if (!csv.match(/^data:text\/csv/i)) {
-    csv = `data:text/csv;charset=utf-8,${csv}`;
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = `data:text/csv;charset=utf-8,${csv}`;
+    }
+
+    link.setAttribute('href', encodeURI(csv));
+    link.setAttribute('download', filename);
+    link.click();
   }
-
-  link.setAttribute('href', encodeURI(csv));
-  link.setAttribute('download', filename);
-  link.click();
 }
 function convertArrayOfObjectsToCSV(array) {
   let result;
@@ -36,5 +39,23 @@ function convertArrayOfObjectsToCSV(array) {
     result += lineDelimiter;
   });
 
+  return result;
+}
+
+export function convertStartDateTime(value) {
+  let dateTime = new Date(value);
+  dateTime.setHours(0);
+  dateTime.setMinutes(0);
+  dateTime.setSeconds(0);
+  let result = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
+  return result;
+}
+export function convertEndDateTime(value) {
+  let dateTime = new Date(value);
+  dateTime.setHours(11);
+  dateTime.setMinutes(59);
+  dateTime.setSeconds(59);
+
+  let result = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
   return result;
 }
