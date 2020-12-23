@@ -64,8 +64,6 @@ export function convertUtcToLocal(dateTime) {
   var date = moment.utc(dateTime).format('YYYY-MM-DD HH:mm:ss');
   var localTime = moment.utc(date).toDate();
   localTime = moment(localTime).format('YYYY-MM-DD HH:mm:ss');
-  console.log('moment: ' + localTime);
-
   return localTime;
 }
 
