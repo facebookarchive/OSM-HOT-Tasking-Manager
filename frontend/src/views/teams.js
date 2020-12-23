@@ -15,6 +15,8 @@ import {
   exporttoCSVFile,
   convertStartDateTime,
   convertEndDateTime,
+  convertUtcToLocal,
+  convertSeconds,
 } from '../network/genericCSVExport';
 import DataTable from 'react-data-table-component';
 import { Button } from '../components/button';
@@ -170,17 +172,6 @@ export function MyTeamsUserSatsIndetailed() {
   let defaultelectedStatus = { value: selectedStatus, label: selectedStatus };
   let userNameSelected = varSelectedUser.value;
 
-  var convertSeconds = (sec) => {
-    var hrs = Math.floor(sec / 3600);
-    var min = Math.floor((sec - hrs * 3600) / 60);
-    var seconds = sec - hrs * 3600 - min * 60;
-    seconds = Math.round(seconds * 100) / 100;
-
-    var result = hrs < 10 ? '0' + hrs : hrs;
-    result += ':' + (min < 10 ? '0' + min : min);
-    result += ':' + (seconds < 10 ? '0' + seconds : seconds);
-    return result;
-  };
   const getUserNameBasedStats = async () => {
     // var startDateFormatted = moment(value[0]).format('YYYY-MM -DD');
 
@@ -202,8 +193,7 @@ export function MyTeamsUserSatsIndetailed() {
     obj.TaskUrl = teamMetricsStats[i].project_id;
     obj.TaskId = teamMetricsStats[i].tasks_id;
     obj.CurrentState = teamMetricsStats[i].task_status;
-
-    obj.StatusChangeTime = moment(teamMetricsStats[i].action_date).format('DD-MM-YYYY HH:mm:ss');
+    obj.StatusChangeTime = convertUtcToLocal(teamMetricsStats[i].action_date);
     obj.TimeSpentOnTask = convertSeconds(teamMetricsStats[i].total_time_spent);
     obj.Reviewer = teamMetricsStats[i].reviewer;
 
@@ -284,7 +274,7 @@ export function MyTeamsUserSatsIndetailed() {
               />
             </td>
             <td>
-              <label className="pt3 pb2 " style={{ marginLeft: '170px' }}>
+              <label className="pt3 pb2 " style={{ marginLeft: '30px' }}>
                 Date Range :
               </label>
             </td>

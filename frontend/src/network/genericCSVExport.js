@@ -59,3 +59,24 @@ export function convertEndDateTime(value) {
   let result = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
   return result;
 }
+
+export function convertUtcToLocal(dateTime) {
+  var date = moment.utc(dateTime).format('YYYY-MM-DD HH:mm:ss');
+  var localTime = moment.utc(date).toDate();
+  localTime = moment(localTime).format('YYYY-MM-DD HH:mm:ss');
+  console.log('moment: ' + localTime);
+
+  return localTime;
+}
+
+export function convertSeconds(sec) {
+  var hrs = Math.floor(sec / 3600);
+  var min = Math.floor((sec - hrs * 3600) / 60);
+  var seconds = sec - hrs * 3600 - min * 60;
+  seconds = Math.round(seconds * 100) / 100;
+
+  var result = hrs < 10 ? '0' + hrs : hrs;
+  result += ':' + (min < 10 ? '0' + min : min);
+  result += ':' + (seconds < 10 ? '0' + seconds : seconds);
+  return result;
+}
