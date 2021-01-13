@@ -35,6 +35,9 @@ export function TasksMapLegend() {
             <TaskStatus status="BADIMAGERY" />
           </p>
           <p className={lineClasses}>
+            <TaskStatus status="ADJACENTLOCK" />
+          </p>
+          <p className={lineClasses}>
             <TaskStatus status="PRIORITY_AREAS" />
           </p>
           <p className={lineClasses}>

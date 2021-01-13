@@ -30,6 +30,18 @@ const TasksByStatus = (props) => {
       borderColor: '#929db3',
     },
     {
+      label: getLabel('ADJACENT_LOCK'),
+      field: 'adjacentLock',
+      backgroundColor: TASK_COLOURS.ADJACENT_LOCK,
+      borderColor: '#929db3',
+    },
+    {
+      label: getLabel('ADJACENTLOCK'),
+      field: 'adjacentLock',
+      backgroundColor: TASK_COLOURS.ADJACENTLOCK,
+      borderColor: '#929db3',
+    },
+    {
       label: getLabel('MAPPED'),
       field: 'mapped',
       backgroundColor: TASK_COLOURS.MAPPED,

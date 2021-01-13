@@ -18,7 +18,12 @@ import { Dropdown } from '../dropdown';
 import { CustomButton } from '../button';
 
 export function TaskStatus({ status, lockHolder }: Object) {
-  const isReadyOrLockedForMapping = ['READY', 'LOCKED_FOR_MAPPING'].includes(status);
+  const isReadyOrLockedForMapping = [
+    'READY',
+    'LOCKED_FOR_MAPPING',
+    'ADJACENT_LOCK',
+    'ADJACENTLOCK',
+  ].includes(status);
   const dotSize = isReadyOrLockedForMapping ? '0.875rem' : '1rem';
   const isLockedStatus = ['LOCKED_FOR_VALIDATION', 'LOCKED_FOR_MAPPING'].includes(status);
   return (
