@@ -299,7 +299,7 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                         editor={activeEditor}
                         callEditor={callEditor}
                       />
-                      {editor === 'ID' && (
+                      {(editor === 'ID' || editor === 'RAPID') && (
                         <Popup
                           modal
                           trigger={(open) => (
