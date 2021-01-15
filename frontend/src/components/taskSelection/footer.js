@@ -42,7 +42,7 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
 
   const lockFailed = (windowObjectReference, message) => {
     // JOSM and iD don't open a new window
-    if (!['JOSM', 'ID'].includes(editor)) {
+    if (!['JOSM', 'ID', 'RAPID'].includes(editor)) {
       windowObjectReference.close();
     }
     fetchLockedTasks();
