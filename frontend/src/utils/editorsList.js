@@ -3,7 +3,7 @@ import { ID_EDITOR_URL, POTLATCH2_EDITOR_URL } from '../config';
 export function getEditors(filterList, customEditor) {
   let editors = [
     {
-      label: 'RAPID',
+      label: 'RapiD',
       value: 'RAPID',
       url: 'https://mapwith.ai/rapid',
     },

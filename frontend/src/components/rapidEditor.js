@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import * as iD from 'iD';
-import 'iD/dist/iD.css';
+import * as RapiD from 'RapiD';
+import 'RapiD/dist/iD.css';
 import { OSM_CONSUMER_KEY, OSM_CONSUMER_SECRET, OSM_SERVER_URL } from '../config';
+
 export default function RapidEditor({ editorRef, setEditorRef, setDisable, comment, presets }) {
   const dispatch = useDispatch();
   const session = useSelector((state) => state.auth.get('session'));
@@ -29,7 +30,7 @@ export default function RapidEditor({ editorRef, setEditorRef, setDisable, comme
     }
   }, [comment, editorRef]);
   useEffect(() => {
-    if (session && locale && iD && editorRef) {
+    if (session && locale && RapiD && editorRef) {
       // if presets is not a populated list we need to set it as null
       try {
         if (presets.length) {
