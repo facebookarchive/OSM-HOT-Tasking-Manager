@@ -12,6 +12,7 @@ from backend.models.dtos.mapping_dto import (
     StopMappingTaskDTO,
     TaskCommentDTO,
 )
+from backend.models.postgis.project import Project
 from backend.models.postgis.statuses import MappingNotAllowed
 from backend.models.postgis.task import Task, TaskStatus, TaskHistory, TaskAction
 from backend.models.postgis.utils import NotFound, UserLicenseError
@@ -51,6 +52,7 @@ class MappingService:
         """ Get task as DTO for transmission over API """
         task = MappingService.get_task(task_id, project_id)
         task_dto = task.as_dto_with_instructions(preferred_local)
+        
         return task_dto
 
     @staticmethod
@@ -75,6 +77,7 @@ class MappingService:
 
         return False
 
+
     @staticmethod
     def lock_task_for_mapping(lock_task_dto: LockTaskDTO) -> TaskDTO:
         """
@@ -83,6 +86,7 @@ class MappingService:
         :raises TaskServiceError
         :return: Updated task, or None if not found
         """
+        
         task = MappingService.get_task(lock_task_dto.task_id, lock_task_dto.project_id)
 
         if not task.is_mappable():
@@ -100,6 +104,9 @@ class MappingService:
                 )
 
         task.lock_task_for_mapping(lock_task_dto.user_id)
+        toggle = Project.get_project_adj_toggle(lock_task_dto.project_id)
+        task.adjacent_task_lock(lock_task_dto.task_id, lock_task_dto.project_id, toggle[0])
+
         return task.as_dto_with_instructions(lock_task_dto.preferred_locale)
 
     @staticmethod
@@ -139,6 +146,8 @@ class MappingService:
                 )
 
         task.unlock_task(mapped_task.user_id, new_state, mapped_task.comment)
+        toggle = Project.get_project_adj_toggle(mapped_task.project_id)
+        task.adjacent_task_unlock(mapped_task.task_id, mapped_task.project_id, toggle[0])
 
         return task.as_dto_with_instructions(mapped_task.preferred_locale)
 
@@ -156,6 +165,9 @@ class MappingService:
             )
 
         task.reset_lock(stop_task.user_id, stop_task.comment)
+        toggle = Project.get_project_adj_toggle(stop_task.project_id)
+        task.adjacent_task_unlock(stop_task.task_id, stop_task.project_id, toggle[0])
+
         return task.as_dto_with_instructions(stop_task.preferred_locale)
 
     @staticmethod

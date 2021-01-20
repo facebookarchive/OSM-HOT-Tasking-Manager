@@ -207,7 +207,7 @@ class ProjectDTO(Model):
     enforce_random_task_selection = BooleanType(
         required=False, default=False, serialized_name="enforceRandomTaskSelection"
     )
-
+    adjacent_task_lock = BooleanType(required=True, default=False, serialized_name='adjacentTaskLock')
     private = BooleanType(required=True)
     changeset_comment = StringType(serialized_name="changesetComment")
     osmcha_filter_id = StringType(serialized_name="osmchaFilterId")
