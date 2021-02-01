@@ -1167,8 +1167,9 @@ class Project(db.Model):
         return campaign_list
 
     def get_project_adj_toggle(project_id: int):
+        """ get the value of adjacent task lock true/false for project"""
         query = db.session.query(Project.adjacent_task_lock).filter(Project.id==project_id).all()
-        toggle_value = [i[0] for i in query]
+        toggle_value = query[0]
         return toggle_value
 
 # Add index on project geometry

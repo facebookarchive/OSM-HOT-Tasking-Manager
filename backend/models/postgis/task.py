@@ -1114,6 +1114,9 @@ class Task(db.Model):
         return locked_tasks
 
     def adjacent_task_lock(self, task_id: int, project_id: int, toggle_value: bool):
+        """
+        It will update all adjacent task status to ADJACENT LOCK for which particular task is selected 
+        """
         if toggle_value:
             spatial_query = text('select id from tasks where ST_Intersects(tasks.geometry, (select geometry from tasks where id= :val and project_id= :p_id))')
             result = db.engine.execute(spatial_query,val=task_id, p_id=project_id)
@@ -1123,11 +1126,14 @@ class Task(db.Model):
             
             for i in task_id_list:
                 status_query = db.session.query(Task.task_status).filter(Task.id==i).filter(Task.project_id==project_id).all()
-                status_value = [i[0] for i in status_query]
+                status_value = status_query[0]
                 if i != task_id and status_value[0]==0:
-                    status_update = db.engine.execute(update_query, t_id=i,proj_id=project_id)
+                    db.engine.execute(update_query, t_id=i,proj_id=project_id)
 
     def adjacent_task_unlock(self, task_id: int, project_id: int, toggle_value: bool):
+        """
+        It will update all adjacent task status to AVAILABLE FOR MAPPING for which particular task is selected 
+        """
         if toggle_value:
             spatial_query = text('select id from tasks where ST_Intersects(tasks.geometry, (select geometry from tasks where id= :val and project_id= :p_id))')
             result = db.engine.execute(spatial_query,val=task_id, p_id=project_id)
@@ -1136,16 +1142,16 @@ class Task(db.Model):
 
             for i in task_id_list:
                 status_query = db.session.query(Task.task_status).filter(Task.id==i).filter(Task.project_id==project_id).all()
-                status_value = [li[0] for li in status_query]
+                status_value = status_query[0]
                 if i != task_id and status_value[0]==8:
                     adj_lock = db.engine.execute(spatial_query, val=i, p_id=project_id)
                     adj_lock_list = [id[0] for id in adj_lock]
                     map_locked = 0
                     for j in adj_lock_list:
                         adj_status_query = db.session.query(Task.task_status).filter(Task.id==j).filter(Task.project_id==project_id).all()
-                        adj_status_value = [li[0] for li in adj_status_query]
+                        adj_status_value = adj_status_query[0]
                         if adj_status_value[0]==1:
                             map_locked = 1
                             break
                     if map_locked==0:
-                        status_update = db.engine.execute(update_query, t_id=i,proj_id=project_id)
+                        db.engine.execute(update_query, t_id=i,proj_id=project_id)
