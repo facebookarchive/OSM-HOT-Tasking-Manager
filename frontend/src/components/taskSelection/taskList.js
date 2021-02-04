@@ -126,8 +126,11 @@ function TaskItem({
     }
   };
   function formatName(userName) {
-    //  return user.firstName + ' ' + user.lastName;
-    return userName.substr(0, 1);
+    let letter = userName
+      .split(' ')
+      .map((word) => word[0])
+      .join('');
+    return letter.substr(0, 3);
   }
 
   const unAssignUser = () => {
@@ -195,19 +198,8 @@ function TaskItem({
                   trigger={
                     <button
                       type="button"
+                      className="newAvatar newAvatarGreenColor"
                       style={{
-                        borderRadius: '100%',
-                        marginLeft: '.25rem',
-                        marginRight: '.25rem',
-                        textAlign: 'center',
-                        display: 'inline-block',
-                        fontize: '.875rem',
-                        height: '1.5rem',
-                        width: '1.5rem',
-                        verticalAlign: 'middle',
-                        backgroundSize: 'cover',
-                        borderColor: 'green',
-
                         backgroundImage: `url(${data.picture_url})`,
                       }}
                     >
@@ -283,19 +275,8 @@ function TaskItem({
                       trigger={
                         <button
                           type="button"
+                          className="newAvatar"
                           style={{
-                            borderRadius: '100%',
-                            marginLeft: '.25rem',
-                            marginRight: '.25rem',
-                            textAlign: 'center',
-                            display: 'inline-block',
-                            fontize: '.875rem',
-                            height: '1.5rem',
-                            width: '1.5rem',
-                            verticalAlign: 'middle',
-                            backgroundSize: 'cover',
-                            borderColor: 'black',
-
                             backgroundImage: `url(${data.picture_url})`,
                           }}
                         >

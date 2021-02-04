@@ -119,6 +119,23 @@ html {
   text-align: justify;
 }
 
+.newAvatar{
+  border-radius: 50%;
+  margin-left: .25rem;
+  margin-right: .25rem;
+  text-align: center;
+  display: 'inline-block';
+  font-size: .875rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  vertical-align: middle;
+  background-size: cover;
+}
+                       
+.newAvatarGreenColor{
+  border-color: #32cd32d2;
+}
+
 /*
    Add shadow on hover, building on what is already in Tachyons
    adjust for the lighter shadow from design
