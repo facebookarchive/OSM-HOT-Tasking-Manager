@@ -9,7 +9,6 @@ import { FormattedMessage } from 'react-intl';
 import { useSelector } from 'react-redux';
 import Select from 'react-select';
 import { Button } from '../button';
-import { UserAvatar, UserAvatarList, UserAvatarButton } from '../user/avatar';
 import messages from './messages';
 import { RelativeTimeWithUnit } from '../../utils/formattedRelativeTime';
 import { TaskActivity } from './taskActivity';
@@ -77,9 +76,9 @@ function TaskItem({
   const [unAssignTaskStatus, setUnAssignTaskStatus] = useState(null);
   const [unAssignTaskStatusError, setUnAssignTaskStatusError] = useState(null);
   const userDetails = useSelector((state) => state.auth.get('userDetails'));
-  const userName = userDetails.username;
+
   const userid = userDetails.id;
-  //console.log('user details are', userDetails);
+
   let selectItems = [];
   if (users) {
     for (var i = 0; i < users.length; i++) {

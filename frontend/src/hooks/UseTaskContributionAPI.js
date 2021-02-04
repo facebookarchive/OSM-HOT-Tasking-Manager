@@ -138,7 +138,6 @@ export const useTaskContributionAPI = (
         );
 
         var result;
-        var testResult = true;
 
         if (remappedParams.assignment === 'TaskAssignedByYou') {
           var refractoredParams = _.omit(remappedParams, [
