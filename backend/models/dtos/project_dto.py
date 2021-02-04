@@ -204,6 +204,9 @@ class ProjectDTO(Model):
         serialized_name="validationPermission",
         validators=[is_known_validation_permission],
     )
+    enforce_assignment = BooleanType(
+        required=True, default=False, serialized_name="enforceAssignment"
+    )
     enforce_random_task_selection = BooleanType(
         required=False, default=False, serialized_name="enforceRandomTaskSelection"
     )

@@ -6,17 +6,26 @@ import ReactPlaceholder from 'react-placeholder';
 import bbox from '@turf/bbox';
 import { useCopyClipboard } from '@lokibai/react-use-copy-clipboard';
 import { FormattedMessage } from 'react-intl';
-
+import { useSelector } from 'react-redux';
+import Select from 'react-select';
+import { Button } from '../button';
 import messages from './messages';
 import { RelativeTimeWithUnit } from '../../utils/formattedRelativeTime';
 import { TaskActivity } from './taskActivity';
 import { compareTaskId, compareLastUpdate } from '../../utils/sorting';
 import { TASK_COLOURS } from '../../config';
-import { LockIcon, ListIcon, ZoomPlusIcon, CloseIcon, InternalLinkIcon } from '../svgIcons';
+import {
+  LockIcon,
+  ListIcon,
+  ZoomPlusIcon,
+  CloseIcon,
+  InternalLinkIcon,
+  ProfilePictureIcon,
+} from '../svgIcons';
 import { PaginatorLine, howManyPages } from '../paginator';
 import { Dropdown } from '../dropdown';
 import { CustomButton } from '../button';
-
+import { pushToLocalJSONAPI } from '../../network/genericJSONRequest';
 export function TaskStatus({ status, lockHolder }: Object) {
   const isReadyOrLockedForMapping = ['READY', 'LOCKED_FOR_MAPPING'].includes(status);
   const dotSize = isReadyOrLockedForMapping ? '0.875rem' : '1rem';
@@ -52,6 +61,7 @@ export function TaskStatus({ status, lockHolder }: Object) {
 function TaskItem({
   data,
   project,
+  users,
   setZoomedTaskId,
   setActiveTaskModal,
   selectTask,
@@ -59,7 +69,93 @@ function TaskItem({
 }: Object) {
   const [isCopied, setCopied] = useCopyClipboard();
   const location = useLocation();
+  const token = useSelector((state) => state.auth.get('token'));
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [assignTaskStatus, setAssignTaskStatus] = useState(null);
+  const [assignTaskStatusError, setAssignTaskStatusError] = useState(null);
+  const [unAssignTaskStatus, setUnAssignTaskStatus] = useState(null);
+  const [unAssignTaskStatusError, setUnAssignTaskStatusError] = useState(null);
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
 
+  const userid = userDetails.id;
+
+  let selectItems = [];
+  if (users) {
+    for (var i = 0; i < users.length; i++) {
+      var obj = {};
+      obj.value = users[i].id;
+      obj.label = users[i].username;
+      selectItems.push(obj);
+    }
+  }
+
+  const assignUser = () => {
+    let tasksAssign = [];
+    tasksAssign.push(data.taskId);
+    let assignParams = {
+      taskIds: tasksAssign,
+    };
+
+    if (selectedOption) {
+      let userLabel = selectedOption.label;
+      pushToLocalJSONAPI(
+        `project/${project.projectId}/assign/?username=${userLabel}`,
+        JSON.stringify(assignParams),
+        token,
+      )
+        .then((res) => {
+          setAssignTaskStatus('Task is Assigned successfully');
+          setAssignTaskStatusError('');
+          setUnAssignTaskStatus('');
+          setUnAssignTaskStatusError('');
+        })
+        .catch((e) => {
+          if (e.message === 'FORBIDDEN') {
+            setAssignTaskStatusError('This taks is already assigned');
+            setAssignTaskStatus('');
+            setUnAssignTaskStatus('');
+            setUnAssignTaskStatusError('');
+          } else {
+            setAssignTaskStatusError('Some error has occured');
+            setAssignTaskStatus('');
+            setUnAssignTaskStatus('');
+            setUnAssignTaskStatusError('');
+          }
+        });
+    }
+  };
+  function formatName(userName) {
+    let letter = userName
+      .split(' ')
+      .map((word) => word[0])
+      .join('');
+    return letter.substr(0, 3);
+  }
+
+  const unAssignUser = () => {
+    let tasksAssign = [];
+    tasksAssign.push(data.taskId);
+    let assignParams = {
+      taskIds: tasksAssign,
+    };
+    pushToLocalJSONAPI(
+      `project/${project.projectId}/unassign/`,
+      JSON.stringify(assignParams),
+      token,
+    )
+      .then((res) => {
+        setAssignTaskStatus('');
+        setAssignTaskStatusError('');
+        setUnAssignTaskStatus('Task is UnAssigned successfully');
+        setUnAssignTaskStatusError('');
+      })
+      .catch((e) => {
+        setAssignTaskStatus('');
+        setAssignTaskStatusError('');
+        setUnAssignTaskStatus('');
+        setUnAssignTaskStatusError('Some error has occured');
+      });
+  };
   return (
     <div
       className={`cf db ba br1 mt2 ${
@@ -91,7 +187,239 @@ function TaskItem({
           <TaskStatus status={data.taskStatus} />
         </div>
       </div>
+
       <div className="w-20 pv3 fr tr dib blue-light truncate overflow-empty">
+        {data.assignedTo === userid ? (
+          <FormattedMessage {...messages.taskassignment}>
+            {(msg) => (
+              <div className="pr2 dib v-mid" title={msg}>
+                <Popup
+                  trigger={
+                    <button
+                      type="button"
+                      className="newAvatar newAvatarGreenColor"
+                      style={{
+                        backgroundImage: `url(${data.picture_url})`,
+                      }}
+                    >
+                      <span>{data.picture_url ? '' : formatName(data.assignedUsername)}</span>
+                    </button>
+                  }
+                  modal
+                  position="top left"
+                >
+                  {(close) => (
+                    <div>
+                      <button className="close" onClick={close}>
+                        &times;
+                      </button>
+                      <h3 className="assign-success">{assignTaskStatus} </h3>
+                      <h3 className="assign-error">{assignTaskStatusError}</h3>
+                      <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                      <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                      <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                        <FormattedMessage {...messages.taskassignmentTitle} />
+                        <b> {data.taskId}</b>
+                        <FormattedMessage {...messages.taskassignmentTitle1} />
+                      </h1>
+                      <div style={{ textAlign: 'left' }}>
+                        <FormattedMessage {...messages.taskassignment}>
+                          {(msg) => {
+                            return (
+                              <Select
+                                classNamePrefix={
+                                  <FormattedMessage {...messages.taskassignmentselectListTitle} />
+                                }
+                                defaultValue={selectedOption}
+                                onChange={setSelectedOption}
+                                options={selectItems}
+                              />
+                            );
+                          }}
+                        </FormattedMessage>
+                        <div>
+                          <br />
+                          <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                            <FormattedMessage {...messages.taskassignmentCancel} />
+                          </Button>
+
+                          <Button
+                            className="bg-red white bg-red-float"
+                            onClick={() => assignUser()}
+                          >
+                            <FormattedMessage {...messages.taskassignment} />
+                          </Button>
+
+                          <Button
+                            className="bg-red white bg-red-float"
+                            onClick={() => unAssignUser()}
+                          >
+                            <FormattedMessage {...messages.taskassignmentUnAssign} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Popup>
+              </div>
+            )}
+          </FormattedMessage>
+        ) : (
+          <span>
+            {data.assignedTo ? (
+              <FormattedMessage {...messages.taskassignment}>
+                {(msg) => (
+                  <div className="pr2 dib v-mid" title={msg}>
+                    <Popup
+                      trigger={
+                        <button
+                          type="button"
+                          className="newAvatar"
+                          style={{
+                            backgroundImage: `url(${data.picture_url})`,
+                          }}
+                        >
+                          <span>{data.picture_url ? '' : formatName(data.assignedUsername)}</span>
+                        </button>
+                      }
+                      modal
+                      position="top left"
+                    >
+                      {(close) => (
+                        <div>
+                          <button className="close" onClick={close}>
+                            &times;
+                          </button>
+                          <h3 className="assign-success">{assignTaskStatus} </h3>
+                          <h3 className="assign-error">{assignTaskStatusError}</h3>
+                          <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                          <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                          <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                            <FormattedMessage {...messages.taskassignmentTitle} />
+                            <b> {data.taskId}</b>
+                            <FormattedMessage {...messages.taskassignmentTitle1} />
+                          </h1>
+                          <div style={{ textAlign: 'left' }}>
+                            <FormattedMessage {...messages.taskassignment}>
+                              {(msg) => {
+                                return (
+                                  <Select
+                                    classNamePrefix={
+                                      <FormattedMessage
+                                        {...messages.taskassignmentselectListTitle}
+                                      />
+                                    }
+                                    defaultValue={selectedOption}
+                                    onChange={setSelectedOption}
+                                    options={selectItems}
+                                  />
+                                );
+                              }}
+                            </FormattedMessage>
+                            <div>
+                              <br />
+                              <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                                <FormattedMessage {...messages.taskassignmentCancel} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => assignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignment} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => unAssignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignmentUnAssign} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Popup>
+                  </div>
+                )}
+              </FormattedMessage>
+            ) : (
+              <FormattedMessage {...messages.taskassignment}>
+                {(msg) => (
+                  <div className="pr2 dib v-mid" title={msg}>
+                    <Popup
+                      trigger={
+                        <ProfilePictureIcon
+                          width="18px"
+                          height="18px"
+                          className="pointer hover-blue-grey"
+                        />
+                      }
+                      modal
+                      position="top left"
+                    >
+                      {(close) => (
+                        <div>
+                          <button className="close" onClick={close}>
+                            &times;
+                          </button>
+                          <h3 className="assign-success">{assignTaskStatus} </h3>
+                          <h3 className="assign-error">{assignTaskStatusError}</h3>
+                          <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                          <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                          <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                            <FormattedMessage {...messages.taskassignmentTitle} />
+                            <b> {data.taskId}</b>
+                            <FormattedMessage {...messages.taskassignmentTitle1} />
+                          </h1>
+                          <div style={{ textAlign: 'left' }}>
+                            <FormattedMessage {...messages.taskassignment}>
+                              {(msg) => {
+                                return (
+                                  <Select
+                                    classNamePrefix={
+                                      <FormattedMessage
+                                        {...messages.taskassignmentselectListTitle}
+                                      />
+                                    }
+                                    defaultValue={selectedOption}
+                                    onChange={setSelectedOption}
+                                    options={selectItems}
+                                  />
+                                );
+                              }}
+                            </FormattedMessage>
+                            <div>
+                              <br />
+                              <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                                <FormattedMessage {...messages.taskassignmentCancel} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => assignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignment} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => unAssignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignmentUnAssign} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Popup>
+                  </div>
+                )}
+              </FormattedMessage>
+            )}
+          </span>
+        )}
+
         <FormattedMessage {...messages.seeTaskHistory}>
           {(msg) => (
             <div className="pr2 dib v-mid" title={msg}>
@@ -182,6 +510,7 @@ export function TaskFilter({ userCanValidate, statusFilter, setStatusFn }: Objec
 export function TaskList({
   project,
   tasks,
+  users,
   userCanValidate,
   activeFilter,
   selectTask,
@@ -304,6 +633,7 @@ export function TaskList({
               sortBy === 'id' ? readyTasks.sort(compareTaskId) : readyTasks.sort(compareLastUpdate)
             }
             ItemComponent={TaskItem}
+            users={users}
             setZoomedTaskId={setZoomedTaskId}
             setActiveTaskModal={setActiveTaskModal}
             selected={selected}
@@ -376,6 +706,7 @@ function TaskActivityModal({
 function PaginatedList({
   items,
   ItemComponent,
+  users,
   pageSize,
   project,
   setZoomedTaskId,
@@ -418,6 +749,7 @@ function PaginatedList({
           <ItemComponent
             key={n}
             data={item.properties}
+            users={users}
             project={project}
             selectTask={selectTask}
             selected={selected}

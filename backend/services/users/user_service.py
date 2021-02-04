@@ -2,7 +2,7 @@ from cachetools import TTLCache, cached
 from flask import current_app
 import datetime
 from sqlalchemy.sql.expression import literal
-from sqlalchemy import func, or_, desc, and_, distinct, cast, Time
+from sqlalchemy import func, or_, desc, and_, distinct, cast, Time, text
 from backend import db
 from backend.models.dtos.project_dto import ProjectFavoritesDTO, ProjectSearchResultsDTO
 from backend.models.dtos.user_dto import (
@@ -16,13 +16,21 @@ from backend.models.dtos.user_dto import (
     UserRegisterEmailDTO,
     UserCountryContributed,
     UserCountriesContributed,
+    AssignedTask,
+    AssignedTasksDTO,
 )
 from backend.models.dtos.interests_dto import InterestsListDTO, InterestDTO
 from backend.models.postgis.interests import Interest, project_interests
 from backend.models.postgis.message import Message
 from backend.models.postgis.project import Project
+from backend.models.postgis.project_info import ProjectInfo
 from backend.models.postgis.user import User, UserRole, MappingLevel, UserEmail
-from backend.models.postgis.task import TaskHistory, TaskAction, Task
+from backend.models.postgis.task import (
+    TaskHistory,
+    TaskAssignmentHistory,
+    TaskAction,
+    Task,
+)
 from backend.models.dtos.user_dto import UserTaskDTOs
 from backend.models.dtos.stats_dto import Pagination
 from backend.models.postgis.statuses import TaskStatus, ProjectStatus
@@ -263,7 +271,6 @@ class UserService:
 
         user_task_dtos = UserTaskDTOs()
         task_id_list = base_query.subquery()
-
         tasks = Task.query.join(
             task_id_list,
             and_(
@@ -283,7 +290,6 @@ class UserService:
             tasks = tasks.filter_by(project_id=project_id)
 
         results = tasks.paginate(page, page_size, True)
-
         task_list = []
 
         for task, action_date in results.items:
@@ -315,7 +321,6 @@ class UserService:
             .subquery()
             .alias("actions_table")
         )
-
         # Get only rows with the given actions.
         filtered_actions = (
             TaskHistory.query.with_entities(
@@ -393,6 +398,7 @@ class UserService:
             .group_by("trn")
             .subquery()
         )
+
         total_validation_time = db.session.query(
             func.sum(cast(func.to_timestamp(query.c.tm, "HH24:MI:SS"), Time))
         ).scalar()
@@ -798,3 +804,69 @@ class UserService:
             dto.interests.append(int_dto)
 
         return dto
+
+    @staticmethod
+    def get_user_assigned_tasks(
+        as_assigner,
+        username: str,
+        preferred_locale: str,
+        closed=None,
+        task_status=None,
+        project_id=None,
+        page=1,
+        page_size=10,
+        sort_by="assigned_date",
+        sort_direction="desc",
+    ) -> AssignedTasksDTO:
+        """ Get assigned tasks either assigned to or assigned by the user """
+        user = UserService.get_user_by_username(username)
+        query = (
+            TaskAssignmentHistory.query.filter_by(assigner_id=user.id)
+            if as_assigner
+            else TaskAssignmentHistory.query.filter_by(assignee_id=user.id)
+        )
+
+        if closed is not None:
+            query = query.filter_by(is_closed=closed)
+
+        if project_id is not None:
+            query = query.filter_by(project_id=project_id)
+
+        if task_status is not None:
+            query = query.filter_by(task_status=task_status)
+
+        results = query.order_by(text(sort_by + " " + sort_direction)).paginate(
+            page, page_size, True
+        )
+
+        project_names = {}
+        assigned_tasks_dto = AssignedTasksDTO()
+        for entry in results.items:
+            user_query = (
+                TaskHistory.query.with_entities(
+                    TaskHistory.action_date
+                )
+                .filter(TaskHistory.user_id==user.id)
+                .filter(TaskHistory.project_id==entry.project_id)
+                .filter(TaskHistory.task_id==entry.task_id)
+                .order_by(TaskHistory.action_date.desc()).all()
+            )
+            user_list = [i[0] for i in user_query]
+            dto = AssignedTask()
+            dto.task_id = entry.task_id
+            dto.project_id = entry.project_id
+            dto.history_id = entry.assignment_history_id
+            dto.closed = entry.is_closed
+            dto.assigned_date = entry.assigned_date
+            dto.task_status = TaskStatus(entry.task_status).name
+            dto.last_updated = user_list[0]
+            if dto.project_id not in project_names:
+                project_names[dto.project_id] = ProjectInfo.get_dto_for_locale(
+                    dto.project_id, preferred_locale
+                ).name
+            dto.project_name = project_names[dto.project_id]
+
+            assigned_tasks_dto.assigned_tasks.append(dto)
+
+        assigned_tasks_dto.pagination = Pagination(results)
+        return assigned_tasks_dto

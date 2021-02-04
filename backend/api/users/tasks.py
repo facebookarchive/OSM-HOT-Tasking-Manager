@@ -1,7 +1,7 @@
 from flask_restful import Resource, current_app, request
 from dateutil.parser import parse as date_parse
 
-from backend.services.users.authentication_service import token_auth
+from backend.services.users.authentication_service import token_auth, tm
 from backend.services.users.user_service import UserService, NotFound
 
 
@@ -116,3 +116,114 @@ class UsersTasksAPI(Resource):
             error_msg = f"User GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg}, 500
+
+
+class UserAssignedTasksAPI(Resource):
+    @tm.pm_only(False)
+    @token_auth.login_required
+    def get(self, username):
+        """
+        Get assigned tasks either assigned to or assigned by user
+        ---
+        tags:
+            - user
+        produces:
+            - application/json
+        parameters:
+            - in: header
+              name: Authorization
+              description: Base64 encoded session token
+              required: true
+              type: string
+              default: Token sessionTokenHere==
+            - in: header
+              name: Accept-Language
+              description: Language user is requesting
+              type: string
+              required: true
+              default: en
+            - name: username
+              in: path
+              description: The users username
+              required: true
+              type: string
+            - in: query
+              name: asAssigner
+              description: treats user as assigner, rather than assignee, if true
+              type: string
+            - in: query
+              name: sortBy
+              description: field to sort by, defaults to assigned_date
+              type: string
+            - in: query
+              name: sortDirection
+              description: direction of sort, defaults to desc
+              type: string
+            - in: query
+              name: page
+              description: Page of results user requested
+              type: integer
+            - in: query
+              name: pageSize
+              description: Size of page, defaults to 10
+              type: integer
+            - in: query
+              name: project
+              description: Optional project filter
+              type: integer
+            - in: query
+              name: closed
+              description: Optional filter for open/closed assignments
+              type: boolean
+        responses:
+            200:
+                description: User's assigned tasks
+            404:
+                description: No assigned tasks
+            500:
+                description: Internal Server Error
+        """
+        try:
+            sort_column_map = {
+                "assignedDate": "assigned_date",
+                "projectId": "project_id",
+            }
+            sort_column = sort_column_map.get(
+                request.args.get("sortBy"), sort_column_map["assignedDate"]
+            )
+
+            # closed needs to be set to True, False, or None
+            closed = None
+            if request.args.get("closed") == "true":
+                closed = True
+            elif request.args.get("closed") == "false":
+                closed = False
+
+            # task status needs to be set to None or one of the statuses
+            task_status = request.args.get("taskStatus") or None
+
+            # sort direction should only be desc or asc
+            if request.args.get("sortDirection") in ("asc", "desc"):
+                sort_direction = request.args.get("sortDirection")
+            else:
+                sort_direction = "desc"
+
+            assigned_tasks = UserService.get_user_assigned_tasks(
+                request.args.get("asAssigner") == "true",
+                username,
+                request.environ.get("HTTP_ACCEPT_LANGUAGE"),
+                closed,
+                task_status,
+                request.args.get("project", None, type=int),
+                request.args.get("page", None, type=int),
+                request.args.get("pageSize", None, type=int),
+                sort_column,
+                sort_direction,
+            )
+            return assigned_tasks.to_primitive(), 200
+        except NotFound:
+            return {"Error": "No assigned tasks"}, 404
+        except Exception as e:
+            error_msg = f"Assigned Tasks API - unhandled error: {str(e)}"
+            current_app.logger.critical(error_msg)
+            return {"Error": error_msg}, 500

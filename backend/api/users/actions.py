@@ -1,11 +1,19 @@
 from flask_restful import Resource, current_app, request
 from schematics.exceptions import DataError
 
-from backend.models.dtos.user_dto import UserDTO, UserRegisterEmailDTO
+from backend.models.dtos.user_dto import (
+    UserDTO,
+    UserRegisterEmailDTO,
+    AssignTasksDTO,
+    UnassignTasksDTO,
+)
 from backend.services.messaging.message_service import MessageService
 from backend.services.users.authentication_service import token_auth, tm
 from backend.services.users.user_service import UserService, UserServiceError, NotFound
 from backend.services.interests_service import InterestService
+from backend.services.mapping_service import MappingServiceError, MappingService
+from backend.services.validator_service import ValidatorServiceError
+from backend.models.postgis.utils import UserLicenseError
 
 
 class UsersActionsSetUsersAPI(Resource):
@@ -398,5 +406,172 @@ class UsersActionsSetInterestsAPI(Resource):
             return {"Error": "Interest not Found"}, 404
         except Exception as e:
             error_msg = f"User relationship POST - unhandled error: {str(e)}"
+            current_app.logger.critical(error_msg)
+            return {"Error": error_msg}, 500
+
+
+class UserActionsAssignTasksAPI(Resource):
+    @tm.pm_only()
+    @token_auth.login_required
+    def post(self, project_id):
+        """
+        Manually assign tasks to a user
+        ---
+        tags:
+            - project-admin
+        produces:
+            - application/json
+        parameters:
+            - in: header
+              name: Authorization
+              description: Base64 encoded session token
+              required: true
+              type: string
+              default: Token sessionTokenHere==
+            - in: header
+              name: Accept-Language
+              description: Language user is requesting
+              type: string
+              required: true
+              default: en
+            - name: project_id
+              in: path
+              description: The ID of the project the task is associated with
+              required: true
+              type: integer
+              default: 1
+            - name: username
+              in: query
+              description: The username to assign the task to
+              required: true
+              type: string
+              default: Thinkwhere
+            - in: body
+              name: tasks
+              required: true
+              description: JSON object for locking task(s)
+              schema:
+                  properties:
+                      taskIds:
+                          type: array
+                          items:
+                              type: integer
+                          description: Array of taskIds for locking
+                          default: [1,2]
+        responses:
+            200:
+                description: Task(s) assigned to user
+            401:
+                description: Unauthorized - Invalid credentials
+            404:
+                description: Task(s) or User not found
+            500:
+                description: Internal Server Error
+        """
+        try:
+            assign_tasks_dto = AssignTasksDTO(request.get_json())
+            assign_tasks_dto.assigner_id = tm.authenticated_user_id
+            user_id = UserService.get_user_by_username(request.args.get("username")).id
+            assign_tasks_dto.assignee_id = user_id
+            assign_tasks_dto.project_id = project_id
+            assign_tasks_dto.preferred_locale = request.environ.get(
+                "HTTP_ACCEPT_LANGUAGE"
+            )
+            assign_tasks_dto.validate()
+
+        except DataError as e:
+            current_app.logger.error(f"Error validating request: {str(e)}")
+            return str(e), 400
+
+        try:
+            task = MappingService.assign_tasks(assign_tasks_dto)
+            return task.to_primitive(), 200
+        except NotFound:
+            return {"Error": "Task Not Found"}, 404
+        except (MappingServiceError, ValidatorServiceError) as e:
+            return {"Error": str(e)}, 403
+        except UserLicenseError:
+            return {"Error": "User not accepted license terms"}, 409
+        except Exception as e:
+            error_msg = f"Task Assign API - unhandled error: {str(e)}"
+            current_app.logger.critical(error_msg)
+            return {"Error": error_msg}, 500
+
+
+class UserActionsUnassignTasksAPI(Resource):
+    @tm.pm_only()
+    @token_auth.login_required
+    def post(self, project_id):
+        """
+        Manually unassign tasks
+        ---
+        tags:
+            - project-admin
+        produces:
+            - application/json
+        parameters:
+            - in: header
+              name: Authorization
+              description: Base64 encoded session token
+              required: true
+              type: string
+              default: Token sessionTokenHere==
+            - in: header
+              name: Accept-Language
+              description: Language user is requesting
+              type: string
+              required: true
+              default: en
+            - name: project_id
+              in: path
+              description: The ID of the project the task is associated with
+              required: true
+              type: integer
+              default: 1
+            - in: body
+              name: tasks
+              required: true
+              description: JSON object for unassigning task(s)
+              schema:
+                  properties:
+                      taskIds:
+                          type: array
+                          items:
+                              type: integer
+                          description: Array of taskIds for unassigning
+                          default: [1,2]
+        responses:
+            200:
+                description: Task(s) unassigned
+            401:
+                description: Unauthorized - Invalid credentials
+            404:
+                description: Task(s) not found
+            500:
+                description: Internal Server Error
+        """
+        try:
+            unassign_tasks_dto = UnassignTasksDTO(request.get_json())
+            unassign_tasks_dto.project_id = project_id
+            unassign_tasks_dto.assigner_id = tm.authenticated_user_id
+            unassign_tasks_dto.preferred_locale = request.environ.get(
+                "HTTP_ACCEPT_LANGUAGE"
+            )
+            unassign_tasks_dto.validate()
+        except DataError as e:
+            current_app.logger.error(f"Error validating request: {str(e)}")
+            return str(e), 400
+
+        try:
+            task = MappingService.unassign_tasks(unassign_tasks_dto)
+            return task.to_primitive(), 200
+        except NotFound:
+            return {"Error": "Task Not Found"}, 404
+        except (MappingServiceError, ValidatorServiceError) as e:
+            return {"Error": str(e)}, 403
+        except UserLicenseError:
+            return {"Error": "User not accepted license terms"}, 409
+        except Exception as e:
+            error_msg = f"Task UnAssign API - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"Error": error_msg}, 500

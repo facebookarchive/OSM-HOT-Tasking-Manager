@@ -46,10 +46,12 @@ const getRandomTaskByAction = (activities, taskAction) => {
 export function TaskSelection({ project, type, loading }: Object) {
   const user = useSelector((state) => state.auth.get('userDetails'));
   const userOrgs = useSelector((state) => state.auth.get('organisations'));
+  const token = useSelector((state) => state.auth.get('token'));
   const lockedTasks = useGetLockedTasks();
   const dispatch = useDispatch();
   const [tasks, setTasks] = useState();
   const [activities, setActivities] = useState();
+  const [users, setUsers] = useState();
   const [contributions, setContributions] = useState();
   const [isValidationAllowed, setIsValidationAllowed] = useState(undefined);
   const [zoomedTaskId, setZoomedTaskId] = useState(null);
@@ -75,6 +77,13 @@ export function TaskSelection({ project, type, loading }: Object) {
     `/api/v2/projects/${project.projectId}/queries/priority-areas/`,
     project.projectId !== undefined,
   );
+  const getUsers = useCallback((id) => {
+    fetchLocalJSONAPI(`users/?project_id=${id}`, token)
+      .then((res) => {
+        setUsers(res.users);
+      })
+      .catch((e) => console.log('call back failed in task index file' + e));
+  }, []);
 
   const getActivities = useCallback((id) => {
     if (id) {
@@ -96,7 +105,8 @@ export function TaskSelection({ project, type, loading }: Object) {
   useEffect(() => {
     getActivities(project.projectId);
     getContributions(project.projectId);
-  }, [getActivities, getContributions, project.projectId]);
+    getUsers(project.projectId);
+  }, [getActivities, getContributions, getUsers, project.projectId]);
   // refresh activities each 60 seconds if page is visible to user
   useInterval(() => {
     if (document.visibilityState === 'visible') {
@@ -326,6 +336,7 @@ export function TaskSelection({ project, type, loading }: Object) {
                     <TaskList
                       project={project}
                       tasks={tasks}
+                      users={users}
                       userCanValidate={isValidationAllowed}
                       updateActivities={getActivities}
                       selectTask={selectTask}

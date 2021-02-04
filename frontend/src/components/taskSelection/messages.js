@@ -575,4 +575,29 @@ export default defineMessages({
     defaultMessage:
       'You need to be member of one of the mapping teams to be able to map this project.',
   },
+
+  taskassignment: {
+    id: 'project.permissions.task.assign',
+    defaultMessage: 'Assign',
+  },
+  taskassignmentTitle: {
+    id: 'project.permissions.task.assignTitle1',
+    defaultMessage: 'Assign Task # ',
+  },
+  taskassignmentTitle1: {
+    id: 'project.permissions.task.assignTitle2',
+    defaultMessage: '  to some one',
+  },
+  taskassignmentCancel: {
+    id: 'project.permissions.task.assignCancel',
+    defaultMessage: 'Cancel',
+  },
+  taskassignmentUnAssign: {
+    id: 'project.permissions.task.UnAssign',
+    defaultMessage: 'UnAssign',
+  },
+  taskassignmentselectListTitle: {
+    id: 'project.permissions.task.selectListTitle',
+    defaultMessage: 'Please select a username',
+  },
 });

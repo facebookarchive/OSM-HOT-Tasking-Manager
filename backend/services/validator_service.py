@@ -21,6 +21,7 @@ from backend.models.postgis.task import (
 )
 from backend.models.postgis.utils import NotFound, UserLicenseError, timestamp
 from backend.models.postgis.project_info import ProjectInfo
+from backend.models.postgis.project import Project
 from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
@@ -44,6 +45,7 @@ class ValidatorService:
         """
         # Loop supplied tasks to check they can all be locked for validation
         tasks_to_lock = []
+        project = Project.get(validation_dto.project_id)
         for task_id in validation_dto.task_ids:
             task = Task.get(task_id, validation_dto.project_id)
 
@@ -65,6 +67,10 @@ class ValidatorService:
                 raise ValidatorServiceError(
                     "Tasks cannot be validated by the same user who marked task as mapped or badimagery"
                 )
+            if project.enforce_assignment and not task.assign_check(
+                validation_dto.user_id
+            ):
+                raise ValidatorServiceError("Task assigned to another user")
 
             tasks_to_lock.append(task)
 

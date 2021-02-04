@@ -144,6 +144,9 @@ class User(db.Model):
         )
 
         # Add filter to query as required
+        if query.project_id:
+            base = base.filter(User.id.in_(query.user_list))
+
         if query.mapping_level:
             mapping_levels = query.mapping_level.split(",")
             mapping_level_array = [
@@ -168,7 +171,8 @@ class User(db.Model):
             listed_user.username = result.username
             listed_user.picture_url = result.picture_url
             listed_user.role = UserRole(result.role).name
-
+            listed_user.project_id = query.project_id
+            
             dto.users.append(listed_user)
 
         dto.pagination = Pagination(results)
