@@ -89,10 +89,23 @@ export const MyTasksNav = (props) => {
           <FormattedMessage {...messages.archived} />
         </Link>
         <Link
-          to="?status=Assigned"
-          className={`di mh1 ${isActiveButton('Assigned', contributionsQuery)} ${linkCombo}`}
+          to="?assignment=TaskAssignedToYou"
+          className={`di mh1 ${isActiveButton(
+            'TaskAssignedToYou',
+            contributionsQuery,
+          )} ${linkCombo}`}
         >
-          Tasks Assign to You
+          <FormattedMessage {...messages.assignedToYou} />
+        </Link>
+
+        <Link
+          to="?assignment=TaskAssignedByYou"
+          className={`di mh1 ${isActiveButton(
+            'TaskAssignedByYou',
+            contributionsQuery,
+          )} ${linkCombo}`}
+        >
+          <FormattedMessage {...messages.assignedByYou} />
         </Link>
       </div>
       {props.children}

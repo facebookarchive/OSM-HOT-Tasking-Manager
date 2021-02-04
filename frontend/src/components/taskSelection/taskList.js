@@ -9,7 +9,7 @@ import { FormattedMessage } from 'react-intl';
 import { useSelector } from 'react-redux';
 import Select from 'react-select';
 import { Button } from '../button';
-
+import { UserAvatar, UserAvatarList, UserAvatarButton } from '../user/avatar';
 import messages from './messages';
 import { RelativeTimeWithUnit } from '../../utils/formattedRelativeTime';
 import { TaskActivity } from './taskActivity';
@@ -76,14 +76,20 @@ function TaskItem({
   const [assignTaskStatusError, setAssignTaskStatusError] = useState(null);
   const [unAssignTaskStatus, setUnAssignTaskStatus] = useState(null);
   const [unAssignTaskStatusError, setUnAssignTaskStatusError] = useState(null);
-
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const userName = userDetails.username;
+  const userid = userDetails.id;
+  //console.log('user details are', userDetails);
   let selectItems = [];
-  for (var i = 0; i < users.length; i++) {
-    var obj = {};
-    obj.value = users[i].id;
-    obj.label = users[i].username;
-    selectItems.push(obj);
+  if (users) {
+    for (var i = 0; i < users.length; i++) {
+      var obj = {};
+      obj.value = users[i].id;
+      obj.label = users[i].username;
+      selectItems.push(obj);
+    }
   }
+
   const assignUser = () => {
     let tasksAssign = [];
     tasksAssign.push(data.taskId);
@@ -119,6 +125,10 @@ function TaskItem({
         });
     }
   };
+  function formatName(userName) {
+    //  return user.firstName + ' ' + user.lastName;
+    return userName.substr(0, 1);
+  }
 
   const unAssignUser = () => {
     let tasksAssign = [];
@@ -175,74 +185,261 @@ function TaskItem({
           <TaskStatus status={data.taskStatus} />
         </div>
       </div>
+
       <div className="w-20 pv3 fr tr dib blue-light truncate overflow-empty">
-        <FormattedMessage {...messages.taskassignment}>
-          {(msg) => (
-            <div className="pr2 dib v-mid" title={msg}>
-              <Popup
-                trigger={
-                  <ProfilePictureIcon
-                    width="18px"
-                    height="18px"
-                    className="pointer hover-blue-grey"
-                  />
-                }
-                modal
-                position="top left"
-              >
-                {(close) => (
-                  <div>
-                    <button className="close" onClick={close}>
-                      &times;
+        {data.assignedTo === userid ? (
+          <FormattedMessage {...messages.taskassignment}>
+            {(msg) => (
+              <div className="pr2 dib v-mid" title={msg}>
+                <Popup
+                  trigger={
+                    <button
+                      type="button"
+                      style={{
+                        borderRadius: '100%',
+                        marginLeft: '.25rem',
+                        marginRight: '.25rem',
+                        textAlign: 'center',
+                        display: 'inline-block',
+                        fontize: '.875rem',
+                        height: '1.5rem',
+                        width: '1.5rem',
+                        verticalAlign: 'middle',
+                        backgroundSize: 'cover',
+                        borderColor: 'green',
+
+                        backgroundImage: `url(${data.picture_url})`,
+                      }}
+                    >
+                      <span>{data.picture_url ? '' : formatName(data.assignedUsername)}</span>
                     </button>
-                    <h3 className="assign-success">{assignTaskStatus} </h3>
-                    <h3 className="assign-error">{assignTaskStatusError}</h3>
-                    <h3 className="assign-success">{unAssignTaskStatus} </h3>
-                    <h3 className="assign-error">{unAssignTaskStatusError}</h3>
-                    <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
-                      <FormattedMessage {...messages.taskassignmentTitle} />
-                      <b> {data.taskId}</b>
-                      <FormattedMessage {...messages.taskassignmentTitle1} />
-                    </h1>
-                    <div style={{ textAlign: 'left' }}>
-                      <FormattedMessage {...messages.taskassignment}>
-                        {(msg) => {
-                          return (
-                            <Select
-                              classNamePrefix={
-                                <FormattedMessage {...messages.taskassignmentselectListTitle} />
-                              }
-                              defaultValue={selectedOption}
-                              onChange={setSelectedOption}
-                              options={selectItems}
-                            />
-                          );
-                        }}
-                      </FormattedMessage>
-                      <div>
-                        <br />
-                        <Button className="bg-red white bg-red-float" onClick={() => {}}>
-                          <FormattedMessage {...messages.taskassignmentCancel} />
-                        </Button>
+                  }
+                  modal
+                  position="top left"
+                >
+                  {(close) => (
+                    <div>
+                      <button className="close" onClick={close}>
+                        &times;
+                      </button>
+                      <h3 className="assign-success">{assignTaskStatus} </h3>
+                      <h3 className="assign-error">{assignTaskStatusError}</h3>
+                      <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                      <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                      <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                        <FormattedMessage {...messages.taskassignmentTitle} />
+                        <b> {data.taskId}</b>
+                        <FormattedMessage {...messages.taskassignmentTitle1} />
+                      </h1>
+                      <div style={{ textAlign: 'left' }}>
+                        <FormattedMessage {...messages.taskassignment}>
+                          {(msg) => {
+                            return (
+                              <Select
+                                classNamePrefix={
+                                  <FormattedMessage {...messages.taskassignmentselectListTitle} />
+                                }
+                                defaultValue={selectedOption}
+                                onChange={setSelectedOption}
+                                options={selectItems}
+                              />
+                            );
+                          }}
+                        </FormattedMessage>
+                        <div>
+                          <br />
+                          <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                            <FormattedMessage {...messages.taskassignmentCancel} />
+                          </Button>
 
-                        <Button className="bg-red white bg-red-float" onClick={() => assignUser()}>
-                          <FormattedMessage {...messages.taskassignment} />
-                        </Button>
+                          <Button
+                            className="bg-red white bg-red-float"
+                            onClick={() => assignUser()}
+                          >
+                            <FormattedMessage {...messages.taskassignment} />
+                          </Button>
 
-                        <Button
-                          className="bg-red white bg-red-float"
-                          onClick={() => unAssignUser()}
-                        >
-                          <FormattedMessage {...messages.taskassignmentUnAssign} />
-                        </Button>
+                          <Button
+                            className="bg-red white bg-red-float"
+                            onClick={() => unAssignUser()}
+                          >
+                            <FormattedMessage {...messages.taskassignmentUnAssign} />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  )}
+                </Popup>
+              </div>
+            )}
+          </FormattedMessage>
+        ) : (
+          <span>
+            {data.assignedTo ? (
+              <FormattedMessage {...messages.taskassignment}>
+                {(msg) => (
+                  <div className="pr2 dib v-mid" title={msg}>
+                    <Popup
+                      trigger={
+                        <button
+                          type="button"
+                          style={{
+                            borderRadius: '100%',
+                            marginLeft: '.25rem',
+                            marginRight: '.25rem',
+                            textAlign: 'center',
+                            display: 'inline-block',
+                            fontize: '.875rem',
+                            height: '1.5rem',
+                            width: '1.5rem',
+                            verticalAlign: 'middle',
+                            backgroundSize: 'cover',
+                            borderColor: 'black',
+
+                            backgroundImage: `url(${data.picture_url})`,
+                          }}
+                        >
+                          <span>{data.picture_url ? '' : formatName(data.assignedUsername)}</span>
+                        </button>
+                      }
+                      modal
+                      position="top left"
+                    >
+                      {(close) => (
+                        <div>
+                          <button className="close" onClick={close}>
+                            &times;
+                          </button>
+                          <h3 className="assign-success">{assignTaskStatus} </h3>
+                          <h3 className="assign-error">{assignTaskStatusError}</h3>
+                          <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                          <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                          <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                            <FormattedMessage {...messages.taskassignmentTitle} />
+                            <b> {data.taskId}</b>
+                            <FormattedMessage {...messages.taskassignmentTitle1} />
+                          </h1>
+                          <div style={{ textAlign: 'left' }}>
+                            <FormattedMessage {...messages.taskassignment}>
+                              {(msg) => {
+                                return (
+                                  <Select
+                                    classNamePrefix={
+                                      <FormattedMessage
+                                        {...messages.taskassignmentselectListTitle}
+                                      />
+                                    }
+                                    defaultValue={selectedOption}
+                                    onChange={setSelectedOption}
+                                    options={selectItems}
+                                  />
+                                );
+                              }}
+                            </FormattedMessage>
+                            <div>
+                              <br />
+                              <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                                <FormattedMessage {...messages.taskassignmentCancel} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => assignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignment} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => unAssignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignmentUnAssign} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Popup>
                   </div>
                 )}
-              </Popup>
-            </div>
-          )}
-        </FormattedMessage>
+              </FormattedMessage>
+            ) : (
+              <FormattedMessage {...messages.taskassignment}>
+                {(msg) => (
+                  <div className="pr2 dib v-mid" title={msg}>
+                    <Popup
+                      trigger={
+                        <ProfilePictureIcon
+                          width="18px"
+                          height="18px"
+                          className="pointer hover-blue-grey"
+                        />
+                      }
+                      modal
+                      position="top left"
+                    >
+                      {(close) => (
+                        <div>
+                          <button className="close" onClick={close}>
+                            &times;
+                          </button>
+                          <h3 className="assign-success">{assignTaskStatus} </h3>
+                          <h3 className="assign-error">{assignTaskStatusError}</h3>
+                          <h3 className="assign-success">{unAssignTaskStatus} </h3>
+                          <h3 className="assign-error">{unAssignTaskStatusError}</h3>
+                          <h1 className="pb2 ma0 barlow-condensed blue-dark divPopHeader">
+                            <FormattedMessage {...messages.taskassignmentTitle} />
+                            <b> {data.taskId}</b>
+                            <FormattedMessage {...messages.taskassignmentTitle1} />
+                          </h1>
+                          <div style={{ textAlign: 'left' }}>
+                            <FormattedMessage {...messages.taskassignment}>
+                              {(msg) => {
+                                return (
+                                  <Select
+                                    classNamePrefix={
+                                      <FormattedMessage
+                                        {...messages.taskassignmentselectListTitle}
+                                      />
+                                    }
+                                    defaultValue={selectedOption}
+                                    onChange={setSelectedOption}
+                                    options={selectItems}
+                                  />
+                                );
+                              }}
+                            </FormattedMessage>
+                            <div>
+                              <br />
+                              <Button className="bg-red white bg-red-float" onClick={() => {}}>
+                                <FormattedMessage {...messages.taskassignmentCancel} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => assignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignment} />
+                              </Button>
+
+                              <Button
+                                className="bg-red white bg-red-float"
+                                onClick={() => unAssignUser()}
+                              >
+                                <FormattedMessage {...messages.taskassignmentUnAssign} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Popup>
+                  </div>
+                )}
+              </FormattedMessage>
+            )}
+          </span>
+        )}
+
         <FormattedMessage {...messages.seeTaskHistory}>
           {(msg) => (
             <div className="pr2 dib v-mid" title={msg}>

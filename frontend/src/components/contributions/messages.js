@@ -32,6 +32,14 @@ export default defineMessages({
     id: 'mytasks.filter.archived',
     defaultMessage: 'Archived projects',
   },
+  assignedByYou: {
+    id: 'mytasks.filter.assignedByYou',
+    defaultMessage: 'Tasks Assigned By You',
+  },
+  assignedToYou: {
+    id: 'mytasks.filter.assignedToYou',
+    defaultMessage: 'Tasks Assigned to You',
+  },
   searchProject: {
     id: 'mytasks.placeholder.search_project',
     defaultMessage: 'Search by project id',

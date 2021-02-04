@@ -78,7 +78,7 @@ export function TaskSelection({ project, type, loading }: Object) {
     project.projectId !== undefined,
   );
   const getUsers = useCallback((id) => {
-    fetchLocalJSONAPI(`users/`, token)
+    fetchLocalJSONAPI(`users/?project_id=${id}`, token)
       .then((res) => {
         setUsers(res.users);
       })
@@ -105,7 +105,7 @@ export function TaskSelection({ project, type, loading }: Object) {
   useEffect(() => {
     getActivities(project.projectId);
     getContributions(project.projectId);
-    getUsers();
+    getUsers(project.projectId);
   }, [getActivities, getContributions, getUsers, project.projectId]);
   // refresh activities each 60 seconds if page is visible to user
   useInterval(() => {

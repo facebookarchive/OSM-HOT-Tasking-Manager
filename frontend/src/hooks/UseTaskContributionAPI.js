@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useReducer } from 'react';
 import axios from 'axios';
+import _ from 'lodash';
 
 import { useQueryParams, StringParam } from 'use-query-params';
 import { stringify as stringifyUQP } from 'query-string';
@@ -15,6 +16,7 @@ const contributionsQueryAllSpecification = {
   text: StringParam,
   maxDate: StringParam,
   projectStatus: StringParam,
+  assignment: StringParam,
   page: StringParam,
 };
 
@@ -104,6 +106,8 @@ export const useTaskContributionAPI = (
   const user_id = useSelector(
     (state) => state.auth.get('userDetails') && state.auth.get('userDetails').id,
   );
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const userName = userDetails.username;
 
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isLoading: true,
@@ -132,16 +136,60 @@ export const useTaskContributionAPI = (
           throttledExternalQueryParamsState,
           backendToQueryConversion,
         );
-        const result = await axios({
-          url: `${API_URL}users/${user_id}/tasks/`,
-          method: 'get',
-          params: remappedParams,
-          headers: { Authorization: `Token ${token}` },
-          cancelToken: new CancelToken(function executor(c) {
-            // An executor function receives a cancel function as a parameter
-            cancel = { end: c, params: throttledExternalQueryParamsState };
-          }),
-        });
+
+        var result;
+        var testResult = true;
+
+        if (remappedParams.assignment === 'TaskAssignedByYou') {
+          var refractoredParams = _.omit(remappedParams, [
+            'project_status',
+            'project_id',
+            'status',
+            'min_action_date',
+            'max_action_date',
+          ]);
+          result = await axios({
+            url: `${API_URL}user/${userName}/assigned-tasks/?pageSize=10&closed=true`,
+            method: 'get',
+            params: refractoredParams,
+            headers: { Authorization: `Token ${token}` },
+            cancelToken: new CancelToken(function executor(c) {
+              // An executor function receives a cancel function as a parameter
+              cancel = { end: c, params: throttledExternalQueryParamsState };
+            }),
+          });
+        } else if (remappedParams.assignment === 'TaskAssignedToYou') {
+          var refractoredParams = _.omit(remappedParams, [
+            'project_status',
+            'project_id',
+            'status',
+            'min_action_date',
+            'max_action_date',
+          ]);
+
+          result = await axios({
+            url: `${API_URL}user/${userName}/assigned-tasks/?pageSize=10&closed=false`,
+            method: 'get',
+            params: refractoredParams,
+            headers: { Authorization: `Token ${token}` },
+            cancelToken: new CancelToken(function executor(c) {
+              // An executor function receives a cancel function as a parameter
+              cancel = { end: c, params: throttledExternalQueryParamsState };
+            }),
+          });
+        } else {
+          result = await axios({
+            // url: `${API_URL}users/${userName}/tasks/`,
+            url: `${API_URL}users/${user_id}/tasks/`,
+            method: 'get',
+            params: remappedParams,
+            headers: { Authorization: `Token ${token}` },
+            cancelToken: new CancelToken(function executor(c) {
+              // An executor function receives a cancel function as a parameter
+              cancel = { end: c, params: throttledExternalQueryParamsState };
+            }),
+          });
+        }
 
         if (!didCancel) {
           if (result && result.headers && result.headers['content-type'].indexOf('json') !== -1) {
