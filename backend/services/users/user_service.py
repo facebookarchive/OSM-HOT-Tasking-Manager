@@ -842,6 +842,16 @@ class UserService:
         project_names = {}
         assigned_tasks_dto = AssignedTasksDTO()
         for entry in results.items:
+            user_query = (
+                TaskHistory.query.with_entities(
+                    TaskHistory.action_date
+                )
+                .filter(TaskHistory.user_id==user.id)
+                .filter(TaskHistory.project_id==entry.project_id)
+                .filter(TaskHistory.task_id==entry.task_id)
+                .order_by(TaskHistory.action_date.desc()).all()
+            )
+            user_list = [i[0] for i in user_query]
             dto = AssignedTask()
             dto.task_id = entry.task_id
             dto.project_id = entry.project_id
@@ -849,6 +859,7 @@ class UserService:
             dto.closed = entry.is_closed
             dto.assigned_date = entry.assigned_date
             dto.task_status = TaskStatus(entry.task_status).name
+            dto.last_updated = user_list[0]
             if dto.project_id not in project_names:
                 project_names[dto.project_id] = ProjectInfo.get_dto_for_locale(
                     dto.project_id, preferred_locale

@@ -5,7 +5,7 @@ from backend.models.dtos.user_dto import UserSearchQuery
 from backend.services.users.authentication_service import token_auth
 from backend.services.users.user_service import UserService, NotFound
 from backend.services.project_service import ProjectService
-
+from backend.models.postgis.task import TaskHistory
 
 class UsersRestAPI(Resource):
     @token_auth.login_required
@@ -84,6 +84,10 @@ class UsersAllAPI(Resource):
               name: level
               description: Level of User, eg BEGINNER
               type: string
+            - in: query
+              name: project_id
+              description: project Id
+              type: integer
         responses:
             200:
                 description: Users found
@@ -100,6 +104,8 @@ class UsersAllAPI(Resource):
             query.username = request.args.get("username")
             query.mapping_level = request.args.get("level")
             query.role = request.args.get("role")
+            query.project_id = request.args.get("project_id")
+            query.user_list = TaskHistory.get_user_mapped_to_project(query.project_id)
             query.validate()
         except DataError as e:
             current_app.logger.error(f"Error validating request: {str(e)}")

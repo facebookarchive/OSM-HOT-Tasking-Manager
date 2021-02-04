@@ -595,6 +595,11 @@ class TaskHistory(db.Model):
             .first()
         )
 
+    def get_user_mapped_to_project(project_id: int):
+        base = db.session.query(TaskHistory.user_id.distinct()).filter(TaskHistory.project_id == project_id).all()
+        user_var = [i[0] for i in base]
+        return user_var
+
 
 class Task(db.Model):
     """ Describes an individual mapping Task """
@@ -1094,7 +1099,19 @@ class Task(db.Model):
 
         tasks_features = []
         for task in project_tasks:
+            pic_query = db.session.query(User.picture_url).filter(User.id==task.assigned_to).all()
+            pic_url = [i[0] for i in pic_query]
+            username_query = db.session.query(User.username).filter(User.id==task.assigned_to).all()
+            username = [i[0] for i in username_query]
             task_geometry = geojson.loads(task.geojson)
+            
+            if len(pic_url) and len(username):
+                pic_url = pic_url[0]
+                username = username[0]
+            else:
+                pic_url = None
+                username = None
+
             task_properties = dict(
                 taskId=task.id,
                 taskX=task.x,
@@ -1103,6 +1120,8 @@ class Task(db.Model):
                 taskIsSquare=task.is_square,
                 taskStatus=TaskStatus(task.task_status).name,
                 assignedTo=task.assigned_to,
+                assignedUsername=username,
+                picture_url = pic_url,
                 lockedBy=task.locked_by,
             )
 
@@ -1127,9 +1146,21 @@ class Task(db.Model):
             .filter(Task.project_id == project_id)
             .all()
         )
-
+        
         tasks_features = []
         for task in project_tasks:
+            pic_query = db.session.query(User.picture_url).filter(User.id==task.assigned_to).all()
+            pic_url = [i[0] for i in pic_query]
+            username_query = db.session.query(User.username).filter(User.id==task.assigned_to).all()
+            username = [i[0] for i in username_query]
+            
+            if len(pic_url) and len(username):
+                pic_url = pic_url[0]
+                username = username[0]
+            else:
+                pic_url = None
+                username = None
+
             task_properties = dict(
                 taskId=task.id,
                 taskX=task.x,
@@ -1138,7 +1169,10 @@ class Task(db.Model):
                 taskIsSquare=task.is_square,
                 taskStatus=TaskStatus(task.task_status).name,
                 assignedTo=task.assigned_to,
+                assignedUsername=username,
+                picture_url = pic_url,
             )
+
             feature = geojson.Feature(properties=task_properties)
             tasks_features.append(feature)
 

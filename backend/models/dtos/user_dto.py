@@ -13,7 +13,7 @@ from backend.models.dtos.stats_dto import Pagination
 from backend.models.dtos.mapping_dto import TaskDTO
 from backend.models.dtos.interests_dto import InterestDTO
 from backend.models.postgis.statuses import MappingLevel, UserRole
-
+from schematics.types import UTCDateTimeType
 
 def is_known_mapping_level(value):
     """ Validates that supplied mapping level is known value """
@@ -187,10 +187,12 @@ class UserSearchQuery(Model):
         serialized_name="mappingLevel", validators=[is_known_mapping_level]
     )
     page = IntType()
+    project_id = IntType()
+    user_list = ListType(IntType())
 
     def __hash__(self):
         """ Make object hashable so we can cache user searches"""
-        return hash((self.username, self.role, self.mapping_level, self.page))
+        return hash((self.username, self.role, self.mapping_level, self.page, self.project_id))
 
 
 class ListedUser(Model):
@@ -201,7 +203,7 @@ class ListedUser(Model):
     role = StringType()
     mapping_level = StringType(serialized_name="mappingLevel")
     picture_url = StringType(serialized_name="pictureUrl")
-
+    project_id = IntType(serialized_name="projectId")
 
 class UserRegisterEmailDTO(Model):
     """ DTO containing data for user registration with email model """
@@ -284,6 +286,9 @@ class AssignedTask(Model):
     closed = BooleanType()
     assigned_date = DateTimeType(serialized_name="assignedDate")
     task_status = StringType(serialized_name="taskStatus")
+    last_updated = UTCDateTimeType(
+        serialized_name="lastUpdated", serialize_when_none=False
+    )
 
 
 class AssignedTasksDTO(Model):
@@ -294,5 +299,5 @@ class AssignedTasksDTO(Model):
         super().__init__()
         self.assigned_tasks = []
 
-    assigned_tasks = ListType(ModelType(AssignedTask), serialized_name="assignedTasks")
+    assigned_tasks = ListType(ModelType(AssignedTask), serialized_name="tasks")
     pagination = ModelType(Pagination)
