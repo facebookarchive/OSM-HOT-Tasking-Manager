@@ -25,6 +25,7 @@ from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
 from backend.services.users.user_service import UserService
+from backend.models.postgis.project import Project
 
 
 class ValidatorServiceError(Exception):
@@ -88,6 +89,10 @@ class ValidatorService:
 
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(validation_dto.project_id)
+        for task_id in validation_dto.task_ids:
+            task = Task.get(task_id, validation_dto.project_id)
+            task.adjacent_task_lock(task.id, validation_dto.project_id, enable_adjacent_task_lock[0])
 
         return task_dtos
 
@@ -180,6 +185,10 @@ class ValidatorService:
 
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(project_id)
+        for task_to_unlock in tasks_to_unlock:
+            task = task_to_unlock["task"]
+            task.adjacent_task_unlock(task.id, project_id, enable_adjacent_task_lock[0])
 
         return task_dtos
 
@@ -213,6 +222,10 @@ class ValidatorService:
 
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(project_id)
+        for task_to_unlock in tasks_to_unlock:
+            task = task_to_unlock["task"]
+            task.adjacent_task_unlock(task.id, project_id, enable_adjacent_task_lock[0])
 
         return task_dtos
 

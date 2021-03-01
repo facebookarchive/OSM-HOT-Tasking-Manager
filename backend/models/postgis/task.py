@@ -303,7 +303,10 @@ class TaskHistory(db.Model):
                 TaskHistory.project_id == project_id,
                 TaskHistory.task_id == task_id,
                 TaskHistory.action == lock_action.name,
-                TaskHistory.user_id == user_id,).order_by(TaskHistory.id.asc()).first()
+                TaskHistory.user_id == user_id,
+            )
+            .order_by(TaskHistory.id.asc())
+            .first()
         )
 
         dupe.delete()
@@ -467,9 +470,12 @@ class TaskHistory(db.Model):
                 TaskHistory.project_id == project_id,
                 TaskHistory.task_id == task_id,
                 TaskHistory.action == TaskAction.STATE_CHANGE.name,
-                TaskHistory.action_text.in_([TaskStatus.BADIMAGERY.name, TaskStatus.MAPPED.name])
+                TaskHistory.action_text.in_(
+                    [TaskStatus.BADIMAGERY.name, TaskStatus.MAPPED.name]
+                ),
             )
-            .order_by(TaskHistory.action_date.desc()).first()
+            .order_by(TaskHistory.action_date.desc())
+            .first()
         )
 
 
@@ -500,7 +506,6 @@ class Task(db.Model):
     validated_by = db.Column(
         db.BigInteger, db.ForeignKey("users.id", name="fk_users_validator"), index=True
     )
-   
     # Mapped objects
     task_history = db.relationship(
         TaskHistory, cascade="all", order_by=desc(TaskHistory.id)
@@ -508,7 +513,7 @@ class Task(db.Model):
     task_annotations = db.relationship(TaskAnnotation, cascade="all")
     lock_holder = db.relationship(User, foreign_keys=[locked_by])
     mapper = db.relationship(User, foreign_keys=[mapped_by])
-   
+
     def create(self):
         """ Creates and saves the current model to the DB """
         db.session.add(self)
@@ -1150,7 +1155,7 @@ class Task(db.Model):
                     for j in adj_lock_list:
                         adj_status_query = db.session.query(Task.task_status).filter(Task.id==j).filter(Task.project_id==project_id).all()
                         adj_status_value = adj_status_query[0]
-                        if adj_status_value[0]==1:
+                        if adj_status_value[0]==1 or adj_status_value[0]==3:
                             map_locked = 1
                             break
                     if map_locked==0:
