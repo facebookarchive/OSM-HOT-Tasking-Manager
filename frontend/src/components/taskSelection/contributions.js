@@ -64,7 +64,7 @@ function Contributor({ user, activeUser, activeStatus, displayTasks }: Object) {
                   colorClasses="white bg-blue-grey"
                 />
                 <Link className="blue-dark mr2 link" to={`/users/${user.username}`}>
-                  {user.username}
+                  {user.name?(user.name):(user.username)}
                 </Link>
               </span>
             </>

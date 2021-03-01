@@ -135,7 +135,8 @@ export const ProjectDetail = (props) => {
   const h2Classes = 'pl4 f2 fw6 mt2 mb3 ttu barlow-condensed blue-dark';
   const userLink = (
     <Link to={`/users/${props.project.author}`} className="link blue-dark underline">
-      {props.project.author}
+      {props.project.name?(props.project.name):(props.project.author)}
+
     </Link>
   );
 

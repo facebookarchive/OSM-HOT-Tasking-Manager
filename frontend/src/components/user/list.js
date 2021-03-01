@@ -35,7 +35,7 @@ const UserFilter = ({ filters, setFilters, updateFilters, intl }) => {
                 id="name"
                 ref={inputRef}
                 autoComplete="off"
-                value={filters.username !== '' ? filters.username : ''}
+                value={filters.username !== '' ? filters.username : '' || filters.name !== '' ? filters.name : ''}
                 onChange={(e) => updateFilters('username', e.target.value)}
                 placeholder={msg}
                 className={'input-reset ba b--grey-light pa1 lh-copy db w-100'}
@@ -136,7 +136,7 @@ export const SearchNav = ({ filters, setFilters, initialFilters }) => {
       <div className="tr mr3">
         <RoleFilter filters={filters} setFilters={setFilters} updateFilters={updateFilters} />
       </div>
-      {(filters.username || filters.level !== 'ALL' || filters.role !== 'ALL') && (
+      {(filters.username || filters.name || filters.level !== 'ALL' || filters.role !== 'ALL') && (
         <div className="tr red pointer" onClick={clearFilters}>
           <FormattedMessage {...messages.clearFilters} />
         </div>
@@ -281,7 +281,7 @@ const UserEditMenu = ({ user, token, close, setStatus }) => {
   );
 };
 
-export function UserListCard({ user, token, username, setStatus }: Object) {
+export function UserListCard({ user, token, username, setStatus,name }: Object) {
   const [isHovered, setHovered] = useState(false);
 
   return (
@@ -297,6 +297,7 @@ export function UserListCard({ user, token, username, setStatus }: Object) {
         <UserAvatar
           picture={user.pictureUrl}
           username={user.username}
+          name={user.name}
           colorClasses="white bg-blue-grey"
         />
         <a

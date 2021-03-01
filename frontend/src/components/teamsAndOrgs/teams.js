@@ -90,6 +90,8 @@ export function Teams({ teams, viewAllQuery, showAddButton = false, isReady }: O
 }
 
 export function TeamCard({ team, managementView }: Object) {
+
+  
   return (
     <Link
       to={managementView ? `/manage/teams/${team.teamId}/` : `/teams/${team.teamId}/membership/`}
@@ -257,6 +259,7 @@ export function TeamForm(props) {
 export function TeamSideBar({ team, members, managers, requestedToJoin }: Object) {
   const [isUserTeamManager] = useEditTeamAllowed(team);
 
+  
   return (
     <ReactPlaceholder
       showLoadingAnimation={true}
@@ -306,6 +309,7 @@ export function TeamSideBar({ team, members, managers, requestedToJoin }: Object
             {managers.map((user, n) => (
               <UserAvatar
                 key={n}
+                name={user.name}
                 username={user.username}
                 picture={user.pictureUrl}
                 size="large"
@@ -320,6 +324,7 @@ export function TeamSideBar({ team, members, managers, requestedToJoin }: Object
             {members.map((user, n) => (
               <UserAvatar
                 key={n}
+                name={user.name}
                 username={user.username}
                 picture={user.pictureUrl}
                 colorClasses="white bg-blue-grey mv1"

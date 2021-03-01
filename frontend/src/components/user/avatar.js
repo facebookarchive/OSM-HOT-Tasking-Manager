@@ -35,6 +35,8 @@ export const UserAvatar = ({
   let sizeStyles = {};
   let closeIconStyle = { left: '0.4rem' };
 
+  
+
   if (size === 'large') {
     closeIconStyle = { marginLeft: '3rem' };
     sizeClasses = 'h3 w3 f2';
@@ -49,7 +51,9 @@ export const UserAvatar = ({
   }
 
   let letters;
+  let displayName;
   if (name) {
+    displayName=name;
     letters = name
       .split(' ')
       .map((word) => word[0])
@@ -57,16 +61,17 @@ export const UserAvatar = ({
   } else if (number) {
     letters = number;
   } else {
+    displayName=username;
     letters = username
       .split(' ')
       .map((word) => word[0])
       .join('');
   }
   if (picture) sizeStyles.backgroundImage = `url(${picture})`;
-
+  
   const avatar = (
     <div
-      title={username}
+      title={displayName}
       style={sizeStyles}
       className={`dib mh1 br-100 tc v-mid cover ${colorClasses} ${sizeClasses}`}
     >
@@ -116,6 +121,7 @@ export const UserAvatarList = ({
       {users.slice(0, maxLength ? maxLength : users.length).map((user, n) => (
         <div style={{ marginLeft: n === 0 ? '' : marginLeft }} className="dib" key={n}>
           <UserAvatar
+          name={user.name}
             username={user.username}
             picture={user.pictureUrl}
             size={size}

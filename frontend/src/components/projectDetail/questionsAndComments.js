@@ -101,6 +101,8 @@ export const QuestionsAndComments = ({ projectId }) => {
 };
 
 function CommentList({ comments }: Object) {
+
+  
   return (
     <div className="pt3">
       {comments.map((comment, n) => (
@@ -109,6 +111,7 @@ function CommentList({ comments }: Object) {
             <div className="fl">
               {comment.pictureUrl === null ? null : (
                 <UserAvatar
+                  name={comment.name}
                   username={comment.username}
                   picture={comment.pictureUrl}
                   colorClasses="white bg-blue-grey"
@@ -118,7 +121,7 @@ function CommentList({ comments }: Object) {
             <div className="fl ml3">
               <p className="b ma0">
                 <a href={`/users/${comment.username}`} className="blue-dark b underline">
-                  {comment.username}
+                {comment.name ? (comment.name):(comment.username)}
                 </a>
               </p>
               <span className="blue-grey f6">

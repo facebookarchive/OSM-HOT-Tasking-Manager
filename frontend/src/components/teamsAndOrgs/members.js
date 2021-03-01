@@ -78,6 +78,7 @@ export function Members({
           {members.map((user, n) => (
             <UserAvatar
               key={n}
+              name={user.name}
               username={user.username}
               picture={user.pictureUrl}
               size="large"
@@ -145,6 +146,7 @@ export function JoinRequests({ requests, teamId, addMembers, updateRequests }: O
           <div className="cf db pt2" key={n}>
             <div className="fl pt1">
               <UserAvatar
+              name={user.name}
                 username={user.username}
                 picture={user.pictureUrl}
                 colorClasses="white bg-blue-grey"

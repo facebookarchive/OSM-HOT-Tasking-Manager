@@ -766,7 +766,7 @@
   "users.detail.MyTeams": "My teams",
   "users.detail.MyContribs": "My contributions",
   "users.detail.MyStats": "My stats",
-  "users.list.search.username": "Search by username",
+  "users.list.search.username": "Search by Username / Displayname",
   "users.list.total": "Total number of users: {total}",
   "users.list.actions.setRole": "Set role",
   "users.list.actions.setLevel": "Set mapper level",

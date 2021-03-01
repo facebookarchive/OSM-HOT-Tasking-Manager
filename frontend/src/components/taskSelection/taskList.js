@@ -80,7 +80,7 @@ function TaskItem({
               <span className="blue-grey">
                 <FormattedMessage
                   {...messages.taskLastUpdate}
-                  values={{ user: <span className="b blue-grey">{data.actionBy}</span> }}
+                  values={{ user: <span className="b blue-grey">{data.name ? (data.name):(data.actionBy)}</span> }}
                 />{' '}
                 <RelativeTimeWithUnit date={data.actionDate} />
               </span>
