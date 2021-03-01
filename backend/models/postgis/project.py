@@ -983,6 +983,7 @@ class Project(db.Model):
         base_dto.created = self.created
         base_dto.last_updated = self.last_updated
         base_dto.author = User.get_by_id(self.author_id).username
+        base_dto.name = User.get_by_id(self.author_id).name
         base_dto.active_mappers = Project.get_active_mappers(self.id)
         base_dto.task_creation_mode = TaskCreationMode(self.task_creation_mode).name
         base_dto.percent_mapped = Project.calculate_tasks_percent(

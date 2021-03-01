@@ -42,6 +42,7 @@ class TeamMembersDTO(Model):
     function = StringType(required=True, validators=[validate_team_member_function])
     active = StringType()
     picture_url = StringType(serialized_name="pictureUrl")
+    name = StringType()
 
 
 class TeamProjectDTO(Model):

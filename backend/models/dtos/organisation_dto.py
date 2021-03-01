@@ -14,6 +14,7 @@ class OrganisationManagerDTO(Model):
 
     username = StringType(required=True)
     picture_url = StringType(serialized_name="pictureUrl")
+    name = StringType()
 
 
 class OrganisationTeamsDTO(Model):

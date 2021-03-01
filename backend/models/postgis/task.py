@@ -42,8 +42,6 @@ class TaskAction(Enum):
     COMMENT = 4
     AUTO_UNLOCKED_FOR_MAPPING = 5
     AUTO_UNLOCKED_FOR_VALIDATION = 6
-
-
 class TaskInvalidationHistory(db.Model):
     """ Describes the most recent history of task invalidation and subsequent validation """
 
@@ -197,7 +195,6 @@ class TaskHistory(db.Model):
     invalidation_history = db.relationship(
         TaskInvalidationHistory, lazy="dynamic", cascade="all"
     )
-
     actioned_by = db.relationship(User)
     task_mapping_issues = db.relationship(TaskMappingIssue, cascade="all")
 
@@ -478,7 +475,6 @@ class TaskHistory(db.Model):
             .first()
         )
 
-
 class Task(db.Model):
     """ Describes an individual mapping Task """
 
@@ -506,7 +502,6 @@ class Task(db.Model):
     validated_by = db.Column(
         db.BigInteger, db.ForeignKey("users.id", name="fk_users_validator"), index=True
     )
-
     # Mapped objects
     task_history = db.relationship(
         TaskHistory, cascade="all", order_by=desc(TaskHistory.id)
@@ -677,7 +672,6 @@ class Task(db.Model):
             TaskAction.AUTO_UNLOCKED_FOR_VALIDATION,
         ]:
             history.set_auto_unlock_action(action)
-
         if mapping_issues is not None:
             history.task_mapping_issues = mapping_issues
 
@@ -777,7 +771,6 @@ class Task(db.Model):
             )
             self.mapped_by = None
             self.validated_by = None
-
         if not undo:
             # Using a slightly evil side effect of Actions and Statuses having the same name here :)
             TaskHistory.update_task_locked_with_duration(
@@ -935,7 +928,6 @@ class Task(db.Model):
                 taskIsSquare=task.is_square,
                 taskStatus=TaskStatus(task.task_status).name,
             )
-
             feature = geojson.Feature(properties=task_properties)
             tasks_features.append(feature)
 
@@ -1021,6 +1013,9 @@ class Task(db.Model):
             history.action = action.action
             history.action_text = action.action_text
             history.action_date = action.action_date
+            history.name = (
+                action.actioned_by.name if action.actioned_by else None
+            )
             history.action_by = (
                 action.actioned_by.username if action.actioned_by else None
             )

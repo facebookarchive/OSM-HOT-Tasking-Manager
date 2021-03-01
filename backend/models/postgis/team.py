@@ -192,6 +192,7 @@ class Team(db.Model):
         member_dto = TeamMembersDTO()
         user = User.get_by_id(member.user_id)
         member_function = TeamMemberFunctions(member.function).name
+        member_dto.name = user.name
         member_dto.username = user.username
         member_dto.function = member_function
         member_dto.picture_url = user.picture_url

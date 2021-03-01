@@ -125,6 +125,7 @@ class StatsService:
                 TaskHistory.action,
                 TaskHistory.action_date,
                 TaskHistory.action_text,
+                TaskHistory.name,
                 User.username,
             )
             .join(User)
@@ -145,6 +146,7 @@ class StatsService:
             history.action_text = item.action_text
             history.action_date = item.action_date
             history.action_by = item.username
+            history.name = item.name
             activity_dto.activity.append(history)
 
         activity_dto.pagination = Pagination(results)
@@ -217,6 +219,7 @@ class StatsService:
                 sq.c.action_date,
                 sq_statuses.c.task_status,
                 User.username,
+                User.name,
             )
             .outerjoin(sq, sq.c.task_id == sq_statuses.c.id)
             .outerjoin(User, User.id == sq.c.user_id)
@@ -232,6 +235,7 @@ class StatsService:
                     task_status=TaskStatus(r.task_status).name,
                     action_date=r.action_date,
                     action_by=r.username,
+                    name=r.name,
                 )
             )
             for r in results

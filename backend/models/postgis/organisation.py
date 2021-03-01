@@ -171,6 +171,7 @@ class Organisation(db.Model):
 
         for manager in self.managers:
             org_manager_dto = OrganisationManagerDTO()
+            org_manager_dto.name = manager.name
             org_manager_dto.username = manager.username
             org_manager_dto.picture_url = manager.picture_url
             organisation_dto.managers.append(org_manager_dto)

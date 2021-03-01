@@ -83,7 +83,7 @@ class ProjectChat(db.Model):
             chat_dto.username = message.posted_by.username
             chat_dto.picture_url = message.posted_by.picture_url
             chat_dto.timestamp = message.time_stamp
-
+            chat_dto.name = message.posted_by.name
             dto.chat.append(chat_dto)
 
         dto.pagination = Pagination(project_messages)

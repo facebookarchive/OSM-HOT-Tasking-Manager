@@ -58,6 +58,7 @@ class UserDTO(Model):
     is_email_verified = EmailType(
         serialized_name="isEmailVerified", serialize_when_none=False
     )
+
     is_expert = BooleanType(serialized_name="isExpert", serialize_when_none=False)
     twitter_id = StringType(serialized_name="twitterId")
     facebook_id = StringType(serialized_name="facebookId")
@@ -199,6 +200,7 @@ class ListedUser(Model):
     role = StringType()
     mapping_level = StringType(serialized_name="mappingLevel")
     picture_url = StringType(serialized_name="pictureUrl")
+    name = StringType()
 
 
 class UserRegisterEmailDTO(Model):

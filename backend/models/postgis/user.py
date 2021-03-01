@@ -140,9 +140,8 @@ class User(db.Model):
 
         # Base query that applies to all searches
         base = db.session.query(
-            User.id, User.username, User.mapping_level, User.role, User.picture_url
+            User.id, User.username, User.mapping_level, User.role, User.picture_url, User.name
         )
-
         # Add filter to query as required
         if query.mapping_level:
             mapping_levels = query.mapping_level.split(",")
@@ -151,7 +150,11 @@ class User(db.Model):
             ]
             base = base.filter(User.mapping_level.in_(mapping_level_array))
         if query.username:
-            base = base.filter(User.username.ilike(query.username.lower() + "%"))
+            base_query = base.filter(User.username.ilike(query.username.lower() + "%")).all()
+            if len(base_query):
+                base = base.filter(User.username.ilike(query.username.lower() + "%"))
+            else:
+                base = base.filter(User.name.ilike(query.username.lower() + "%"))
 
         if query.role:
             roles = query.role.split(",")
@@ -168,7 +171,7 @@ class User(db.Model):
             listed_user.username = result.username
             listed_user.picture_url = result.picture_url
             listed_user.role = UserRole(result.role).name
-
+            listed_user.name = result.name
             dto.users.append(listed_user)
 
         dto.pagination = Pagination(results)
@@ -390,6 +393,14 @@ class User(db.Model):
         self.interests.extend(objs)
         db.session.commit()
 
+    def display_name(user_id):
+        name = db.session.query(User.name).filter(User.id==user_id).all()
+        username = db.session.query(User.username).filter(User.id==user_id).all()
+        if user_id:
+            if len(name):
+                return name[0]
+            else:
+                return username[0]
 
 class UserEmail(db.Model):
     __tablename__ = "users_with_email"

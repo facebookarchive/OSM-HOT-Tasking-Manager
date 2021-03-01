@@ -235,6 +235,7 @@ class ProjectDTO(Model):
     created = UTCDateTimeType()
     last_updated = UTCDateTimeType(serialized_name="lastUpdated")
     author = StringType()
+    name = StringType()
     active_mappers = IntType(serialized_name="activeMappers")
     percent_mapped = IntType(serialized_name="percentMapped")
     percent_validated = IntType(serialized_name="percentValidated")

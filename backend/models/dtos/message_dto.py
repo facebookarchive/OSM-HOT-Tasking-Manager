@@ -51,6 +51,7 @@ class ChatMessageDTO(Model):
     picture_url = StringType(default=None, serialized_name="pictureUrl")
     timestamp = UTCDateTimeType()
     username = StringType()
+    name = StringType()
 
 
 class ProjectChatDTO(Model):
