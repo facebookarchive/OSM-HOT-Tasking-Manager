@@ -108,7 +108,6 @@ export const TasksMap = ({
       if (map.getSource('tasks') === undefined) {
         map.addImage('lock', lockIcon, { width: 17, height: 20, data: lockIcon });
         map.addImage('redlock', redlockIcon, { width: 30, height: 30, data: redlockIcon });
-        //  map.addImage('adjacentLock', adjLockIcon, { width: 130, height: 130, data: adjLockIcon });
 
         map.addSource('tasks', {
           type: 'geojson',
@@ -132,10 +131,7 @@ export const TasksMap = ({
           ['==', ['to-string', ['get', 'taskStatus']], 'ADJACENT_LOCK'],
         ];
 
-        console.log('adjacent lock is', adjacentlocked);
-        console.log(' lock is', locked);
         let taskStatusCondition = ['case'];
-        console.log('task status ', taskStatusCondition);
 
         let pattern = {
           id: 'pattern',
