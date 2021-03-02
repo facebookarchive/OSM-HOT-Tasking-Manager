@@ -271,6 +271,14 @@ export default defineMessages({
     id: 'project.tasks.status.badImagery',
     defaultMessage: 'Unavailable',
   },
+  taskStatus_ADJACENT_LOCK: {
+    id: 'project.tasks.status.adjacentLock',
+    defaultMessage: 'Adjacent Lock',
+  },
+  taskStatus_ADJACENTLOCK: {
+    id: 'project.tasks.status.adjacentlock',
+    defaultMessage: 'Adjacent Lock',
+  },
   taskStatus_SPLIT: {
     id: 'project.tasks.status.split',
     defaultMessage: 'Split',

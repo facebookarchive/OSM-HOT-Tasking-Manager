@@ -8,12 +8,16 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL } from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
+import adjLock from '../../assets/img/adj-lock.PNG';
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
 
 let redlockIcon = new Image(17, 20);
 redlockIcon.src = redlock;
+
+let adjLockIcon = new Image(60, 60);
+adjLockIcon.src = adjLock;
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
 try {
@@ -122,14 +126,49 @@ export const TasksMap = ({
           ['==', ['to-string', ['get', 'taskStatus']], 'LOCKED_FOR_MAPPING'],
           ['==', ['to-string', ['get', 'taskStatus']], 'LOCKED_FOR_VALIDATION'],
         ];
+        const adjacentlocked = [
+          'any',
+          ['==', ['to-string', ['get', 'taskStatus']], 'ADJACENT_LOCK'],
+        ];
 
         let taskStatusCondition = ['case'];
+
+        let pattern = {
+          id: 'pattern',
+          type: 'fill',
+          source: 'data',
+          sprite: 'mapbox://sprites/mapbox/bright-v8',
+          // 'source': 'snailbones.dc1c6wzp',
+          paint: {
+            // 'fill-pattern': "curve-09",
+            'fill-pattern': [
+              'step',
+              ['get', 'Outage'],
+              'curve-10',
+              20,
+              'curve-09',
+              40,
+              'curve-11',
+              50,
+              'curve-12',
+              100,
+              'curve-13',
+            ],
+            'fill-opacity': 0.9,
+            // "fill-translate": [-100,-100],
+            // "fill-translate-transition": 500,
+          },
+        };
 
         if (authDetails.id !== undefined) {
           const all_condition = ['all', locked, ['==', ['get', 'lockedBy'], authDetails.id]];
           taskStatusCondition = [...taskStatusCondition, ...[all_condition, 'redlock']];
+          //taskStatusCondition = [...taskStatusCondition, ...[adjacentlocked, 'adjacentLock', '']];
         }
+
         taskStatusCondition = [...taskStatusCondition, ...[locked, 'lock', '']];
+        // taskStatusCondition = [...taskStatusCondition, ...[adjacentlocked, 'adjacentLock', '']];
+        console.log('task status ', taskStatusCondition);
 
         map.addLayer({
           id: 'tasks-icon',
@@ -160,12 +199,18 @@ export const TasksMap = ({
                 TASK_COLOURS.LOCKED_FOR_VALIDATION,
                 'VALIDATED',
                 TASK_COLOURS.VALIDATED,
+                'ADJACENT_LOCK',
+                TASK_COLOURS.ADJACENT_LOCK,
                 'INVALIDATED',
                 TASK_COLOURS.INVALIDATED,
                 'BADIMAGERY',
                 TASK_COLOURS.BADIMAGERY,
                 'rgba(0,0,0,0)',
               ],
+              //   'fill-pattern': ['match', ['get', 'taskStatus'], 'ADJACENT_LOCK', pattern],
+              //'fill-pattern': ['match', ['get', 'taskStatus'], 'ADJACENT_LOCK', adjLockIcon],
+              //adjLockIcon
+
               'fill-opacity': 0.8,
             },
           },

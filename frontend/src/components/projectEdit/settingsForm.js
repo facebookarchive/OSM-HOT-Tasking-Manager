@@ -123,6 +123,21 @@ export const SettingsForm = ({ languages, defaultLocale }) => {
           <FormattedMessage {...messages.randomTaskSelectionDescription} />
         </p>
       </div>
+      <div className={styleClasses.divClass}>
+        <label className={styleClasses.labelClass}>Adjacent Task Lock</label>
+        <p className={styleClasses.pClass}>
+          When the user locks the task for mapping, it will automatically blocks all the adjacent
+          tasks being lock by any other user for mapping
+        </p>
+        <SwitchToggle
+          label="Adjacent Task Lock"
+          labelPosition="right"
+          isChecked={projectInfo.adjacentTaskLock}
+          onChange={() =>
+            setProjectInfo({ ...projectInfo, adjacentTaskLock: !projectInfo.adjacentTaskLock })
+          }
+        />
+      </div>
     </div>
   );
 };

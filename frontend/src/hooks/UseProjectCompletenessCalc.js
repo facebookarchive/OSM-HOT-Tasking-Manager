@@ -44,11 +44,13 @@ export function useTasksByStatus(tasks) {
       const invalidated = getStatusCount(tasks, 'INVALIDATED');
       const badImagery = getStatusCount(tasks, 'BADIMAGERY');
       const lockedForMapping = getStatusCount(tasks, 'LOCKED_FOR_MAPPING');
+      const adjacentLock = getStatusCount(tasks, 'ADJACENT_LOCK');
       const lockedForValidation = getStatusCount(tasks, 'LOCKED_FOR_VALIDATION');
       setStats({
         ready: ready,
         badImagery: badImagery,
         lockedForMapping: lockedForMapping,
+        adjacentLock: adjacentLock,
         mapped: mapped,
         lockedForValidation: lockedForValidation,
         validated: validated,

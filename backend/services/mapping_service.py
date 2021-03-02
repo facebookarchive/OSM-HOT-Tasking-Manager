@@ -12,6 +12,7 @@ from backend.models.dtos.mapping_dto import (
     StopMappingTaskDTO,
     TaskCommentDTO,
 )
+from backend.models.postgis.project import Project
 from backend.models.postgis.statuses import MappingNotAllowed
 from backend.models.postgis.task import Task, TaskStatus, TaskHistory, TaskAction
 from backend.models.postgis.utils import NotFound, UserLicenseError
@@ -100,7 +101,9 @@ class MappingService:
                 )
 
         task.lock_task_for_mapping(lock_task_dto.user_id)
-        return task.as_dto_with_instructions(lock_task_dto.preferred_locale)
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(lock_task_dto.project_id)
+        task.adjacent_task_lock(lock_task_dto.task_id, lock_task_dto.project_id, enable_adjacent_task_lock[0])
+        return task.as_dto_with_instructions(lock_task_dto.preferred_locale)  
 
     @staticmethod
     def unlock_task_after_mapping(mapped_task: MappedTaskDTO) -> TaskDTO:
@@ -139,7 +142,9 @@ class MappingService:
                 )
 
         task.unlock_task(mapped_task.user_id, new_state, mapped_task.comment)
-
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(mapped_task.project_id)
+        task.adjacent_task_unlock(mapped_task.task_id, mapped_task.project_id, enable_adjacent_task_lock[0])
+        
         return task.as_dto_with_instructions(mapped_task.preferred_locale)
 
     @staticmethod
@@ -156,6 +161,8 @@ class MappingService:
             )
 
         task.reset_lock(stop_task.user_id, stop_task.comment)
+        enable_adjacent_task_lock = Project.get_prevent_adjacent_task_lock(stop_task.project_id)
+        task.adjacent_task_unlock(stop_task.task_id, stop_task.project_id, enable_adjacent_task_lock[0])
         return task.as_dto_with_instructions(stop_task.preferred_locale)
 
     @staticmethod

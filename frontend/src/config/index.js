@@ -42,7 +42,7 @@ export const HOMEPAGE_VIDEO_URL = process.env.REACT_APP_HOMEPAGE_VIDEO_URL || ''
 // OSM API and Editor URLs
 export const OSM_SERVER_URL = process.env.REACT_APP_OSM_SERVER_URL || 'https://www.openstreetmap.org';
 export const ID_EDITOR_URL = process.env.REACT_APP_ID_EDITOR_URL || 'https://www.openstreetmap.org/edit?editor=id&';
-export const POTLATCH2_EDITOR_URL = process.env.REACT_APP_POTLATCH2_EDITOR_URL || 'https://www.openstreetmap.org/edit?editor=potlatch2'
+export const POTLATCH2_EDITOR_URL = process.env.REACT_APP_POTLATCH2_EDITOR_URL || 'https://www.openstreetmap.org/edit?editor=potlatch2';
 
 export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 1000000; // bytes
 
@@ -54,6 +54,8 @@ export const TASK_COLOURS = {
   VALIDATED: '#40ac8c',
   INVALIDATED: '#fceca4',
   BADIMAGERY: '#d8dae4',
+  ADJACENT_LOCK: '#6a6762',
+  ADJACENTLOCK: '#6a6762',
   PRIORITY_AREAS: '#efd1d1',
 };
 

@@ -5,7 +5,7 @@ import json
 from enum import Enum
 from flask import current_app
 from sqlalchemy.types import Float, Text
-from sqlalchemy import desc, cast, func, distinct
+from sqlalchemy import desc, cast, func, distinct, text
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm.session import make_transient
 from geoalchemy2 import Geometry
@@ -29,6 +29,7 @@ from backend.models.postgis.utils import (
     timestamp,
     parse_duration,
     NotFound,
+    ST_Intersects,
 )
 from backend.models.postgis.task_annotation import TaskAnnotation
 
@@ -197,7 +198,6 @@ class TaskHistory(db.Model):
     invalidation_history = db.relationship(
         TaskInvalidationHistory, lazy="dynamic", cascade="all"
     )
-
     actioned_by = db.relationship(User)
     task_mapping_issues = db.relationship(TaskMappingIssue, cascade="all")
 
@@ -506,7 +506,6 @@ class Task(db.Model):
     validated_by = db.Column(
         db.BigInteger, db.ForeignKey("users.id", name="fk_users_validator"), index=True
     )
-
     # Mapped objects
     task_history = db.relationship(
         TaskHistory, cascade="all", order_by=desc(TaskHistory.id)
@@ -684,6 +683,7 @@ class Task(db.Model):
         self.task_history.append(history)
         return history
 
+
     def lock_task_for_mapping(self, user_id: int):
         self.set_task_history(TaskAction.LOCKED_FOR_MAPPING, user_id)
         self.task_status = TaskStatus.LOCKED_FOR_MAPPING.value
@@ -766,11 +766,13 @@ class Task(db.Model):
         ):
             # Don't set mapped if state being set back to mapped after validation
             self.mapped_by = user_id
+
         elif new_state == TaskStatus.VALIDATED:
             TaskInvalidationHistory.record_validation(
                 self.project_id, self.id, user_id, history
             )
             self.validated_by = user_id
+            
         elif new_state == TaskStatus.INVALIDATED:
             TaskInvalidationHistory.record_invalidation(
                 self.project_id, self.id, user_id, history
@@ -783,7 +785,6 @@ class Task(db.Model):
             TaskHistory.update_task_locked_with_duration(
                 self.id, self.project_id, TaskStatus(self.task_status), user_id
             )
-
         self.task_status = new_state.value
         self.locked_by = None
         self.update()
@@ -935,7 +936,6 @@ class Task(db.Model):
                 taskIsSquare=task.is_square,
                 taskStatus=TaskStatus(task.task_status).name,
             )
-
             feature = geojson.Feature(properties=task_properties)
             tasks_features.append(feature)
 
@@ -1117,3 +1117,46 @@ class Task(db.Model):
         locked_tasks = [task for task in tasks]
 
         return locked_tasks
+
+    def adjacent_task_lock(self, task_id: int, project_id: int, toggle_value: bool):
+        """
+        It will update all adjacent task status to ADJACENT LOCK for which particular task is selected 
+        """
+        if toggle_value:
+            spatial_query = text('select id from tasks where ST_Intersects(tasks.geometry, (select geometry from tasks where id= :val and project_id= :p_id))')
+            result = db.engine.execute(spatial_query,val=task_id, p_id=project_id)
+            task_id_list = [i[0] for i in result]
+
+            update_query = text('update tasks SET task_status=8 where id= :t_id and project_id= :proj_id')
+            
+            for i in task_id_list:
+                status_query = db.session.query(Task.task_status).filter(Task.id==i).filter(Task.project_id==project_id).all()
+                status_value = status_query[0]
+                if i != task_id and status_value[0]==0:
+                    db.engine.execute(update_query, t_id=i,proj_id=project_id)
+
+    def adjacent_task_unlock(self, task_id: int, project_id: int, toggle_value: bool):
+        """
+        It will update all adjacent task status to AVAILABLE FOR MAPPING for which particular task is selected 
+        """
+        if toggle_value:
+            spatial_query = text('select id from tasks where ST_Intersects(tasks.geometry, (select geometry from tasks where id= :val and project_id= :p_id))')
+            result = db.engine.execute(spatial_query,val=task_id, p_id=project_id)
+            task_id_list = [i[0] for i in result]
+            update_query = text('update tasks SET task_status=0 where id= :t_id and project_id= :proj_id')
+
+            for i in task_id_list:
+                status_query = db.session.query(Task.task_status).filter(Task.id==i).filter(Task.project_id==project_id).all()
+                status_value = status_query[0]
+                if i != task_id and status_value[0]==8:
+                    adj_lock = db.engine.execute(spatial_query, val=i, p_id=project_id)
+                    adj_lock_list = [id[0] for id in adj_lock]
+                    map_locked = 0
+                    for j in adj_lock_list:
+                        adj_status_query = db.session.query(Task.task_status).filter(Task.id==j).filter(Task.project_id==project_id).all()
+                        adj_status_value = adj_status_query[0]
+                        if adj_status_value[0]==1 or adj_status_value[0]==3:
+                            map_locked = 1
+                            break
+                    if map_locked==0:
+                        db.engine.execute(update_query, t_id=i,proj_id=project_id)

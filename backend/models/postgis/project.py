@@ -136,6 +136,7 @@ class Project(db.Model):
     enforce_random_task_selection = db.Column(
         db.Boolean, default=False
     )  # Force users to edit at random to avoid mapping "easy" tasks
+    prevent_adjacent_task_lock = db.Column(db.Boolean, default=False) # Turn on adjacent lock
     private = db.Column(db.Boolean, default=False)  # Only allowed users can validate
     featured = db.Column(
         db.Boolean, default=False
@@ -359,6 +360,7 @@ class Project(db.Model):
         self.priority = ProjectPriority[project_dto.project_priority].value
         self.default_locale = project_dto.default_locale
         self.enforce_random_task_selection = project_dto.enforce_random_task_selection
+        self.prevent_adjacent_task_lock = project_dto.prevent_adjacent_task_lock
         self.private = project_dto.private
         self.mapper_level = MappingLevel[project_dto.mapper_level.upper()].value
         self.changeset_comment = project_dto.changeset_comment
@@ -969,6 +971,7 @@ class Project(db.Model):
             self.validation_permission
         ).name
         base_dto.enforce_random_task_selection = self.enforce_random_task_selection
+        base_dto.prevent_adjacent_task_lock = self.prevent_adjacent_task_lock
         base_dto.private = self.private
         base_dto.mapper_level = MappingLevel(self.mapper_level).name
         base_dto.changeset_comment = self.changeset_comment
@@ -1163,6 +1166,11 @@ class Project(db.Model):
 
         return campaign_list
 
+    def get_prevent_adjacent_task_lock(project_id: int):
+        """ get the value of adjacent task lock true/false for project"""  
+        query = db.session.query(Project.prevent_adjacent_task_lock).filter(Project.id==project_id).all()
+
+        return query[0]
 
 # Add index on project geometry
 db.Index("idx_geometry", Project.geometry, postgresql_using="gist")
