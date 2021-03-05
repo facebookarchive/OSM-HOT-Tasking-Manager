@@ -14,7 +14,7 @@ import { useSetProjectPageTitleTag } from '../../hooks/UseMetaTags';
 import { getTaskAction, userCanValidate } from '../../utils/projectPermissions';
 import { getRandomArrayItem } from '../../utils/random';
 import { updateTasksStatus } from '../../utils/updateTasksStatus';
-import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { fetchLocalJSONAPI, pushToLocalJSONAPI } from '../../network/genericJSONRequest';
 import { TasksMap } from './map.js';
 import { TaskList } from './taskList';
 import { TasksMapLegend } from './legend';
@@ -23,7 +23,7 @@ import { ChangesetCommentTags } from './changesetComment';
 import { ProjectHeader } from '../projectDetail/header';
 import Contributions from './contributions';
 import { UserPermissionErrorContent } from './permissionErrorModal';
-import { ProjectValidations, Validations } from './validations';
+import { Validations } from './validations';
 import { RefreshIcon } from '../svgIcons';
 
 const TaskSelectionFooter = React.lazy(() => import('./footer'));
@@ -103,16 +103,18 @@ export function TaskSelection({ project, type, loading }: Object) {
     }
   }, []);
   const getValidationsRefreshFetch = () => {
-    console.log('new function call ***&&&^^^ ');
+    fetchLocalJSONAPI(`osmcha/${project.projectId}/`, token)
+      .then((res) => setValidations(res.summary))
+      .catch((e) => console.log(e));
   };
   const getValidationsRefresh = () => {
-    //if (id) {
-    console.log('project id is', project.projectId);
-    fetchLocalJSONAPI(`osmcha/${project.projectId}/`, token)
+    let projectParams = {
+      project_id: project.projectId,
+    };
+
+    pushToLocalJSONAPI(`osmcha/`, JSON.stringify(projectParams), token)
       .then(function (res) {
-        setValidations(res.summary);
         getValidationsRefreshFetch();
-        //return data.results;
       })
 
       .catch((e) => console.log(e));

@@ -109,6 +109,12 @@ def add_api_endpoints(app):
     app.logger.debug("Adding routes to API endpoints")
     api = Api(app)
 
+    #OSMCHA API
+    from backend.api.osmcha.resources import(
+        OSMAPI,
+        GETOSMAPI,
+    )
+
     # Projects API import
     from backend.api.projects.resources import (
         ProjectsRestAPI,
@@ -267,6 +273,10 @@ def add_api_endpoints(app):
     )
     from backend.api.system.applications import SystemApplicationsRestAPI
     from backend.api.system.image_upload import SystemImageUploadRestAPI
+
+    #OSMCHA endpoint
+    api.add_resource(OSMAPI, format_url('osmcha/'), methods=['POST'])
+    api.add_resource(GETOSMAPI, format_url('osmcha/<int:project_id>'), methods=['GET'])
 
     # Projects REST endpoint
     api.add_resource(ProjectsAllAPI, format_url("projects/"), methods=["GET"])

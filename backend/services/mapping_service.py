@@ -18,7 +18,7 @@ from backend.models.postgis.utils import NotFound, UserLicenseError
 from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
-
+from backend.models.postgis.osmcha import OSMcha
 
 class MappingServiceError(Exception):
     """ Custom Exception to notify callers an error occurred when handling mapping """
@@ -139,7 +139,7 @@ class MappingService:
                 )
 
         task.unlock_task(mapped_task.user_id, new_state, mapped_task.comment)
-
+        OSMcha.get_osmcha_details(mapped_task.task_id, mapped_task.project_id)
         return task.as_dto_with_instructions(mapped_task.preferred_locale)
 
     @staticmethod
