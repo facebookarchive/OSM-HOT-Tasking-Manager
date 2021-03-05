@@ -107,6 +107,11 @@ export default defineMessages({
     id: 'project.typesOfMapping',
     defaultMessage: 'Types of Mapping',
   },
+
+  taskflags: {
+    id: 'project.permissions.task.flag',
+    defaultMessage: 'Flags',
+  },
   editor: {
     id: 'project.editor',
     defaultMessage: 'Editor',

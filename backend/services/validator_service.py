@@ -25,6 +25,7 @@ from backend.services.messaging.message_service import MessageService
 from backend.services.project_service import ProjectService
 from backend.services.stats_service import StatsService
 from backend.services.users.user_service import UserService
+from backend.models.postgis.osmcha import OSMcha
 
 
 class ValidatorServiceError(Exception):
@@ -46,7 +47,6 @@ class ValidatorService:
         tasks_to_lock = []
         for task_id in validation_dto.task_ids:
             task = Task.get(task_id, validation_dto.project_id)
-
             if task is None:
                 raise NotFound(f"Task {task_id} not found")
 
@@ -131,7 +131,6 @@ class ValidatorService:
         message_sent_to = []
         for task_to_unlock in tasks_to_unlock:
             task = task_to_unlock["task"]
-
             if task_to_unlock["comment"]:
                 # Parses comment to see if any users have been @'d
                 MessageService.send_message_after_comment(
@@ -182,7 +181,9 @@ class ValidatorService:
 
         task_dtos = TaskDTOs()
         task_dtos.tasks = dtos
-
+        for task_to_unlock in tasks_to_unlock:
+            task = task_to_unlock["task"]
+            OSMcha.get_osmcha_details(task.id, project_id)
         return task_dtos
 
     @staticmethod

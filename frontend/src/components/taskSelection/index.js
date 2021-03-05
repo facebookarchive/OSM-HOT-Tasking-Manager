@@ -14,7 +14,7 @@ import { useSetProjectPageTitleTag } from '../../hooks/UseMetaTags';
 import { getTaskAction, userCanValidate } from '../../utils/projectPermissions';
 import { getRandomArrayItem } from '../../utils/random';
 import { updateTasksStatus } from '../../utils/updateTasksStatus';
-import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
+import { fetchLocalJSONAPI, pushToLocalJSONAPI } from '../../network/genericJSONRequest';
 import { TasksMap } from './map.js';
 import { TaskList } from './taskList';
 import { TasksMapLegend } from './legend';
@@ -23,6 +23,8 @@ import { ChangesetCommentTags } from './changesetComment';
 import { ProjectHeader } from '../projectDetail/header';
 import Contributions from './contributions';
 import { UserPermissionErrorContent } from './permissionErrorModal';
+import { Validations } from './validations';
+import { RefreshIcon } from '../svgIcons';
 
 const TaskSelectionFooter = React.lazy(() => import('./footer'));
 
@@ -46,11 +48,13 @@ const getRandomTaskByAction = (activities, taskAction) => {
 export function TaskSelection({ project, type, loading }: Object) {
   const user = useSelector((state) => state.auth.get('userDetails'));
   const userOrgs = useSelector((state) => state.auth.get('organisations'));
+  const token = useSelector((state) => state.auth.get('token'));
   const lockedTasks = useGetLockedTasks();
   const dispatch = useDispatch();
   const [tasks, setTasks] = useState();
   const [activities, setActivities] = useState();
   const [contributions, setContributions] = useState();
+  const [validations, setValidations] = useState();
   const [isValidationAllowed, setIsValidationAllowed] = useState(undefined);
   const [zoomedTaskId, setZoomedTaskId] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
@@ -91,12 +95,38 @@ export function TaskSelection({ project, type, loading }: Object) {
         .catch((e) => console.log(e));
     }
   }, []);
+  const getValidations = useCallback((id) => {
+    if (id) {
+      fetchLocalJSONAPI(`osmcha/${id}/`, token)
+        .then((res) => setValidations(res.summary))
+        .catch((e) => console.log(e));
+    }
+  }, []);
+  const getValidationsRefreshFetch = () => {
+    fetchLocalJSONAPI(`osmcha/${project.projectId}/`, token)
+      .then((res) => setValidations(res.summary))
+      .catch((e) => console.log(e));
+  };
+  const getValidationsRefresh = () => {
+    let projectParams = {
+      project_id: project.projectId,
+    };
+
+    pushToLocalJSONAPI(`osmcha/`, JSON.stringify(projectParams), token)
+      .then(function (res) {
+        getValidationsRefreshFetch();
+      })
+
+      .catch((e) => console.log(e));
+    //  }
+  };
 
   // fetch activities and contributions when the component is started
   useEffect(() => {
     getActivities(project.projectId);
     getContributions(project.projectId);
-  }, [getActivities, getContributions, project.projectId]);
+    getValidations(project.projectId);
+  }, [getActivities, getContributions, getValidations, project.projectId]);
   // refresh activities each 60 seconds if page is visible to user
   useInterval(() => {
     if (document.visibilityState === 'visible') {
@@ -320,6 +350,17 @@ export function TaskSelection({ project, type, loading }: Object) {
                   >
                     <FormattedMessage {...messages.contributions} />
                   </span>
+                  <span
+                    className={`mr4 pb2 pointer ${
+                      activeSection === 'contributions' && 'bb b--blue-dark'
+                    }`}
+                    onClick={() => {
+                      // getContributions(project.projectId);
+                      setActiveSection('validations');
+                    }}
+                  >
+                    Validations
+                  </span>
                 </div>
                 <div className="pt3">
                   <div className={`${activeSection !== 'tasks' ? 'dn' : ''}`}>
@@ -353,6 +394,20 @@ export function TaskSelection({ project, type, loading }: Object) {
                       activeUser={activeUser}
                       activeStatus={activeStatus}
                     />
+                  ) : null}
+                  {activeSection === 'validations' ? (
+                    <div>
+                      <button
+                        className="pv1 ph2 pointer ba b--grey-light bg-tan"
+                        style={{ float: 'right' }}
+                        onClick={() => getValidationsRefresh()}
+                      >
+                        <RefreshIcon height="15px" className="pt1" />
+                      </button>{' '}
+                      <br />
+                      <br />
+                      <Validations project={project} validations={validations}></Validations>
+                    </div>
                   ) : null}
                 </div>
               </div>
