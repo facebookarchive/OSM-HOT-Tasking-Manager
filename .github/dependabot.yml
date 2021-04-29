@@ -32,10 +32,6 @@ updates:
     interval: daily
     time: "13:00"
   open-pull-requests-limit: 10
-  allow:
-  - dependency-name: react-data-table-component*
-  - dependency-name: react-datepicker
-  - dependency-name: styled-components
   ignore:
   - dependency-name: "@testing-library/user-event"
     versions:
