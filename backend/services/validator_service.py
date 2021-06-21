@@ -67,7 +67,7 @@ class ValidatorService:
                 raise ValidatorServiceError(
                     "Tasks cannot be validated by the same user who marked task as mapped or badimagery"
                 )
-            if project.enforce_assignment and not task.assign_check(
+            if project.enforce_task_assignment and not task.assign_check(
                 validation_dto.user_id
             ):
                 raise ValidatorServiceError("Task assigned to another user")

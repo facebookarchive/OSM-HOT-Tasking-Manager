@@ -124,7 +124,7 @@ class MappingService:
 
         if not task.is_mappable():
             raise MappingServiceError("Task in invalid state for mapping")
-        if project.enforce_assignment and not task.can_assign_to(lock_task_dto.user_id):
+        if project.enforce_task_assignment and not task.can_assign_to(lock_task_dto.user_id):
             raise MappingServiceError("Task assigned to another user")
 
         user_can_map, error_reason = ProjectService.is_user_permitted_to_map(

@@ -133,7 +133,7 @@ class Project(db.Model):
     validation_permission = db.Column(
         db.Integer, default=ValidationPermission.ANY.value
     )  # Means only users with validator role can validate
-    enforce_assignment = db.Column(
+    enforce_task_assignment = db.Column(
         db.Boolean, default=False
     )  # Turns on task assignment
     enforce_random_task_selection = db.Column(
@@ -361,7 +361,7 @@ class Project(db.Model):
         self.status = ProjectStatus[project_dto.project_status].value
         self.priority = ProjectPriority[project_dto.project_priority].value
         self.default_locale = project_dto.default_locale
-        self.enforce_assignment = project_dto.enforce_assignment
+        self.enforce_task_assignment = project_dto.enforce_task_assignment
         self.enforce_random_task_selection = project_dto.enforce_random_task_selection
         self.private = project_dto.private
         self.mapper_level = MappingLevel[project_dto.mapper_level.upper()].value
@@ -972,7 +972,7 @@ class Project(db.Model):
         base_dto.validation_permission = ValidationPermission(
             self.validation_permission
         ).name
-        base_dto.enforce_assignment = self.enforce_assignment
+        base_dto.enforce_task_assignment = self.enforce_task_assignment
         base_dto.enforce_random_task_selection = self.enforce_random_task_selection
         base_dto.private = self.private
         base_dto.mapper_level = MappingLevel(self.mapper_level).name

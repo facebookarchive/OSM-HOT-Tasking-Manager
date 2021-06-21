@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 3d8062560a66
+Revision ID: 000d9d34b127
 Revises: ba778ef9c615
-Create Date: 2021-01-15 11:55:31.299515
+Create Date: 2021-06-21 13:03:30.276105
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3d8062560a66'
+revision = '000d9d34b127'
 down_revision = 'ba778ef9c615'
 branch_labels = None
 depends_on = None
@@ -39,7 +39,7 @@ def upgrade():
     op.create_index('idx_task_assigned_by_status_composite', 'task_assignment_history', ['assignee_id', 'is_closed'], unique=False)
     op.create_index('idx_task_assigned_to_status_composite', 'task_assignment_history', ['assigner_id', 'is_closed'], unique=False)
     op.create_index('idx_task_assignment_history_composite', 'task_assignment_history', ['task_id', 'project_id'], unique=False)
-    op.add_column('projects', sa.Column('enforce_assignment', sa.Boolean(), nullable=True))
+    op.add_column('projects', sa.Column('enforce_task_assignment', sa.Boolean(), nullable=True))
     op.drop_index('idx_task_validation_mapper_status_composite', table_name='task_invalidation_history')
     op.create_index('idx_task_validation_mapper_status_composite', 'task_invalidation_history', ['invalidator_id', 'is_closed'], unique=False)
     op.add_column('tasks', sa.Column('assigned_to', sa.BigInteger(), nullable=True))
@@ -53,7 +53,7 @@ def downgrade():
     op.drop_column('tasks', 'assigned_to')
     op.drop_index('idx_task_validation_mapper_status_composite', table_name='task_invalidation_history')
     op.create_index('idx_task_validation_mapper_status_composite', 'task_invalidation_history', ['mapper_id', 'is_closed'], unique=False)
-    op.drop_column('projects', 'enforce_assignment')
+    op.drop_column('projects', 'enforce_task_assignment')
     op.drop_index('idx_task_assignment_history_composite', table_name='task_assignment_history')
     op.drop_index('idx_task_assigned_to_status_composite', table_name='task_assignment_history')
     op.drop_index('idx_task_assigned_by_status_composite', table_name='task_assignment_history')
