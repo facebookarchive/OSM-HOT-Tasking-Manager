@@ -174,7 +174,7 @@ class Project(db.Model):
             Editors.ID.value,
             Editors.JOSM.value,
             Editors.CUSTOM.value,
-            Editors.RAPID.value
+            Editors.RAPID.value,
         ],
         index=True,
         nullable=False,
@@ -185,7 +185,7 @@ class Project(db.Model):
             Editors.ID.value,
             Editors.JOSM.value,
             Editors.CUSTOM.value,
-            Editors.RAPID.value
+            Editors.RAPID.value,
         ],
         index=True,
         nullable=False,
