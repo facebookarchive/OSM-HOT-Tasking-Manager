@@ -76,7 +76,7 @@ export function getIdUrl(project, centroid, zoomLevel, selectedTasks, customUrl)
   const base = customUrl ? formatCustomUrl(customUrl) : `${ID_EDITOR_URL}`;
   let url = base + '#map=' + [zoomLevel, centroid[1], centroid[0]].join('/');
   // the other URL params are only needed by external iD editors
-  if (customUrl !== '?editor=ID' || customUrl !== '?editor=RAPID') {
+  if (!['?editor=ID','?editor=RAPID'].includes(customUrl)) {
     if (project.changesetComment) {
       url += '&comment=' + encodeURIComponent(project.changesetComment);
     }
