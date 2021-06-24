@@ -113,7 +113,7 @@ export default function RapidEditor({ setDisable, comment, presets, imagery, gpx
           }
         });
       }
-    }, [session, iDContext, setDisable, presets, locale, gpxUrl]);
+    }, [session, iDContext, setDisable, presets, locale, gpxUrl, powerUser]);
 
   return <div className="w-100 vh-minus-77-ns" id="id-container"></div>;
 }
