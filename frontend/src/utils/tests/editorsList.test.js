@@ -6,7 +6,7 @@ describe('test getEditors', () => {
       {
         label: 'RapiD',
         value: 'RAPID',
-        url: 'https://mapwith.ai/rapid?',
+        url: 'https://mapwith.ai/rapid',
       },
       {
         label: 'iD Editor',
