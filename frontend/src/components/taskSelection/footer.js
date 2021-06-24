@@ -74,7 +74,7 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
     if (!['JOSM', 'ID', 'RAPID'].includes(editor)) {
       windowObjectReference = window.open(
         '',
-        `TM-${props.project.projectId}-${props.selectedTasks}`,
+        `TM-${project.projectId}-${selectedTasks}`,
       );
     }
     if (['validateSelectedTask', 'validateAnotherTask', 'validateATask'].includes(taskAction)) {

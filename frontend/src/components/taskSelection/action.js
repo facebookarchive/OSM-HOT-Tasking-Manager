@@ -33,7 +33,7 @@ import { ResourcesTab } from './resourcesTab';
 import { ActionTabsNav } from './actionTabsNav';
 
 const Editor = React.lazy(() => import('../editor'));
-const RapEditor = React.lazy(() => import('../rapidEditor'));
+const RapiDEditor = React.lazy(() => import('../rapidEditor'));
 
 export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, action, editor }) {
   useSetProjectPageTitleTag(project);
@@ -166,19 +166,20 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
             >
               {editor === 'ID' ? (
                 <Editor
-                  editorRef={editorRef}
-                  setEditorRef={setEditorRef}
                   setDisable={setDisable}
                   comment={project.changesetComment}
                   presets={project.idPresets}
+                  imagery={formatImageryUrlCallback(project.imagery)}
+                  gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                 />
               ) : (
-                <RapEditor
-                  editorRef={editorRef}
-                  setEditorRef={setEditorRef}
+                <RapiDEditor
                   setDisable={setDisable}
                   comment={project.changesetComment}
                   presets={project.idPresets}
+                  imagery={formatImageryUrlCallback(project.imagery)}
+                  gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
+                  powerUser={project.rapidPowerUser}
                 />
               )}
             </React.Suspense>
@@ -209,7 +210,7 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
               ready={typeof project.projectId === 'number' && project.projectId > 0}
             >
               {(activeEditor === 'ID' || activeEditor === 'RAPID') && (
-                <SidebarToggle setShowSidebar={setShowSidebar} editorRef={editorRef} />
+                <SidebarToggle setShowSidebar={setShowSidebar} />
               )}
               <HeaderLine
                 author={project.author}
