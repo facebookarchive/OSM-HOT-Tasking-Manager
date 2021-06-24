@@ -59,7 +59,6 @@ export const POTLATCH2_EDITOR_URL =
   'https://www.openstreetmap.org/edit?editor=potlatch2';
 export const RAPID_EDITOR_URL =
   process.env.REACT_APP_RAPID_EDITOR_URL || 'https://mapwith.ai/rapid';
-export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 1000000; // bytes
 
 export const TASK_COLOURS = {
   READY: '#fff',
