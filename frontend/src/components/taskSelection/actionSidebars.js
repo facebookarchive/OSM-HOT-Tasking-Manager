@@ -268,7 +268,7 @@ export function CompletionTabForMapping({
       )}
       <div className="cf mv2" data-tip>
         <Button
-          className="bg-red white w-100 fl"
+          className="bg-primary white w-100 fl"
           onClick={() => submitTaskAsync.execute()}
           disabled={
             disabled ||
@@ -492,7 +492,7 @@ export function CompletionTabForValidation({
       )}
       <div className="cf mv3" data-tip>
         <Button
-          className="bg-red white w-100 fl"
+          className="bg-primary white w-100 fl"
           onClick={() => submitTaskAsync.execute()}
           disabled={disabled || !areAllTasksVerified || stopValidationAsync.status === 'pending'}
           loading={submitTaskAsync.status === 'pending'}
@@ -581,7 +581,7 @@ const TaskValidationSelector = ({
           </label>
           <CustomButton
             className={`${
-              showCommentInput ? 'b--red red' : 'b--grey-light blue-dark'
+              showCommentInput ? 'b--primary primary' : 'b--grey-light blue-dark'
             } bg-white ba br1 ml3 pv2 ph3`}
             onClick={() => setShowCommentInput(!showCommentInput)}
             icon={
@@ -631,7 +631,7 @@ const TaskValidationSelector = ({
                     <FormattedMessage {...messages[`copyCommentTo${currentStatus}`]} />
                   </CustomButton>
                   <CustomButton
-                    className="red bn bg-white br1 ml2 ph2 pv2"
+                    className="primary bn bg-white br1 ml2 ph2 pv2"
                     onClick={() => setEnableCopy(false)}
                   >
                     <FormattedMessage {...messages.cancel} />
@@ -668,15 +668,15 @@ function CompletionInstructions({ setVisibility }: Object) {
       </span>
       <div className="blue-grey">
         <p>
-          <CheckCircle className="bg-red white" />
+          <CheckCircle className="bg-primary white" />
           <FormattedMessage {...messages.instructionsSelect} />
         </p>
         <p>
-          <CheckCircle className="bg-red white" />
+          <CheckCircle className="bg-primary white" />
           <FormattedMessage {...messages.instructionsComment} />
         </p>
         <p>
-          <CheckCircle className="bg-red white" />
+          <CheckCircle className="bg-primary white" />
           <FormattedMessage {...messages.instructionsSubmit} />
         </p>
       </div>
@@ -734,7 +734,7 @@ export function SidebarToggle({ setShowSidebar }: Object) {
 export function UnsavedMapChangesModalContent({ close, action }: Object) {
   return (
     <div className="blue-dark bg-white pv2 pv4-ns ph2 ph4-ns tc">
-      <div className="cf tc red pb3">
+      <div className="cf tc primary pb3">
         <AlertIcon height="50px" width="50px" />
       </div>
       <h3 className="barlow-condensed f3 fw6 mv0">
@@ -747,7 +747,7 @@ export function UnsavedMapChangesModalContent({ close, action }: Object) {
           <FormattedMessage {...messages.unsavedChangesToReloadEditor} />
         )}
       </div>
-      <Button className="bg-red white" onClick={() => close()}>
+      <Button className="bg-primary white" onClick={() => close()}>
         <FormattedMessage {...messages.closeModal} />
       </Button>
     </div>
@@ -766,7 +766,7 @@ function TaskSplitErrorModalContent({ close }: Object) {
       <div className="mv4 lh-title">
         <FormattedMessage {...messages.splitTaskErrorDescription} />
       </div>
-      <Button className="bg-red white" onClick={() => close()}>
+      <Button className="bg-primary white" onClick={() => close()}>
         <FormattedMessage {...messages.closeModal} />
       </Button>
     </div>

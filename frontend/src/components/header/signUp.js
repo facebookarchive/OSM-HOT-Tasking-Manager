@@ -23,12 +23,12 @@ const LoginModal = ({ step, login }) => {
         </p>
       </div>
       <div className="mt4 tr">
-        <Button className="bg-red white" onClick={() => login()}>
+        <Button className="bg-primary white" onClick={() => login()}>
           <FormattedMessage {...messages.authorize} />
         </Button>
         <p className="mb0 f6 tr">
           <a
-            className="link pointer red fw5"
+            className="link pointer primary fw5"
             target="_blank"
             rel="noopener noreferrer"
             href={OSM_REGISTER_URL}
@@ -70,10 +70,10 @@ const ProceedOSM = ({ data, step, setStep, login }) => {
         </p>
       </div>
       <div className="mt5 tr">
-        <Button className="bg-red white" onClick={() => NextStep(setStep)}>
+        <Button className="bg-primary white" onClick={() => NextStep(setStep)}>
           <FormattedMessage {...messages.submitProceedOSM} />
         </Button>
-        <p className="tr f6 link pointer red fw5" onClick={() => handleLogin()}>
+        <p className="tr f6 link pointer primary fw5" onClick={() => handleLogin()}>
           <FormattedMessage {...messages.proceedOSMLogin} />
         </p>
       </div>
@@ -173,7 +173,7 @@ const SignupForm = ({ data, setData, step, setStep }) => {
       </div>
       <p className="mb0 f6">
         <a
-          className="link pointer red fw5"
+          className="link pointer primary fw5"
           target="_blank"
           rel="noopener noreferrer"
           href={`http://${ORG_PRIVACY_POLICY_URL}`}
@@ -183,7 +183,7 @@ const SignupForm = ({ data, setData, step, setStep }) => {
       </p>
       <div className="mt3 tr">
         <Button
-          className="bg-red white"
+          className="bg-primary white"
           onClick={() => checkFields()}
           disabled={step.errMessage !== null || !data.name || !data.email}
         >

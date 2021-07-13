@@ -199,8 +199,8 @@ export function CreateTeam() {
               <div className="w-20-l w-40-m w-50 h-100 fr">
                 <FormSubmitButton
                   disabled={submitting || pristine || !values.organisation_id}
-                  className="w-100 h-100 bg-red white"
-                  disabledClassName="bg-red o-50 white w-100 h-100"
+                  className="w-100 h-100 bg-primary white"
+                  disabledClassName="bg-primary o-50 white w-100 h-100"
                 >
                   <FormattedMessage {...messages.createTeam} />
                 </FormSubmitButton>
@@ -456,8 +456,8 @@ export function TeamDetail(props) {
           <div className="w-20-l w-40-m w-50 h-100 fr">
             {isMember ? (
               <CustomButton
-                className="w-100 h-100 bg-red white"
-                disabledClassName="bg-red o-50 white w-100 h-100"
+                className="w-100 h-100 bg-primary white"
+                disabledClassName="bg-primary o-50 white w-100 h-100"
                 onClick={() => leaveTeam()}
               >
                 <FormattedMessage
@@ -467,8 +467,8 @@ export function TeamDetail(props) {
             ) : (
               team.joinMethod !== 'BY_INVITE' && (
                 <CustomButton
-                  className="w-100 h-100 bg-red white"
-                  disabledClassName="bg-red o-50 white w-100 h-100"
+                  className="w-100 h-100 bg-primary white"
+                  disabledClassName="bg-primary o-50 white w-100 h-100"
                   onClick={() => joinTeam()}
                 >
                   <FormattedMessage {...messages.joinTeam} />

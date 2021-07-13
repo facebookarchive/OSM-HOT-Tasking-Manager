@@ -93,7 +93,7 @@ export const ProjectDetailLeft = ({ project, contributors, className, type }: Ob
           <section className="lh-title h-100-ns h5 overflow-x-scroll">
             <div className="pr2 markdown-content" dangerouslySetInnerHTML={htmlShortDescription} />
             <div>
-              <a href="#description" className="link base-font bg-white f6 bn pn red pointer">
+              <a href="#description" className="link base-font bg-white f6 bn pn primary pointer">
                 <span className="pr2 ttu f6 fw6">
                   <FormattedMessage {...messages.readMore} />
                 </span>
@@ -218,7 +218,7 @@ export const ProjectDetail = (props) => {
             <p>
               <FormattedMessage {...messages.createdBy} values={{ user: userLink }} />
             </p>
-            <UserAvatar username={props.project.author} size="large" colorClasses="white bg-red" />
+            <UserAvatar username={props.project.author} size="large" colorClasses="white bg-primary" />
           </>
         )}
       </div>
@@ -235,7 +235,7 @@ export const ProjectDetail = (props) => {
           </h4>
           <PermissionBox
             permission={props.project.mappingPermission}
-            className="dib pv2 ph3 mt2 red"
+            className="dib pv2 ph3 mt2 primary"
           />
           <h4 className="mb2 fw6">
             <FormattedMessage {...messages.whoCanValidate} />
@@ -243,7 +243,7 @@ export const ProjectDetail = (props) => {
           <PermissionBox
             permission={props.project.validationPermission}
             validation
-            className="dib pv2 ph3 mt2 red"
+            className="dib pv2 ph3 mt2 primary"
           />
         </div>
         <div className="w-100 w-70-l fl">
@@ -311,7 +311,7 @@ export const ProjectDetail = (props) => {
           ready={typeof props.project === 'object'}
         >
           <Link to={`/projects/${props.project.projectId}/stats`} className="link pr2">
-            <CustomButton className="bg-red white bn pa3">
+            <CustomButton className="bg-primary white bn pa3">
               <FormattedMessage {...messages.moreStats} />
             </CustomButton>
           </Link>

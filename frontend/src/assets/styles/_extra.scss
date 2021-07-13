@@ -158,23 +158,23 @@ a:active {
 // Custom class
 
 .checkbox:checked + .checkbox-wrapper {
-  background-color: $red; // @extend .bg-green;
+  background-color: $primary; // @extend .bg-green;
 
   .checkbox-toggle {
     left: 2rem; // @extend .left-2;
     background-color: $white; // @extend .bg-moon-gray;
-    border-color: $red;
+    border-color: $primary;
   }
 
   .checkbox-toggle-sm {
     left: 1rem; // @extend .left-1;
     background-color: $white; // @extend .bg-moon-gray;
-    border-color: $red;
+    border-color: $primary;
   }
 }
 
 .checkbox-toggle:hover {
-  border: dashed red !important;
+  border: dashed $primary !important;
 }
 
 .radio-input {
@@ -182,7 +182,7 @@ a:active {
 }
 
 .radio-input:checked {
-  background-color: $red;
+  background-color: $primary;
   border: none;
 }
 
@@ -190,7 +190,7 @@ a:active {
 https://codepen.io/nielsenramon/pen/mLMeLY
  */
 .radiobutton:checked + .radiobutton-wrapper {
-  background-color: $red; // @extend .bg-white;
+  background-color: $primary; // @extend .bg-white;
 
   div {
     border-color: $white; // @extend .b--white;
@@ -213,7 +213,7 @@ https://codepen.io/nielsenramon/pen/mLMeLY
   }
 
   a {
-    color: $red;
+    color: $primary;
     text-decoration: none;
   }
 }
@@ -231,7 +231,7 @@ textarea:disabled {
   position: absolute;
   top: -1px;
   right: 0px;
-  background: $red;
+  background: $primary;
   box-sizing: border-box;
   border-radius: 100%;
   width: 0.6rem;
@@ -250,7 +250,7 @@ p.messageSubjectLinks {
 
   & > a:hover {
     & > a {
-      color: $red;
+      color: $primary;
     }
 
     color: $red;
@@ -265,7 +265,7 @@ p.messageSubjectLinks {
 
 div.messageBodyLinks {
   & > a {
-    color: $red;
+    color: $primary;
     text-decoration: none;
     font-weight: 600;
   }

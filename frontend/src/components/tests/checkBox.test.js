@@ -12,7 +12,7 @@ describe('CheckBox', () => {
       <CheckBox activeItems={selected} toggleFn={setSelected} itemId={1} />,
     );
     expect(screen.getByRole('checkbox').className).toBe(
-      'bg-white w1 h1 ma1 ba bw1 b--red br1 relative pointer ',
+      'bg-white w1 h1 ma1 ba bw1 b--primary br1 relative pointer ',
     );
     expect(container.querySelectorAll('div').length).toBe(1);
     fireEvent.click(screen.getByRole('checkbox'));
@@ -24,7 +24,7 @@ describe('CheckBox', () => {
       <CheckBox activeItems={selected} toggleFn={setSelected} itemId={1} />,
     );
     expect(screen.getByRole('checkbox').className).toBe(
-      'bg-white w1 h1 ma1 ba bw1 b--red br1 relative pointer ',
+      'bg-white w1 h1 ma1 ba bw1 b--primary br1 relative pointer ',
     );
     expect(container.querySelectorAll('div').length).toBe(2);
     fireEvent.click(screen.getByRole('checkbox'));

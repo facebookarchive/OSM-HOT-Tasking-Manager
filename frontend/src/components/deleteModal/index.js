@@ -70,7 +70,7 @@ export function DeleteModal({ id, name, type, className }: Object) {
                   >
                     <FormattedMessage {...messages.cancel} />
                   </Button>
-                  <Button className="bg-red white" onClick={() => deleteEntity()}>
+                  <Button className="bg-primary white" onClick={() => deleteEntity()}>
                     <FormattedMessage {...messages.delete} />
                   </Button>
                 </div>

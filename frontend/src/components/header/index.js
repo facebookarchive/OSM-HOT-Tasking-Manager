@@ -61,7 +61,7 @@ function getMenuItensForUser(userDetails, organisations) {
 const UserDisplay = ({ username }) => {
   return (
     <span>
-      <CurrentUserAvatar className="br-100 v-mid red h2 w2 dib" />
+      <CurrentUserAvatar className="br-100 v-mid primary h2 w2 dib" />
       <span className="pl2 mw5 dib v-mid truncate">{username}</span>
     </span>
   );
@@ -154,7 +154,7 @@ const PopupItems = (props) => {
       ) : (
         <div>
           <AuthButtons
-            logInStyle="bg-red white"
+            logInStyle="bg-primary white"
             signUpStyle="bg-blue-dark white mh1 mv2 dib"
             redirectTo={props.location.pathname}
           />
@@ -260,14 +260,14 @@ class Header extends React.Component {
         <UpdateDialog />
         {this.checkUserEmail()}
         {this.props.showOrgBar && (
-          <div className="cf ph2 red pt3 pb2 bb b--grey-light">
+          <div className="cf ph2 primary pt3 pb2 bb b--grey-light">
             <div className="fl w-50">
               <span className="barlow-condensed f5 ml2 ">
                 <FormattedMessage {...messages.slogan} />
               </span>
             </div>
-            <div className="tr red">
-              <a className="link red f6 mr2" href={`http://${ORG_URL}`}>
+            <div className="tr primary">
+              <a className="link primary f6 mr2" href={`http://${ORG_URL}`}>
                 {ORG_URL}
                 <ExternalLinkIcon className="pl2 v-btm" style={{ height: '15px' }} />
               </a>

@@ -35,7 +35,7 @@ export function AnotherProjectLock({ projectId, lockedTasksLength, action }: Obj
         />
       </div>
       <Link to={`/projects/${projectId}/${action}/`} state={{ directedFrom: location.pathname }}>
-        <Button className="bg-red white">
+        <Button className="bg-primary white">
           <FormattedMessage {...messages.goToProject} values={{ project: projectId }} />
         </Button>
       </Link>
@@ -60,7 +60,7 @@ export function SameProjectLock({ lockedTasks, action }: Object) {
         />
       </div>
       <Button
-        className="bg-red white"
+        className="bg-primary white"
         onClick={() => navigate(`/projects/${lockedTasks.project}/${action}/`)}
       >
         <FormattedMessage
@@ -106,7 +106,7 @@ export const LicenseError = ({ id, close, lockTasks }) => {
             <Button onClick={() => close()} className="blue-dark bg-white mr2">
               <FormattedMessage {...messages.cancel} />
             </Button>
-            <Button onClick={() => AcceptLicense()} className="white bg-red">
+            <Button onClick={() => AcceptLicense()} className="white bg-primary">
               <FormattedMessage {...messages.acceptLicense} />
             </Button>
           </div>
@@ -134,7 +134,7 @@ export function LockError({ error, close }) {
         )}
       </div>
       <div className="w-100 pt3">
-        <Button onClick={() => close()} className="bg-red white mr2">
+        <Button onClick={() => close()} className="bg-primary white mr2">
           <FormattedMessage {...messages.closeModal} />
         </Button>
       </div>

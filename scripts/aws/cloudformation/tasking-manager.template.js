@@ -56,7 +56,7 @@ const Parameters = {
   DatabaseParameterGroupName: {
     Description: 'Name of the customized parameter group for the database',
     Type: 'String',
-    Default: 'tm3-logging-postgres11'
+    Default: 'tm4-logging-postgres11'
   },
   DatabaseSnapshotRetentionPeriod: {
     Description: 'Retention period for automatic (scheduled) snapshots in days',
@@ -67,7 +67,11 @@ const Parameters = {
     Description: 'ELB subnets',
     Type: 'String'
   },
-  SSLCertificateIdentifier: {
+  CloudfrontSSLCertificateIdentifier: {
+    Type: 'String',
+    Description: 'SSL certificate for HTTPS protocol used for Cloudfront (must be in us-east-1)'
+  },
+  LoadBalancerSSLCertificateIdentifier: {
     Type: 'String',
     Description: 'SSL certificate for HTTPS protocol'
   },
@@ -179,6 +183,7 @@ const Conditions = {
   DatabaseDumpFileGiven: cf.notEquals(cf.ref('DatabaseDump'), ''),
   IsTaskingManagerProduction: cf.equals(cf.ref('AutoscalingPolicy'), 'production'),
   IsTaskingManagerDemo: cf.equals(cf.ref('AutoscalingPolicy'), 'Demo (max 3)'),
+  IsTaskingManagerDevelopment: cf.equals(cf.ref('AutoscalingPolicy'), 'development'),
   IsHOTOSMUrl: cf.equals(
     cf.select('1', cf.split('.', cf.ref('TaskingManagerURL')))
     , 'hotosm')
@@ -198,7 +203,7 @@ const Resources = {
       LaunchConfigurationName: cf.ref('TaskingManagerLaunchConfiguration'),
       TargetGroupARNs: [ cf.ref('TaskingManagerTargetGroup') ],
       HealthCheckType: 'EC2',
-      AvailabilityZones: ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1f'],
+      AvailabilityZones: ['us-west-1a', 'us-west-1b'],
       Tags: [{
         Key: 'Name',
         PropagateAtLaunch: true,
@@ -207,9 +212,9 @@ const Resources = {
     },
     UpdatePolicy: {
       AutoScalingRollingUpdate: {
-        PauseTime: 'PT60M',
+        PauseTime: cf.if('IsTaskingManagerDevelopment', 'PT0S', 'PT60M'),
         MaxBatchSize: 2,
-        WaitOnResourceSignals: true
+        WaitOnResourceSignals: cf.if('IsTaskingManagerDevelopment', false, true)
       }
     }
   },
@@ -352,9 +357,9 @@ const Resources = {
     },
     Properties: {
       IamInstanceProfile: cf.ref('TaskingManagerEC2InstanceProfile'),
-      ImageId: 'ami-00fa576fb10a52a1c',
+      ImageId: 'ami-066c6938fb715719f',
       InstanceType: 'c5d.large',
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
         'set -x',
@@ -385,8 +390,8 @@ const Resources = {
         'sudo apt-get -y install git',
         'sudo apt-get -y install awscli',
         'sudo apt-get -y install ruby',
-        'git clone --recursive https://github.com/hotosm/tasking-manager.git',
-        'cd tasking-manager/',
+        'git clone --recursive https://github.com/facebookincubator/OSM-HOT-Tasking-Manager.git',
+        'cd OSM-HOT-Tasking-Manager/',
         cf.sub('git reset --hard ${GitSha}'),
         'python3 -m venv ./venv',
         '. ./venv/bin/activate',
@@ -443,7 +448,7 @@ const Resources = {
         cf.sub('sudo /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource TaskingManagerLaunchConfiguration --region ${AWS::Region} --configsets default'),
         cf.sub('/opt/aws/bin/cfn-signal --exit-code $? --region ${AWS::Region} --resource TaskingManagerASG --stack ${AWS::StackName}')
       ]),
-      KeyName: 'mbtiles'
+      KeyName: 'tm4'
     }
   },
   TaskingManagerEC2Role: {
@@ -568,17 +573,17 @@ const Resources = {
     }
   },
   TaskingManagerEC2InstanceProfile: {
-     Type: "AWS::IAM::InstanceProfile",
-     Properties: {
-        Roles: cf.if('DatabaseDumpFileGiven', [cf.ref('TaskingManagerDatabaseDumpAccessRole')], [cf.ref('TaskingManagerEC2Role')]),
-        InstanceProfileName: cf.join('-', [cf.stackName, 'ec2', 'instance', 'profile'])
-     }
+    Type: "AWS::IAM::InstanceProfile",
+    Properties: {
+      Roles: cf.if('DatabaseDumpFileGiven', [cf.ref('TaskingManagerDatabaseDumpAccessRole')], [cf.ref('TaskingManagerEC2Role')]),
+      InstanceProfileName: cf.join('-', [cf.stackName, 'ec2', 'instance', 'profile'])
+    }
   },
   TaskingManagerLoadBalancer: {
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer',
     Properties: {
       Name: cf.stackName,
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
       Subnets: cf.split(',', cf.ref('ELBSubnets')),
       Type: 'application'
     }
@@ -586,13 +591,13 @@ const Resources = {
   TaskingManagerLoadBalancerRoute53: {
     Type: 'AWS::Route53::RecordSet',
     Properties: {
-      Name: cf.join('-', [cf.stackName, 'api.hotosm.org']),
+      Name: cf.join('-', [cf.stackName, 'api.mapwith.ai']),
       Type: 'A',
       AliasTarget: {
         DNSName: cf.getAtt('TaskingManagerLoadBalancer', 'DNSName'),
         HostedZoneId: cf.getAtt('TaskingManagerLoadBalancer', 'CanonicalHostedZoneID')
       },
-      HostedZoneId: 'Z2O929GW6VWG99',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   },
   TaskingManagerTargetGroup: {
@@ -607,8 +612,8 @@ const Resources = {
       HealthCheckPath: '/api/v2/system/heartbeat/',
       Port: 8000,
       Protocol: 'HTTP',
-      VpcId: cf.importValue(cf.join('-', ['hotosm-network-production', 'default-vpc', cf.region])),
-      Tags: [ { "Key": "stack_name", "Value": cf.stackName } ],
+      VpcId: cf.importValue(cf.join('-', ['mapwithai-network-production', 'default-vpc', cf.region])),
+      Tags: [{ "Key": "stack_name", "Value": cf.stackName }],
       Matcher: {
         HttpCode: '200,202,302,304'
       }
@@ -617,8 +622,8 @@ const Resources = {
   TaskingManagerLoadBalancerHTTPSListener: {
     Type: 'AWS::ElasticLoadBalancingV2::Listener',
     Properties: {
-      Certificates: [ {
-        CertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier'))
+      Certificates: [{
+        CertificateArn: cf.arn('acm', cf.join('/', ['certificate', cf.ref('LoadBalancerSSLCertificateIdentifier')]))
       }],
       DefaultActions: [{
         Type: 'forward',
@@ -665,9 +670,9 @@ const Resources = {
         StorageType: 'gp2',
         DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
         EnableCloudwatchLogsExports: ['postgresql'],
-        DBInstanceClass: cf.ref('DatabaseInstanceType'),
+        DBInstanceClass: cf.if('IsTaskingManagerProduction', cf.ref('DatabaseInstanceType'), 'db.t2.small'),
         DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
-        VPCSecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+        VPCSecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
     }
   },
   TaskingManagerReactBucket: {
@@ -690,16 +695,16 @@ const Resources = {
   TaskingManagerReactBucketPolicy: {
     Type: 'AWS::S3::BucketPolicy',
     Properties: {
-      Bucket : cf.ref('TaskingManagerReactBucket'),
+      Bucket: cf.ref('TaskingManagerReactBucket'),
       PolicyDocument: {
         Version: "2012-10-17",
-        Statement:[{
-          Action: [ 's3:GetObject'],
+        Statement: [{
+          Action: ['s3:GetObject'],
           Effect: 'Allow',
           Principal: '*',
-          Resource: [ cf.join('',
+          Resource: [cf.join('',
             [
-              cf.getAtt('TaskingManagerReactBucket', 'Arn'), 
+              cf.getAtt('TaskingManagerReactBucket', 'Arn'),
               '/*'
             ]
           )],
@@ -725,12 +730,12 @@ const Resources = {
           }
         }],
         CustomErrorResponses: [{
-          ErrorCachingMinTTL : 0,
+          ErrorCachingMinTTL: 0,
           ErrorCode: 403,
           ResponseCode: 200,
           ResponsePagePath: '/index.html'
-        },{
-          ErrorCachingMinTTL : 0,
+        }, {
+          ErrorCachingMinTTL: 0,
           ErrorCode: 404,
           ResponseCode: 200,
           ResponsePagePath: '/index.html'
@@ -750,7 +755,16 @@ const Resources = {
           ViewerProtocolPolicy: "redirect-to-https"
         },
         ViewerCertificate: {
-          AcmCertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier')),
+          // This one has to be handled specially because a cert for a Cloudfront certificate
+          // MUST be imported to the us-east-1 region regardless of where the rest of the stack lives
+          AcmCertificateArn: cf.sub(
+            'arn:${AWS::Partition}:${service}:${region}:${AWS::AccountId}:certificate/${suffix}',
+            {
+              'service': 'acm',
+              'suffix': cf.ref('CloudfrontSSLCertificateIdentifier'),
+              'region': 'us-east-1',
+            }
+          ),
           MinimumProtocolVersion: 'TLSv1.2_2018',
           SslSupportMethod: 'sni-only'
         }
@@ -759,7 +773,7 @@ const Resources = {
   },
   TaskingManagerRoute53: {
     Type: 'AWS::Route53::RecordSet',
-    Condition: 'IsHOTOSMUrl',
+    // Condition: 'IsHOTOSMUrl',
     Properties: {
       Name: cf.ref('TaskingManagerURL'),
       Type: 'A',
@@ -767,7 +781,7 @@ const Resources = {
         DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
         HostedZoneId: 'Z2FDTNDATAQYW2'
       },
-      HostedZoneId: 'Z2O929GW6VWG99',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   }
 };

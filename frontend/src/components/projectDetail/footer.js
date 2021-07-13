@@ -55,7 +55,7 @@ export const ProjectDetailFooter = (props) => {
         )}
         <div className="dib w-40 tr fr">
           <Link to={`./tasks`} className="">
-            <Button className="white bg-red h3 w-100">
+            <Button className="white bg-primary h3 w-100">
               <FormattedMessage {...messages.contribute} />
             </Button>
           </Link>
