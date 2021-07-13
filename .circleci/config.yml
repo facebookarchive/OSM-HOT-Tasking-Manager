@@ -232,7 +232,7 @@ workflows:
             only:
             - develop
             - staging-test
-	    - mapwithai-cloudformation
+            - mapwithai-cloudformation
         requires:
           - build
         stack_name: "staging"
@@ -245,7 +245,7 @@ workflows:
             only:
             - develop
             - staging-test
-	    - mapwithai-cloudformation
+            - mapwithai-cloudformation
         requires:
           - build
         context: tasking-manager-staging
