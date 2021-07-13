@@ -17,7 +17,7 @@ import { formatOverpassLink } from '../../utils/overpassLink';
 import { pushToLocalJSONAPI, fetchLocalJSONAPI } from '../../network/genericJSONRequest';
 import { CurrentUserAvatar, UserAvatar } from '../user/avatar';
 import { CloseIcon } from '../svgIcons';
-import { ID_EDITOR_URL } from '../../config';
+import { ID_EDITOR_URL, RAPID_EDITOR_URL } from '../../config';
 import { Button, CustomButton } from '../button';
 import { Dropdown } from '../dropdown';
 import { CommentInputField } from '../comments/commentInput';
@@ -57,7 +57,7 @@ const PostComment = ({ projectId, taskId, contributors, setCommentPayload }) => 
         />
       </div>
       <div className="w-20 fr pt3 tr">
-        <Button onClick={() => saveComment()} className="bg-red white f6">
+        <Button onClick={() => saveComment()} className="bg-primary white f6">
           <FormattedMessage {...messages.comment} />
         </Button>
       </div>
@@ -363,6 +363,17 @@ export const TaskActivity = ({
 
 function EditorDropdown({ project, taskId, bbox }: Object) {
   const loadTaskOnEditor = (arr) => {
+    if (arr[0].value === 'RAPID') {
+      let windowObjectReference = window.open('', `RapiD-${project.projectId}-${taskId}`);
+      const { center, zoom } = viewport(bbox, [window.innerWidth, window.innerHeight]);
+      windowObjectReference.location.href = getIdUrl(
+        project,
+        center,
+        zoom,
+        [taskId],
+        RAPID_EDITOR_URL,
+      );
+    }
     if (arr[0].value === 'ID') {
       let windowObjectReference = window.open('', `iD-${project.projectId}-${taskId}`);
       const { center, zoom } = viewport(bbox, [window.innerWidth, window.innerHeight]);
@@ -382,6 +393,7 @@ function EditorDropdown({ project, taskId, bbox }: Object) {
   return (
     <Dropdown
       options={[
+        { label: 'RapiD', value: 'RAPID' },
         { label: 'iD Editor', value: 'ID' },
         { label: 'JOSM', value: 'JOSM' },
       ]}
@@ -414,7 +426,7 @@ function UndoLastTaskAction({ status, resetFn }: Object) {
             <FormattedMessage {...messages.no} />
           </CustomButton>
           <CustomButton
-            className="mh1 dib link ph3 f6 pv2 bg-red white ba b--red"
+            className="mh1 dib link ph3 f6 pv2 bg-primary white ba b--primary"
             onClick={() => {
               resetFn();
               setShowConfirmation(false);
@@ -425,7 +437,7 @@ function UndoLastTaskAction({ status, resetFn }: Object) {
         </>
       ) : (
         <CustomButton
-          className="mh1 link ph3 f6 pv2 bg-red white ba b--red"
+          className="mh1 link ph3 f6 pv2 bg-primary white ba b--primary"
           onClick={() => setShowConfirmation(true)}
         >
           <FormattedMessage {...messages[`revert${status}`]} />

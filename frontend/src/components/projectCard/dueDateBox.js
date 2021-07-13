@@ -40,7 +40,7 @@ export function DueDateBox({ dueDate, intervalMili, align = 'right', tooltipMsg 
             align === 'right' ? 'fr' : 'fl'
           } ${
             milliDifference < 60000 * 20 && intervalMili !== undefined
-              ? 'bg-red white fw6'
+              ? 'bg-primary white fw6'
               : 'bg-grey-light blue-grey'
           } ${intervalMili ? '' : 'mw4'}`}
           data-tip={tooltipMsg}
