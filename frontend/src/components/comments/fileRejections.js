@@ -5,7 +5,7 @@ const FileRejections = ({ files }: Object) => {
   return (
     <ul>
       {files.map(({ file, errors }) => (
-        <li key={file.path} className="red">
+        <li key={file.path} className="primary">
           {file.path} (
           {errors.map((e) => (
             <span key={e.code} className="dib pr2">

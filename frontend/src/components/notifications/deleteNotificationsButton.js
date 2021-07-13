@@ -34,7 +34,7 @@ export const DeleteNotificationsButton = ({
   return (
     <div className="pl2 dib">
       {selected.length ? (
-        <Button onClick={() => deleteMessages(selected)} className="bg-red white" disabled={!token}>
+        <Button onClick={() => deleteMessages(selected)} className="bg-primary white" disabled={!token}>
           <WasteIcon className="w1 h1 pr2 v-mid white" />
           <FormattedMessage {...messages.delete} />
         </Button>

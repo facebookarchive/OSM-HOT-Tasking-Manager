@@ -79,7 +79,7 @@ class DropdownContent extends React.PureComponent {
               i.internalLink ? (
                 <>
                   {i.label}
-                  {this.isActive(i) && <CheckIcon className="red pl4" />}
+                  {this.isActive(i) && <CheckIcon className="primary pl4" />}
                 </>
               ) : (
                 <a
@@ -90,14 +90,14 @@ class DropdownContent extends React.PureComponent {
                   className="link blue-grey"
                 >
                   {i.label}
-                  {this.isActive(i) && <CheckIcon className="red pl4" />}
+                  {this.isActive(i) && <CheckIcon className="primary pl4" />}
                 </a>
               )
             ) : (
               <span onClick={this.props.toggleDropdown}>
                 {i.label}
                 {this.isActive(i) && (
-                  <span className="red pl4">
+                  <span className="primary pl4">
                     <CheckIcon />
                   </span>
                 )}

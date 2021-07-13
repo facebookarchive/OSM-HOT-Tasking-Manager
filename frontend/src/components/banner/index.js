@@ -35,7 +35,7 @@ export function Banner() {
   const privacyPolicyLink = (
     <a
       href={`https://${ORG_PRIVACY_POLICY_URL}`}
-      className="red underline link fw6"
+      className="primary underline link fw6"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -52,7 +52,7 @@ export function Banner() {
         <p>
           <a
             id="privlink"
-            className="red link f4 fw6"
+            className="primary link f4 fw6"
             href={`https://${ORG_PRIVACY_POLICY_URL}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -64,10 +64,10 @@ export function Banner() {
           <FormattedMessage {...messages.bannerText} values={{ link: privacyPolicyLink }} />
         </p>
         <div id="optout-buttons">
-          <div className="white bg-red pv2 ph3 mh1 br1 dib fw6 pointer" id="optout-disagree">
+          <div className="white bg-primary pv2 ph3 mh1 br1 dib fw6 pointer" id="optout-disagree">
             <FormattedMessage {...messages.disagree} />
           </div>
-          <div className="white bg-red pv2 ph3 mh1 br1 dib fw6 pointer" id="optout-agree">
+          <div className="white bg-primary pv2 ph3 mh1 br1 dib fw6 pointer" id="optout-agree">
             <FormattedMessage {...messages.agree} />
           </div>
         </div>
@@ -102,7 +102,7 @@ export function DonationBanner() {
         <p>
           <a
             id="privlink"
-            className="red link f4 fw6"
+            className="primary link f4 fw6"
             href={`http://bit.ly/HOTSummit2021`}
             target="_blank"
             rel="noopener noreferrer"
@@ -112,7 +112,7 @@ export function DonationBanner() {
         </p>
         <p>Join the virtual HOT Summit 2021 on November 22! All are invited; RSVP for free.</p>
         <div id="donation-buttons">
-          <div className="white bg-red pv2 ph3 mh1 br1 dib fw6 pointer" id="donation-close">
+          <div className="white bg-primary pv2 ph3 mh1 br1 dib fw6 pointer" id="donation-close">
             Close
           </div>
         </div>
@@ -156,7 +156,7 @@ export function ArchivalNotificationBanner() {
         <p>
           <a
             id="privlink"
-            className="red link f4 fw6"
+            className="primary link f4 fw6"
             href={
               'https://wiki.openstreetmap.org/wiki/Humanitarian_OSM_Team/Working_groups/Data_Quality_Control_and_Assurance/Tasking_Manager_Project_Gardening'
             }
@@ -171,13 +171,13 @@ export function ArchivalNotificationBanner() {
         </p>
         <div id="archival-notification-buttons">
           <div
-            className="white bg-red pv2 ph3 mh1 br1 dib fw6 pointer"
+            className="white bg-primary pv2 ph3 mh1 br1 dib fw6 pointer"
             id="archival-notification-learnmore"
           >
             <FormattedMessage {...messages.learnMore} />
           </div>
           <div
-            className="white bg-red pv2 ph3 mh1 br1 dib fw6 pointer"
+            className="white bg-primary pv2 ph3 mh1 br1 dib fw6 pointer"
             id="archival-notification-close"
           >
             <FormattedMessage {...messages.close} />

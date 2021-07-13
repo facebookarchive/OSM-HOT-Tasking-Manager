@@ -93,7 +93,7 @@ export const ProjectNav = (props) => {
     fullProjectsQuery.types;
   const filterIsEmpty = !stringify(fullProjectsQuery);
   const moreFiltersCurrentActiveStyle = moreFiltersAnyActive
-    ? 'bg-red white'
+    ? 'bg-primary white'
     : 'bg-white blue-dark';
   const filterRouteToggled =
     props.location.pathname.indexOf('filters') > -1

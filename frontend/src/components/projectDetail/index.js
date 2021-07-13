@@ -104,7 +104,7 @@ export const ProjectDetailLeft = ({ project, contributors, className, type }: Ob
             dangerouslySetInnerHTML={htmlShortDescription}
           />
           <div>
-            <a href="#description" className="link base-font bg-white f6 bn pn red pointer">
+            <a href="#description" className="link base-font bg-white f6 bn pn primary pointer">
               <span className="pr2 ttu f6 fw6">
                 <FormattedMessage {...messages.readMore} />
               </span>
@@ -220,7 +220,7 @@ export const ProjectDetail = (props) => {
             <p>
               <FormattedMessage {...messages.createdBy} values={{ user: userLink }} />
             </p>
-            <UserAvatar username={props.project.author} size="large" colorClasses="white bg-red" />
+            <UserAvatar username={props.project.author} size="large" colorClasses="white bg-primary" />
           </>
         )}
       </div>
@@ -238,7 +238,7 @@ export const ProjectDetail = (props) => {
             </h4>
             <PermissionBox
               permission={props.project.mappingPermission}
-              className="dib pv2 ph3 red"
+              className="dib pv2 ph3 primary"
             />
           </div>
           <div className="w-100 w-30-l">
@@ -248,7 +248,7 @@ export const ProjectDetail = (props) => {
             <PermissionBox
               permission={props.project.validationPermission}
               validation
-              className="dib pv2 ph3 red"
+              className="dib pv2 ph3 primary"
             />
           </div>
         </div>
@@ -317,7 +317,7 @@ export const ProjectDetail = (props) => {
         >
           <div className="flex gap-1 nowrap flex-wrap">
             <Link to={`/projects/${props.project.projectId}/stats`} className="link">
-              <CustomButton className="bg-red white bn pa3">
+              <CustomButton className="bg-primary white bn pa3">
                 <FormattedMessage {...messages.moreStats} />
               </CustomButton>
             </Link>

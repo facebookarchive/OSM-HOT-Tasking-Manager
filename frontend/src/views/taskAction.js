@@ -70,7 +70,10 @@ export function TaskAction({ project, action }: Object) {
               values={{ currentProject: project }}
             />
           </p>
-          <Button className="bg-red white" onClick={() => navigate(`/projects/${project}/tasks/`)}>
+          <Button
+            className="bg-primary white"
+            onClick={() => navigate(`/projects/${project}/tasks/`)}
+          >
             <FormattedMessage {...messages.goToProjectButton} values={{ project: project }} />
           </Button>
         </div>

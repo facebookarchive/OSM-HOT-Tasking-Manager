@@ -35,8 +35,8 @@ export const ProjectSearchBox = ({
   );
 
   const isFocusMobile = isMobile && isFocus;
-  const iconStyleForInputtedText = !fullProjectsQuery[searchField] ? 'blue-grey' : 'red';
-  const clearIconStyleForInputtedText = !fullProjectsQuery[searchField] ? 'dn' : 'red dib-ns';
+  const iconStyleForInputtedText = !fullProjectsQuery[searchField] ? 'blue-grey' : 'primary';
+  const clearIconStyleForInputtedText = !fullProjectsQuery[searchField] ? 'dn' : 'primary dib-ns';
 
   return (
     <nav ref={navRef} className={`${className || ''} mt1 mt2-ns`}>
