@@ -16,7 +16,7 @@ function JumbotronButtons() {
   return (
     <p>
       <Link to={'explore'}>
-        <Button className="bg-red white mr3">
+        <Button className="bg-primary white mr3">
           <FormattedMessage {...messages.startButton} />
         </Button>
       </Link>

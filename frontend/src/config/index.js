@@ -5,7 +5,7 @@ export const API_URL = process.env.REACT_APP_API_URL
   : 'http://127.0.0.1:5000/api/' + API_VERSION + '/';
 export const HOMEPAGE_STATS_API_URL =
   process.env.REACT_APP_HOMEPAGE_STATS_API_URL ||
-  'https://osmstats-api.hotosm.org/wildcard/?key=hotosm-project-*';
+  'https://osmstats-api.hotosm.org/wildcard/?key=mapwithai-project-*';
 export const USER_STATS_API_URL =
   process.env.REACT_APP_USER_STATS_API_URL ||
   'https://osm-stats-production-api.azurewebsites.net/users/';
@@ -75,6 +75,8 @@ export const CHART_COLOURS = {
   blue: '#3389D6',
   orange: '#f09733',
   white: '#fff',
+  magenta: '#da26d3',
+  navy: '#101d4b',
 };
 
 const fallbackRasterStyle = {

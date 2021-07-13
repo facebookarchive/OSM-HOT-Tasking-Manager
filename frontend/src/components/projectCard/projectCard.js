@@ -77,7 +77,7 @@ export function ProjectCard({
       >
         <FormattedMessage {...messages.editProject} />
       </Link>
-      <Link to={`/projects/${projectId}/tasks`} className={`fr bg-red white bn ${linkCombo}`}>
+      <Link to={`/projects/${projectId}/tasks`} className={`fr bg-primary white bn ${linkCombo}`}>
         <FormattedMessage {...messages.projectTasks} />
       </Link>
     </div>
@@ -104,7 +104,7 @@ export function ProjectCard({
                 />
               )}
             </div>
-            <div className="w-60 cf pr1 red dib">
+            <div className="w-60 cf pr1 primary dib">
               <img
                 className="h2 pa1"
                 src={organisationLogo}

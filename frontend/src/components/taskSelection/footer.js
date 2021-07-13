@@ -212,7 +212,7 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
       </div>
       <div className="w-30-ns w-60 fl tr">
         <div className="mt3">
-          <Button className="white bg-red" onClick={() => lockTasks()} loading={isPending}>
+          <Button className="white bg-primary" onClick={() => lockTasks()} loading={isPending}>
             {['selectAnotherProject', 'mappingIsComplete', 'projectIsComplete'].includes(
               taskAction,
             ) ? (
