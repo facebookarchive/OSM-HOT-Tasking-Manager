@@ -37,7 +37,7 @@ export const InboxNavMini = (props) => {
                 props.setPopoutFocus(false);
               }}
             >
-              <div className="dib fr br2 core-font b--white ba bg-red grey-light f7 mv3 pa2">
+              <div className="dib fr br2 core-font b--white ba bg-primary grey-light f7 mv3 pa2">
                 {props.newMsgCount === 1 ? (
                   <FormattedMessage {...messages.oneNewNotification} />
                 ) : (
@@ -59,7 +59,7 @@ export const InboxNavMiniBottom = (props) => {
     /* mb1 mb2-ns (removed for map, but now small gap for more-filters) */
     <footer className={`relative h2 w-100 ${props.className || ''}`}>
       <Link
-        className="absolute hover-darken tc pv2 w-100 b--grey-light ba bg-red white f6 no-underline"
+        className="absolute hover-darken tc pv2 w-100 b--grey-light ba bg-primary white f6 no-underline"
         to="/inbox"
         onClick={(e) => {
           props.setPopoutFocus(false);
@@ -112,7 +112,7 @@ export const InboxNav = (props) => {
               allQueryParams={inboxQuery}
             />
             {!notAnyFilter && (
-              <Link to="./" className="red link ph3 f6 v-mid pv2 mh1 mt1 mt2-ns dib">
+              <Link to="./" className="primary link ph3 f6 v-mid pv2 mh1 mt1 mt2-ns dib">
                 <FormattedMessage {...messages.clearFilters} />
               </Link>
             )}

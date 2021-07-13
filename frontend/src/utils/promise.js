@@ -3,8 +3,8 @@ export function cancelablePromise(promise: Promise<*>) {
 
   const wrappedPromise = new Promise((resolve, reject) => {
     promise
-      .then(val => (hasCanceled_ ? reject({ isCanceled: true }) : resolve(val)))
-      .catch(error => (hasCanceled_ ? reject({ isCanceled: true }) : reject(error)));
+      .then((val) => (hasCanceled_ ? reject({ isCanceled: true }) : resolve(val)))
+      .catch((error) => (hasCanceled_ ? reject({ isCanceled: true }) : reject(error)));
   });
   return {
     promise: wrappedPromise,
@@ -31,12 +31,12 @@ export function cancelableFetchJSON(url: string) {
   return cancelablePromise(
     fetch(url)
       .then(handleErrors)
-      .then(res => {
+      .then((res) => {
         return res.json();
       }),
   );
 }
 
 export function delayPromise(interval: number): { promise: Promise<*>, cancel: () => any } {
-  return cancelablePromise(new Promise(res => setTimeout(res, interval)));
+  return cancelablePromise(new Promise((res) => setTimeout(res, interval)));
 }

@@ -14,7 +14,7 @@ function contactCard() {
       <div className="tc cf mb2">
         <p>
           <Link to={'/contact'}>
-            <Button className="w-100 w-40-m fl tc bg-red white">
+            <Button className="w-100 w-40-m fl tc bg-primary white">
               <FormattedMessage {...messages.organizationContactButton} />
             </Button>
           </Link>
@@ -37,7 +37,7 @@ export function WhoIsMapping() {
     <div className="cf v-mid bg-split-blue-white">
       <div className="ph6-l ph4 pt3 pb5 white cf">
         <div className="cf fl w-100">
-          <h3 className="bg-red dib pv1 ph2 f2 fw8 tc lh-copy white ttu barlow-condensed">
+          <h3 className="bg-primary dib pv1 ph2 f2 fw8 tc lh-copy white ttu barlow-condensed">
             <FormattedMessage {...messages.whoIsMappingTitle} />
           </h3>
         </div>

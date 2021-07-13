@@ -79,7 +79,7 @@ export function MessageMembers({ teamId }: Object) {
           </div>
           <div className="w-30-l w-50 fr dib">
             <Button
-              className="white bg-red h3 w-100"
+              className="white bg-primary h3 w-100"
               onClick={() => sendMessage()}
               disabled={!message || !subject}
             >

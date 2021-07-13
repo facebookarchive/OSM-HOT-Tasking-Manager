@@ -45,7 +45,7 @@ describe('test DueDate', () => {
       </ReduxIntlProviders>,
     );
     expect(container.querySelectorAll('span')[0].className).toContain('fr');
-    expect(container.querySelectorAll('span')[0].className).toContain('bg-red white fw6');
+    expect(container.querySelectorAll('span')[0].className).toContain('bg-primary white fw6');
     expect(container.querySelectorAll('span')[0].className).not.toContain('fl');
     expect(container.querySelectorAll('span')[0].className).not.toContain(
       'bg-grey-light blue-grey',
