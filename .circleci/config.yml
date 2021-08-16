@@ -113,13 +113,13 @@ jobs:
         name: Get RDS Instance ID
         command: |
           chmod +x .circleci/rdsid.sh
-          RDS_ID=$(./.circleci/rdsid.sh '{"aws:cloudformation:stack-name": "tasking-manager-<< parameters.stack_name >>"}')
+          RDS_ID=$(./.circleci/rdsid.sh '{"aws:cloudformation:stack-name": "tm4-<< parameters.stack_name >>"}')
           echo "export RDS_ID=$RDS_ID" >> $BASH_ENV
     - run:
         name: Remove last snapshot and backup database
         no_output_timeout: 15m
         command: |
-          DESCRIBE_SNAPSHOT=$(aws rds describe-db-snapshots --db-snapshot-identifier tm3-<< parameters.stack_name >>-$RDS_ID-latest --db-instance-identifier $RDS_ID --output text)
+          DESCRIBE_SNAPSHOT=$(aws rds describe-db-snapshots --db-snapshot-identifier tm4-<< parameters.stack_name >>-$RDS_ID-latest --db-instance-identifier $RDS_ID --output text)
           NONCE=$(openssl rand -hex 4)
           echo "export NONCE=$NONCE" >> $BASH_ENV
           # Copy old snapshot to temporary
@@ -148,14 +148,14 @@ jobs:
         name: Download config file
         command: |
           export GITSHA=<< parameters.gitsha >>
-          aws s3 cp s3://hot-cfn-config/tasking-manager/tasking-manager-<< parameters.stack_name >>-${AWS_REGION}.cfn.json - | jq -c --arg GITSHA "$GITSHA" '.GitSha = $GITSHA' > $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json
+          aws s3 cp s3://mapwithai-cfn-config/tasking-manager/tasking-manager-<< parameters.stack_name >>-${AWS_REGION}.cfn.json - | jq -c --arg GITSHA "$GITSHA" '.GitSha = $GITSHA' > $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json
     - deploy:
         name: Deploy to << parameters.stack_name >>
         command: |
           export NODE_PATH=/usr/local/share/.config/yarn/global/node_modules/
           validate-template $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js
           export JSON_CONFIG="$(cat $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json)"
-          cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c hot-cfn-config -t hot-cfn-config -r $AWS_REGION -p "$JSON_CONFIG"
+          cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c mapwithai-cfn-config -t mapwithai-cfn-config -r $AWS_REGION -p "$JSON_CONFIG"
     - run:
         name: Cleanup
         when: always

@@ -1,4 +1,4 @@
-const cf = require('@mapbox/cloudfriend');
+const cf = require('/usr/local/lib/node_modules/@mapbox/cloudfriend');
 
 const Parameters = {
   GitSha: {
@@ -22,10 +22,10 @@ const Parameters = {
     Type: 'String',
     Description: 'Path to database dump on S3; Ex: s3://my-bkt/tm.sql'
   },
-  NewRelicLicense: {
-    Type: 'String',
-    Description: 'NEW_RELIC_LICENSE'
-  },
+  // NewRelicLicense: {
+  //   Type: 'String',
+  //   Description: 'NEW_RELIC_LICENSE'
+  // },
   PostgresDB: {
     Type: 'String',
     Description: 'POSTGRES_DB'
@@ -316,7 +316,7 @@ const Resources = {
       IamInstanceProfile: cf.ref('TaskingManagerEC2InstanceProfile'),
       ImageId: 'ami-0565af6e282977273',
       InstanceType: 'c5d.large',
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
         'set -x',
@@ -356,7 +356,7 @@ const Resources = {
         'chmod +x ./install && sudo ./install auto',
         'sudo systemctl start codedeploy-agent',
         'popd',
-        'git clone --recursive https://github.com/hotosm/tasking-manager.git',
+        'git clone --recursive https://github.com/facebookincubator/OSM-HOT-Tasking-Manager.git',
         'cd tasking-manager/',
         cf.sub('git reset --hard ${GitSha}'),
         'python3.6 -m venv ./venv',
@@ -370,7 +370,7 @@ const Resources = {
         'wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz',
         'pip2 install aws-cfn-bootstrap-latest.tar.gz',
         'echo "Exporting environment variables:"',
-        cf.sub('export NEW_RELIC_LICENSE=${NewRelicLicense}'),
+        // cf.sub('export NEW_RELIC_LICENSE=${NewRelicLicense}'),
         cf.join('', ['export POSTGRES_ENDPOINT=', cf.getAtt('TaskingManagerRDS','Endpoint.Address')]),
         cf.sub('export POSTGRES_DB=${PostgresDB}'),
         cf.sub('export POSTGRES_PASSWORD="${PostgresPassword}"'),
@@ -398,7 +398,7 @@ const Resources = {
         cf.if('DatabaseDumpFileGiven', cf.sub('aws s3 cp ${DatabaseDump} dump.sql; sudo -u postgres psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_ENDPOINT/$POSTGRES_DB" < dump.sql'), ''),
         './venv/bin/python3.6 manage.py db upgrade',
         'echo "------------------------------------------------------------"',
-        cf.sub('export NEW_RELIC_LICENSE_KEY="${NewRelicLicense}"'),
+        // cf.sub('export NEW_RELIC_LICENSE_KEY="${NewRelicLicense}"'),
         cf.sub('export TM_SENTRY_BACKEND_DSN="${SentryBackendDSN}"'),
         'export NEW_RELIC_ENVIRONMENT=$TM_ENVIRONMENT',
         cf.sub('NEW_RELIC_CONFIG_FILE=./scripts/aws/cloudformation/newrelic.ini newrelic-admin run-program gunicorn -b 0.0.0.0:8000 --worker-class gevent --workers 5 --timeout 179 --access-logfile ${TaskingManagerLogDirectory}/gunicorn-access.log --access-logformat \'%(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s %(T)s \"%(f)s\" \"%(a)s\"\' manage:application &'),
@@ -540,7 +540,7 @@ const Resources = {
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer',
     Properties: {
       Name: cf.stackName,
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
       Subnets: cf.split(',', cf.ref('ELBSubnets')),
       Type: 'application'
     }
@@ -569,7 +569,7 @@ const Resources = {
       HealthCheckPath: '/api/v2/system/heartbeat/',
       Port: 8000,
       Protocol: 'HTTP',
-      VpcId: cf.importValue(cf.join('-', ['hotosm-network-production', 'default-vpc', cf.region])),
+      VpcId: cf.importValue(cf.join('-', ['mapwithai-network-production', 'default-vpc', cf.region])),
       Tags: [ { "Key": "stack_name", "Value": cf.stackName } ],
       Matcher: {
         HttpCode: '200,202,302,304'
@@ -626,7 +626,7 @@ const Resources = {
         EnableCloudwatchLogsExports: ['postgresql'],
         DBInstanceClass: cf.if('IsTaskingManagerProduction', 'db.t3.2xlarge', 'db.t2.small'),
         DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
-        VPCSecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+        VPCSecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
     }
   },
   TaskingManagerReactBucket: {
@@ -658,7 +658,7 @@ const Resources = {
           Principal: '*',
           Resource: [ cf.join('',
             [
-              cf.getAtt('TaskingManagerReactBucket', 'Arn'), 
+              cf.getAtt('TaskingManagerReactBucket', 'Arn'),
               '/*'
             ]
           )],
@@ -708,27 +708,27 @@ const Resources = {
           TargetOriginId: cf.join('-', [cf.stackName, 'react-app']),
           ViewerProtocolPolicy: "redirect-to-https"
         },
-        ViewerCertificate: {
-          AcmCertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier')),
-          MinimumProtocolVersion: 'TLSv1.2_2018',
-          SslSupportMethod: 'sni-only'
-        }
+        // ViewerCertificate: {
+        //   AcmCertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier')),
+        //   MinimumProtocolVersion: 'TLSv1.2_2018',
+        //   SslSupportMethod: 'sni-only'
+        // }
       }
     }
   },
-  TaskingManagerRoute53: {
-    Type: 'AWS::Route53::RecordSet',
-    Condition: 'IsHOTOSMUrl',
-    Properties: {
-      Name: cf.ref('TaskingManagerURL'),
-      Type: 'A',
-      AliasTarget: {
-        DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
-        HostedZoneId: 'Z2FDTNDATAQYW2'
-      },
-      HostedZoneId: 'Z2O929GW6VWG99',
-    }
-  }
+  // TaskingManagerRoute53: {
+  //   Type: 'AWS::Route53::RecordSet',
+  //   Condition: 'IsHOTOSMUrl',
+  //   Properties: {
+  //     Name: cf.ref('TaskingManagerURL'),
+  //     Type: 'A',
+  //     AliasTarget: {
+  //       DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
+  //       HostedZoneId: 'Z2FDTNDATAQYW2'
+  //     },
+  //     HostedZoneId: 'Z2O929GW6VWG99',
+  //   }
+  // }
 };
 
 const Outputs = {
