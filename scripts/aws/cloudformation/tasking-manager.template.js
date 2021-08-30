@@ -737,7 +737,7 @@ const Resources = {
       Type: 'A',
       AliasTarget: {
         DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
-        HostedZoneId: 'Z00880791N5FTI496ZAWY'
+        HostedZoneId: 'Z2FDTNDATAQYW2'
       },
       HostedZoneId: 'Z00880791N5FTI496ZAWY',
     }
