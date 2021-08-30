@@ -148,7 +148,7 @@ jobs:
         name: Download config file
         command: |
           export GITSHA=<< parameters.gitsha >>
-          aws s3 cp s3://mapwithai-cfn-config/tasking-manager/tasking-manager-<< parameters.stack_name >>-${AWS_REGION}.cfn.json - | jq -c --arg GITSHA "$GITSHA" '.GitSha = $GITSHA' > $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json
+          aws s3 cp s3://mapwithai-cfn-config/mwai-tasking-manager/mwai-tasking-manager-<< parameters.stack_name >>-${AWS_REGION}.cfn.json - | jq -c --arg GITSHA "$GITSHA" '.GitSha = $GITSHA' > $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json
     - deploy:
         name: Deploy to << parameters.stack_name >>
         command: |
@@ -169,7 +169,7 @@ jobs:
             aws rds delete-db-snapshot --db-snapshot-identifier tm3-<< parameters.stack_name >>-${RDS_ID}-${NONCE}
           fi
           # Delete manual snapshot if database ID changed
-          RDS_ID_NEW=$(./.circleci/rdsid.sh '{"aws:cloudformation:stack-name": "tasking-manager-<< parameters.stack_name >>"}')
+          RDS_ID_NEW=$(./.circleci/rdsid.sh '{"aws:cloudformation:stack-name": "mwai-tasking-manager-<< parameters.stack_name >>"}')
           if [ "$RDS_ID" != "$RDS_ID_NEW" ]
           then
             aws rds delete-db-snapshot --db-snapshot-identifier tm3-<< parameters.stack_name >>-${RDS_ID}-latest
@@ -213,8 +213,8 @@ jobs:
           export TM_ENVIRONMENT=<< parameters.stack_name >>
           yarn
           CI=true GENERATE_SOURCEMAP=false yarn build
-          aws s3 sync build/ s3://tasking-manager-<< parameters.stack_name >>-react-app --delete
-          export DISTRIBUTION_ID=`aws cloudformation list-exports --output=text --query "Exports[?Name=='tasking-manager-<< parameters.stack_name >>-cloudfront-id-${AWS_REGION}'].Value"`
+          aws s3 sync build/ s3://mwai-tasking-manager-<< parameters.stack_name >>-react-app --delete
+          export DISTRIBUTION_ID=`aws cloudformation list-exports --output=text --query "Exports[?Name=='mwai-tasking-manager-<< parameters.stack_name >>-cloudfront-id-${AWS_REGION}'].Value"`
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 workflows:
   version: 2
