@@ -729,19 +729,19 @@ const Resources = {
       }
     }
   },
-  // TaskingManagerRoute53: {
-  //   Type: 'AWS::Route53::RecordSet',
-  //   Condition: 'IsHOTOSMUrl',
-  //   Properties: {
-  //     Name: cf.ref('TaskingManagerURL'),
-  //     Type: 'A',
-  //     AliasTarget: {
-  //       DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
-  //       HostedZoneId: 'Z2FDTNDATAQYW2'
-  //     },
-  //     HostedZoneId: 'Z2O929GW6VWG99',
-  //   }
-  // }
+  TaskingManagerRoute53: {
+    Type: 'AWS::Route53::RecordSet',
+    // Condition: 'IsHOTOSMUrl',
+    Properties: {
+      Name: cf.ref('TaskingManagerURL'),
+      Type: 'A',
+      AliasTarget: {
+        DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
+        HostedZoneId: 'Z00880791N5FTI496ZAWY'
+      },
+      HostedZoneId: 'Z00880791N5FTI496ZAWY',
+    }
+  }
 };
 
 const Outputs = {
