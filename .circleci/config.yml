@@ -19,11 +19,11 @@ jobs:
         command: |
           chown -R circleci:circleci ${CIRCLE_WORKING_DIRECTORY}
           chmod -R 755 ${CIRCLE_WORKING_DIRECTORY}
-    - restore_cache:
-        keys:
-        - node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
-        - node-v1-{{ .Branch }}-
-        - node-v1-
+    # - restore_cache:
+    #     keys:
+    #     - node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
+    #     - node-v1-{{ .Branch }}-
+    #     - node-v1-
     - run:
         name: Install requirements
         command: |
@@ -152,7 +152,7 @@ jobs:
     - deploy:
         name: Deploy to << parameters.stack_name >>
         command: |
-          export NODE_PATH= ~/.config/yarn/global/node_modules/
+          export NODE_PATH=/usr/local/share/.config/yarn/global/node_modules/
           validate-template $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js
           export JSON_CONFIG="$(cat $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json)"
           cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c mapwithai-cfn-config -t mapwithai-cfn-config -r $AWS_REGION -p "$JSON_CONFIG"
