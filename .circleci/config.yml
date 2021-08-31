@@ -12,18 +12,19 @@ jobs:
         command: |
           sudo apt-get update
           sudo apt-get install -y libgeos-dev # Required for shapely
-          sudo yarn global add @mapbox/cfn-config @mapbox/cloudfriend
+          # sudo yarn global add @mapbox/cfn-config @mapbox/cloudfriend
+          sudo npm install -g @mapbox/cfn-config @mapbox/cloudfriend
           sudo pip3 install awscli --upgrade
     - run:
         name: Set folder permissions
         command: |
           chown -R circleci:circleci ${CIRCLE_WORKING_DIRECTORY}
           chmod -R 755 ${CIRCLE_WORKING_DIRECTORY}
-    # - restore_cache:
-    #     keys:
-    #     - node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
-    #     - node-v1-{{ .Branch }}-
-    #     - node-v1-
+    - restore_cache:
+        keys:
+        - node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
+        - node-v1-{{ .Branch }}-
+        - node-v1-
     - run:
         name: Install requirements
         command: |
@@ -90,7 +91,8 @@ jobs:
         command: |
           sudo apt-get update
           sudo apt-get install -y libgeos-dev jq # Required for shapely
-          sudo yarn global add @mapbox/cfn-config @mapbox/cloudfriend
+          # sudo yarn global add @mapbox/cfn-config @mapbox/cloudfriend
+          sudo npm install -g @mapbox/cfn-config @mapbox/cloudfriend
           sudo pip3 install awscli --upgrade
     # - run:
     #     name: Configure AWS Access Key ID
@@ -153,7 +155,7 @@ jobs:
         name: Deploy to << parameters.stack_name >>
         command: |
           export NODE_PATH=/usr/local/share/.config/yarn/global/node_modules/
-          validate-template $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js
+          validate-template $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -r us-west-1
           export JSON_CONFIG="$(cat $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json)"
           cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c mapwithai-cfn-config -t mapwithai-cfn-config -r $AWS_REGION -p "$JSON_CONFIG"
     - run:
@@ -189,23 +191,23 @@ jobs:
         name: Install modules
         command: |
           sudo pip3 install awscli --upgrade
-    - run:
-        name: Configure AWS Access Key ID
-        command: |
-          aws configure set aws_access_key_id \
-          $AWS_ACCESS_KEY_ID \
-          --profile default
-    - run:
-        name: Configure AWS Secret Access Key
-        command: |
-          aws configure set aws_secret_access_key \
-          $AWS_SECRET_ACCESS_KEY \
-          --profile default
-    - run:
-        name: Configure AWS default region
-        command: |
-          aws configure set region $AWS_REGION \
-          --profile default
+    # - run:
+    #     name: Configure AWS Access Key ID
+    #     command: |
+    #       aws configure set aws_access_key_id \
+    #       $AWS_ACCESS_KEY_ID \
+    #       --profile default
+    # - run:
+    #     name: Configure AWS Secret Access Key
+    #     command: |
+    #       aws configure set aws_secret_access_key \
+    #       $AWS_SECRET_ACCESS_KEY \
+    #       --profile default
+    # - run:
+    #     name: Configure AWS default region
+    #     command: |
+    #       aws configure set region $AWS_REGION \
+    #       --profile default
     - run:
         name: Deploy Frontend to S3
         command: |
