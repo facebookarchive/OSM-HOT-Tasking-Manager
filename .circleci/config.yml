@@ -80,7 +80,7 @@ jobs:
       gitsha:
         description: "The 40 char hash of the git commit"
         type: string
-    working_directory: /home/circleci/tasking-manager
+    working_directory: /home/circleci/mwai-tasking-manager
     docker:
     - image: circleci/python:3.7-buster-node
     steps:
