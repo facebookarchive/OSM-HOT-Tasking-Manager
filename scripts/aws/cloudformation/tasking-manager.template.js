@@ -558,7 +558,7 @@ const Resources = {
         DNSName: cf.getAtt('TaskingManagerLoadBalancer', 'DNSName'),
         HostedZoneId: cf.getAtt('TaskingManagerLoadBalancer', 'CanonicalHostedZoneID')
       },
-      HostedZoneId: 'Z00880791N5FTI496ZAWY',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   },
   TaskingManagerTargetGroup: {
@@ -739,7 +739,7 @@ const Resources = {
         DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
         HostedZoneId: 'Z2FDTNDATAQYW2'
       },
-      HostedZoneId: 'Z00880791N5FTI496ZAWY',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   }
 };
