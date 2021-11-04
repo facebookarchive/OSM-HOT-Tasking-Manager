@@ -157,7 +157,7 @@ jobs:
           export NODE_PATH=/usr/local/share/.config/yarn/global/node_modules/
           validate-template $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -r us-west-1
           export JSON_CONFIG="$(cat $CIRCLE_WORKING_DIRECTORY/cfn-config-<< parameters.stack_name >>.json)"
-          cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c mapwithai-cfn-config -t mapwithai-cfn-config -r $AWS_REGION -p "$JSON_CONFIG"
+          cfn-config update << parameters.stack_name >> $CIRCLE_WORKING_DIRECTORY/scripts/aws/cloudformation/tasking-manager.template.js -f -c mapwithai-cfn-config -t mapwithai-cfn-config -r $AWS_REGION -p "$JSON_CONFIG" -n mwai-tasking-manager-<< parameters.stack_name >>
     - run:
         name: Cleanup
         when: always
