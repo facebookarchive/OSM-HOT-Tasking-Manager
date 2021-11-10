@@ -361,7 +361,7 @@ const Resources = {
         'sudo systemctl start codedeploy-agent',
         'popd',
         'git clone --recursive https://github.com/facebookincubator/OSM-HOT-Tasking-Manager.git',
-        'cd tasking-manager/',
+        'cd OSM-HOT-Tasking-Manager/',
         cf.sub('git reset --hard ${GitSha}'),
         'python3.6 -m venv ./venv',
         '. ./venv/bin/activate',
