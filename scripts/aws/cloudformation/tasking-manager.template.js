@@ -319,7 +319,7 @@ const Resources = {
     Properties: {
       IamInstanceProfile: cf.ref('TaskingManagerEC2InstanceProfile'),
       ImageId: 'ami-0ff7f191316dba328',
-      InstanceType: 'c5d.small', // c5d.large
+      InstanceType: 'c5d.large',
       SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
