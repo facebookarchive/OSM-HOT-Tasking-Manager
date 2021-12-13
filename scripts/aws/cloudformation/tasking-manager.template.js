@@ -145,6 +145,7 @@ const Conditions = {
   DatabaseDumpFileGiven: cf.notEquals(cf.ref('DatabaseDump'), ''),
   IsTaskingManagerProduction: cf.equals(cf.ref('AutoscalingPolicy'), 'production'),
   IsTaskingManagerDemo: cf.equals(cf.ref('AutoscalingPolicy'), 'Demo (max 3)'),
+  IsTaskingManagerDevelopment: cf.equals(cf.ref('AutoscalingPolicy'), 'development'),
   IsHOTOSMUrl: cf.equals(
     cf.select('1', cf.split('.', cf.ref('TaskingManagerURL')))
     , 'hotosm')
@@ -173,9 +174,9 @@ const Resources = {
     },
     UpdatePolicy: {
       AutoScalingRollingUpdate: {
-        PauseTime: 'PT60M',
+        PauseTime: cf.if('IsTaskingManagerDevelopment', 'PT0S', 'PT60M'),
         MaxBatchSize: 2,
-        WaitOnResourceSignals: true
+        WaitOnResourceSignals: cf.if('IsTaskingManagerDevelopment', false, true)
       }
     }
   },
@@ -323,7 +324,7 @@ const Resources = {
       SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
-        '# set -x',
+        'set -x',
         'export DEBIAN_FRONTEND=noninteractive',
         'export LC_ALL="en_US.UTF-8"',
         'export LC_CTYPE="en_US.UTF-8"',
