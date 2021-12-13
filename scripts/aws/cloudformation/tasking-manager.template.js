@@ -323,7 +323,7 @@ const Resources = {
       SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
-        'set -x',
+        '# set -x',
         'export DEBIAN_FRONTEND=noninteractive',
         'export LC_ALL="en_US.UTF-8"',
         'export LC_CTYPE="en_US.UTF-8"',
