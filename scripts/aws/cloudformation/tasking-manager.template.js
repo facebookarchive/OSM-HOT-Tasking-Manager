@@ -24,7 +24,8 @@ const Parameters = {
   },
   NewRelicLicense: {
     Type: 'String',
-    Description: 'NEW_RELIC_LICENSE'
+    Description: 'NEW_RELIC_LICENSE',
+    Default: ''
   },
   PostgresDB: {
     Type: 'String',
