@@ -22,10 +22,10 @@ const Parameters = {
     Type: 'String',
     Description: 'Path to database dump on S3; Ex: s3://my-bkt/tm.sql'
   },
-  // NewRelicLicense: {
-  //   Type: 'String',
-  //   Description: 'NEW_RELIC_LICENSE'
-  // },
+  NewRelicLicense: {
+    Type: 'String',
+    Description: 'NEW_RELIC_LICENSE'
+  },
   PostgresDB: {
     Type: 'String',
     Description: 'POSTGRES_DB',
