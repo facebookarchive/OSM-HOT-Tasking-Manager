@@ -131,6 +131,7 @@ class SMTPService:
     def _init_smtp_client():
         """ Initialise SMTP client from app settings """
         smtp_settings = current_app.config["SMTP_SETTINGS"]
+        current_app.logger.debug(f"SMTP SETTINGS: {current_app.config['SMTP_SETTINGS']}")
         sender = smtplib.SMTP(smtp_settings["host"], port=smtp_settings["smtp_port"])
         if current_app.config["LOG_LEVEL"] == "DEBUG":
             sender.set_debuglevel(1)
