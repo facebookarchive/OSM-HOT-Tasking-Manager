@@ -119,7 +119,7 @@ class SMTPService:
             msg.attach(part1)
 
         current_app.logger.debug(f"Sending email via SMTP {to_address}")
-        if current_app.config["LOG_LEVEL"] == "DEBUG":
+        if current_app.config["SMTP_SETTINGS"]["host"] is None:
             current_app.logger.debug(msg.as_string())
         else:
             sender = SMTPService._init_smtp_client()
@@ -132,6 +132,8 @@ class SMTPService:
         """ Initialise SMTP client from app settings """
         smtp_settings = current_app.config["SMTP_SETTINGS"]
         sender = smtplib.SMTP(smtp_settings["host"], port=smtp_settings["smtp_port"])
+        if current_app.config["LOG_LEVEL"] == "DEBUG":
+            sender.set_debuglevel(1)
         sender.starttls()
         if smtp_settings["smtp_user"] and smtp_settings["smtp_password"]:
             sender.login(smtp_settings["smtp_user"], smtp_settings["smtp_password"])
