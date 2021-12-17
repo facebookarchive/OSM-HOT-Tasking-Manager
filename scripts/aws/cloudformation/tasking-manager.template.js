@@ -25,7 +25,6 @@ const Parameters = {
   NewRelicLicense: {
     Type: 'String',
     Description: 'NEW_RELIC_LICENSE',
-    Default: ''
   },
   PostgresDB: {
     Type: 'String',
@@ -376,7 +375,7 @@ const Resources = {
         'wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz',
         'pip2 install aws-cfn-bootstrap-latest.tar.gz',
         'echo "Exporting environment variables:"',
-        // cf.sub('export NEW_RELIC_LICENSE=${NewRelicLicense}'),
+        cf.sub('export NEW_RELIC_LICENSE=${NewRelicLicense}'),
         cf.join('', ['export POSTGRES_ENDPOINT=', cf.getAtt('TaskingManagerRDS', 'Endpoint.Address')]),
         cf.sub('export POSTGRES_DB=${PostgresDB}'),
         cf.sub('export POSTGRES_PASSWORD="${PostgresPassword}"'),
@@ -404,7 +403,7 @@ const Resources = {
         cf.if('DatabaseDumpFileGiven', cf.sub('aws s3 cp ${DatabaseDump} dump.sql; sudo -u postgres psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_ENDPOINT/$POSTGRES_DB" < dump.sql'), ''),
         './venv/bin/python3.6 manage.py db upgrade',
         'echo "------------------------------------------------------------"',
-        // cf.sub('export NEW_RELIC_LICENSE_KEY="${NewRelicLicense}"'),
+        cf.sub('export NEW_RELIC_LICENSE_KEY="${NewRelicLicense}"'),
         cf.sub('export TM_SENTRY_BACKEND_DSN="${SentryBackendDSN}"'),
         'export NEW_RELIC_ENVIRONMENT=$TM_ENVIRONMENT',
         cf.sub('NEW_RELIC_CONFIG_FILE=./scripts/aws/cloudformation/newrelic.ini newrelic-admin run-program gunicorn -b 0.0.0.0:8000 --worker-class gevent --workers 5 --timeout 179 --access-logfile ${TaskingManagerLogDirectory}/gunicorn-access.log --access-logformat \'%(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s %(T)s \"%(f)s\" \"%(a)s\"\' manage:application &'),
