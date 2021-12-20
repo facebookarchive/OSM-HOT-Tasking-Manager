@@ -280,7 +280,7 @@ export function TaskList({
             onClick={() => {
               setTextSearch('');
             }}
-            className={`absolute w1 h1 top-0 red pt3 pointer pr3 right-0 ${
+            className={`absolute w1 h1 top-0 primary pt3 pointer pr3 right-0 ${
               textSearch ? 'dib' : 'dn'
             }`}
           />

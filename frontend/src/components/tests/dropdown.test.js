@@ -49,7 +49,7 @@ test('dropdown-content show/hide with clicks', () => {
     }).type,
   ).toBe('div');
   expect(elementInstance.findAllByType(CheckIcon).length).toBe(1);
-  expect(elementInstance.findAllByProps({ className: 'red pl4' }).length).toBe(1);
+  expect(elementInstance.findAllByProps({ className: 'primary pl4' }).length).toBe(1);
   // dropdown-content should disappear after another button click
   elementInstance.findByType(CustomButton).props.onClick();
   expect(() =>

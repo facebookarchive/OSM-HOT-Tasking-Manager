@@ -19,7 +19,7 @@ export function TaskBodyCard({
           </div>
         </div>
         <Link
-          className={`link fr ba ma2 ph4 pv2 bg-red b--grey-light white`}
+          className={`link fr ba ma2 ph4 pv2 bg-primary b--grey-light white`}
           to={`/inbox/delete/${messageId}`}
         >
           <FormattedMessage {...messages.delete} />

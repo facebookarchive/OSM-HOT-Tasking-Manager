@@ -4,7 +4,11 @@ import { FormattedNumber } from 'react-intl';
 export const StatsCard = ({ icon, description, value, className, invertColors = false }) => {
   return (
     <div className={`${className} ph2-ns fl`}>
-      <div className={`cf shadow-4 pt3 pb3 ph2 ${invertColors ? 'bg-red white' : 'bg-white red'}`}>
+      <div
+        className={`cf shadow-4 pt3 pb3 ph2 ${
+          invertColors ? 'bg-primary white' : 'bg-white primary'
+        }`}
+      >
         <div className="w-30 w-100-m fl tc">{icon}</div>
         <StatsCardContent
           value={
@@ -21,7 +25,9 @@ export const StatsCard = ({ icon, description, value, className, invertColors = 
 
 export const StatsCardContent = ({ value, label, className, invertColors = false }: Object) => (
   <div className={className}>
-    <h3 className={`ma0 mb2 barlow-condensed f2 b ${invertColors ? 'white' : 'red'}`}>{value}</h3>
+    <h3 className={`ma0 mb2 barlow-condensed f2 b ${invertColors ? 'white' : 'primary'}`}>
+      {value}
+    </h3>
     <span className={`ma0 h2 f7 b ${invertColors ? 'white' : 'blue-grey'}`}>{label}</span>
   </div>
 );

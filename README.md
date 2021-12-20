@@ -1,38 +1,21 @@
-# Tasking Manager
+# MapWithAI Tasking Manager
 
-[![TM Backend on Quay](https://quay.io/repository/hotosm/tasking-manager/status "Tasking Manager Backend Build")](https://quay.io/repository/hotosm/tasking-manager)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hotosm_tasking-manager&metric=alert_status)](https://sonarcloud.io/dashboard?id=hotosm_tasking-manager)
+[![CircleCI](https://circleci.com/gh/facebookincubator/OSM-HOT-Tasking-Manager/tree/develop.svg?style=svg&circle-token=af41c891f1ce0c291dc05cdb5c400fc02d1cf040)](https://circleci.com/gh/facebookincubator/OSM-HOT-Tasking-Manager/tree/develop)
 
-The most popular tool for teams to coordinate mapping on OpenStreetMap.
-
-[<img src="screenshot.jpg" />](./screenshot.jpg)
-
-With this web application an area of interest can be defined and divided up into smaller tasks that can be completed rapidly. It shows which areas need to be mapped and which areas need a review for quality assurance. You can see the tool in action: log into the widely used [HOT Tasking Manager](https://tasks.hotosm.org/) and start mapping.
-
-[<img src="./docs/assets/project-view.gif" />](./docs/assets/project-view.gif)
-
-This is Free and Open Source Software. You are welcome to use the code and set up your own instance. The Tasking Manager has been initially designed and built by and for the [Humanitarian OpenStreetMap Team](https://www.hotosm.org/), and is nowadays used by many communities and organizations.
+The [MapWithAI](https://mapwith.ai) Tasking Manager is an extension of the [HOT Tasking Manager](https://github.com/hotosm/tasking-manager). This repository aims to further integrate MapWithAI's data sets into the TM to improve project planning and task distribution. We will also be deploying new features to help improve other aspects of the Tasking Manager.
 
 ## Get involved!
 
 * Check our [Code of conduct](./docs/code_of_conduct.md)
 * Get familiar with our [contributor guidelines](./docs/contributing.md)
-* Join the [working groups](./docs/working-groups.md)
 * Help us to [translate the user interface](./docs/contributing-translation.md)
 
-## Developers
+We're available to chat!  Ping us on the `#mapwithai_feedback` channel on either:
+* [OpenStreetMap US Slack](https://slack.openstreetmap.us/)
+* [HOTOSM Slack](https://slack.hotosm.org/)
 
-* [Install TM with Docker](./docs/setup-docker.md)
-* [Setup the TM for development](./docs/setup-development.md)
-* [Learn about migrations between major versions](./docs/migration.md)
-* Help us and submit [pull requests](https://github.com/hotosm/tasking-manager/pulls)
 
-## Instances
-* [HOT Tasking Manager (production)](https://tasks.hotosm.org)
-* [HOT Tasking Manager (staging)](https://tasks-stage.hotosm.org)
-* [TeachOSM](https://tasks.teachosm.org/)
-* [OpenStreetMap Indonesia](https://tasks-indonesia.hotosm.org/)
-* [OpenStreetMap US](https://tasks.openstreetmap.us/)
-* [Map My Kerala](https://mapmykerala.in/)
-* [OpenHistoricalMap](https://tasks.openhistoricalmap.org)
-* [Oceania Tasking Manager](https://tasks.smartcitiestransport.com/)
+## License
+
+The MapWithAI TM is available under the [BSD-2 License](https://opensource.org/licenses/BSD-2-Clause).
+See the [LICENSE.txt](LICENSE.txt) file for more details.
