@@ -22,9 +22,9 @@ jobs:
           chmod -R 755 ${CIRCLE_WORKING_DIRECTORY}
     - restore_cache:
         keys:
-        - node-v2-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
-        - node-v2-{{ .Branch }}-
-        - node-v2-
+        - node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
+        - node-v1-{{ .Branch }}-
+        - node-v1-
     - run:
         name: Install requirements
         command: |
@@ -68,7 +68,7 @@ jobs:
     # - store_artifacts:
     #     path: tests/backend/results
     - save_cache:
-        key: node-v2-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
+        key: node-v1-{{ .Branch }}-{{ checksum "frontend/yarn.lock" }}
         paths:
         - frontend/node_modules
         - env
