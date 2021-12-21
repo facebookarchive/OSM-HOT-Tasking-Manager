@@ -28,7 +28,7 @@ export function Testimonials() {
         {testimonials.map((person, n) => (
           <div key={n} className={`blue-dark cf testimonial-${person.cssCode}`}>
             <div className="w-40-l w-50-m fl ml2-l mt4-ns mt6">
-              <div className="bg-primary rapid-navy f3-l f4 pv2 mt5-l pl3 pr1">
+              <div className="bg-primary white f3-l f4 pv2 mt5-l pl3 pr1">
                 <FormattedMessage {...person.citation} />
               </div>
               <div className="w-70-l w-60-m mh3 mh0-ns ph3 pb5-l pt4-l">
