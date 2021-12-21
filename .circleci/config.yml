@@ -322,7 +322,7 @@ workflows:
           branches:
             only:
               - deployment/mwai-tasking-manager
-        stack_name: "tm4-production"
+        stack_name: "production"
         gitsha: $CIRCLE_SHA1
         context: tasking-manager-tm4-production
   frontend-production:
@@ -334,7 +334,7 @@ workflows:
             only:
               - deployment/mwai-tasking-manager-frontend
               - deployment/mwai-tasking-manager
-        stack_name: "tm4-production"
+        stack_name: "production"
         context: tasking-manager-tm4-production
 notify:
   webhooks:
