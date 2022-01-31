@@ -199,13 +199,6 @@ updates:
     - 8.1.0
     - 8.1.1
     - 8.1.2
-  - dependency-name: "@formatjs/intl-pluralrules"
-    versions:
-    - 4.0.10
-    - 4.0.6
-    - 4.0.7
-    - 4.0.8
-    - 4.0.9
   - dependency-name: "@mapbox/mapbox-gl-draw"
     versions:
     - 1.2.0
