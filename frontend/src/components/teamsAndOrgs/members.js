@@ -102,7 +102,7 @@ export function Members({
             </Button>
           </div>
           <div className="w-30-l w-50 fr dib">
-            <Button className="white bg-red h3 w-100" onClick={() => submitMembers()}>
+            <Button className="white bg-primary h3 w-100" onClick={() => submitMembers()}>
               <FormattedMessage {...messages.done} />
             </Button>
           </div>
@@ -161,7 +161,7 @@ export function JoinRequests({ requests, teamId, addMembers, updateRequests }: O
                 <FormattedMessage {...messages.reject} />
               </Button>
               <Button
-                className="pr2 bg-red white"
+                className="pr2 bg-primary white"
                 onClick={() => acceptRejectRequest(user, 'accept')}
               >
                 <FormattedMessage {...messages.accept} />

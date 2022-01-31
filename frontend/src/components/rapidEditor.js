@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import * as iD from '@hotosm/id';
-import '@hotosm/id/dist/iD.css';
+import * as RapiD from 'RapiD/dist/iD.legacy';
+import 'RapiD/dist/iD.css';
 
 import { OSM_CONSUMER_KEY, OSM_CONSUMER_SECRET, OSM_SERVER_URL } from '../config';
 
-export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }) {
+export default function RapidEditor({
+  setDisable,
+  comment,
+  presets,
+  imagery,
+  gpxUrl,
+  powerUser = false,
+}) {
   const dispatch = useDispatch();
   const session = useSelector((state) => state.auth.get('session'));
   const iDContext = useSelector((state) => state.editor.context);
@@ -45,6 +52,11 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }
         // we need to keep iD context on redux store because iD works better if
         // the context is not restarted while running in the same browser session
         dispatch({ type: 'SET_EDITOR', context: window.iD.coreContext() });
+        //   } else{
+        //     if (RapiDContext === null) {
+        //       dispatch({ type: 'SET_EDITOR', context: iDContext, rapidContext: window.iD.coreRapidContext(())})
+        //     }
+        // }
       }
     }
   }, [windowInit, iDContext, dispatch]);
@@ -56,7 +68,7 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }
   }, [comment, iDContext]);
 
   useEffect(() => {
-    if (session && locale && iD && iDContext) {
+    if (session && locale && RapiD && iDContext) {
       // if presets is not a populated list we need to set it as null
       try {
         if (presets.length) {
@@ -70,7 +82,7 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }
       // setup the context
       iDContext
         .embed(true)
-        .assetPath('/static/id/')
+        .assetPath('/static/rapid/')
         .locale(locale)
         .setsDocumentTitle(false)
         .containerNode(document.getElementById('id-container'));
@@ -84,6 +96,8 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }
       if (gpxUrl) {
         iDContext.layers().layer('data').url(gpxUrl, '.gpx');
       }
+
+      iDContext.rapidContext().showPowerUser = powerUser;
 
       let osm = iDContext.connection();
       const auth = {
@@ -106,7 +120,7 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }
         }
       });
     }
-  }, [session, iDContext, setDisable, presets, locale, gpxUrl]);
+  }, [session, iDContext, setDisable, presets, locale, gpxUrl, powerUser]);
 
   return <div className="w-100 vh-minus-77-ns" id="id-container"></div>;
 }

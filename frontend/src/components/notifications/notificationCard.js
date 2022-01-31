@@ -90,7 +90,7 @@ export function NotificationCard({
       onClick={openMessage}
       className="pointer db base-font w-100 mb1 mw8 bg-white blue-dark ba br1 b--grey-light"
     >
-      <div className={`pv3 pr3 bl bw2 br2 ${read ? 'b--white' : 'b--red'}`}>
+      <div className={`pv3 pr3 bl bw2 br2 ${read ? 'b--white' : 'b--primary'}`}>
         <div className="ph2 pt1 fl">
           <CheckBox activeItems={selected} toggleFn={setSelected} itemId={messageId} />
         </div>

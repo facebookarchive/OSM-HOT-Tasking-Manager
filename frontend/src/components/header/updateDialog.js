@@ -41,7 +41,7 @@ export const UpdateDialog = () => {
           <p className="mb3 mt2">
             <FormattedMessage {...messages.newVersionAvailable} />
           </p>
-          <Button className="bg-red white" onClick={() => updateServiceWorker(registration)}>
+          <Button className="bg-primary white" onClick={() => updateServiceWorker(registration)}>
             <FormattedMessage {...messages.update} />
           </Button>
           <Button className="bg-white blue-dark" onClick={() => setClose(true)}>

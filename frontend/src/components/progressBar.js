@@ -18,7 +18,7 @@ export const ProgressBar = ({ className, height, firstBarValue, secondBarValue =
           aria-valuemax="100"
         ></div>
         <div
-          className={`absolute bg-red br-pill h${height} hide-child`}
+          className={`absolute bg-primary br-pill h${height} hide-child`}
           style={{ width: `${secondBarValue > 100 ? 100 : secondBarValue}%` }}
           role="progressbar"
           aria-valuenow={secondBarValue}

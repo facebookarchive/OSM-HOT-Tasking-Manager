@@ -43,7 +43,7 @@ const PostProjectComment = ({ projectId, updateComments }) => {
         <div className="fl w-20-ns w-100 tc-ns tr pt3 pr0-ns pr1">
           <Button
             onClick={() => saveCommentAsync.execute()}
-            className="bg-red white f5"
+            className="bg-primary white f5"
             disabled={comment === '' || saveCommentAsync.status === 'pending'}
             loading={saveCommentAsync.status === 'pending'}
           >
