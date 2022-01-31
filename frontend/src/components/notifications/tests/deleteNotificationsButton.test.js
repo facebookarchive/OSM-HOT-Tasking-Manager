@@ -62,7 +62,7 @@ describe('DeleteNotificationsButton', () => {
         </IntlProvider>
       </Provider>,
     );
-    expect(screen.getByText('Delete').className).toContain('bg-red white');
+    expect(screen.getByText('Delete').className).toContain('bg-primary white');
     expect(screen.getByText('Delete')).toBeEnabled();
     fireEvent.click(screen.getByText('Delete'));
     await waitFor(() => expect(myMock).toHaveBeenCalledTimes(1));

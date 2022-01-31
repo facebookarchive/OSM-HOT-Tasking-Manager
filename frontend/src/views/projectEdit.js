@@ -37,6 +37,7 @@ export const styleClasses = {
   drawButtonClass: 'bg-blue-dark white mr2',
   redButtonClass: 'bg-red white',
   whiteButtonClass: 'bg-white blue-dark mr2',
+  primaryButtonClass: 'bg-primary white',
   modalClass: 'pa4',
   actionClass: 'bg-blue-dark white dib mr2 mt2 pointer',
 };
@@ -75,6 +76,7 @@ export default function ProjectEdit({ id }) {
         perTaskInstructions: '',
       },
     ],
+    rapidPowerUser: false,
   });
   const [userCanEditProject] = useEditProjectAllowed(projectInfo);
   const supportedLanguages =
@@ -243,7 +245,7 @@ export default function ProjectEdit({ id }) {
           {renderList()}
           <Button
             onClick={() => saveChangesAsync.execute()}
-            className="db bg-red white pa3 bn"
+            className="db bg-primary white pa3 bn"
             loading={saveChangesAsync.status === 'pending'}
           >
             <FormattedMessage {...messages.save} />

@@ -23,7 +23,7 @@ export const StatsNumber = (props) => {
 export const StatsColumn = ({ label, value }: Object) => {
   return (
     <div className={`fl tc w-20-l w-third-m w-100 dib h4`}>
-      <div className="db f1 fw8 red barlow-condensed">
+      <div className="db f1 fw8 primary barlow-condensed">
         <StatsNumber value={value} />
       </div>
       <div className="db blue-grey">

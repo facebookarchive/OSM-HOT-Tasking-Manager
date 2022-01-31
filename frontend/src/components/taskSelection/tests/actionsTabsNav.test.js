@@ -25,7 +25,7 @@ describe('ActionTabsNav', () => {
     expect(screen.getByText('Completion').className).toContain('bb b--blue-dark');
     expect(screen.getByText('Instructions').className).not.toContain('bb b--blue-dark');
     expect(screen.getByText('History').className).not.toContain('bb b--blue-dark');
-    expect(screen.getByText('3').className).toBe('bg-red white dib br-100 tc f6 ml1 mb1 v-mid');
+    expect(screen.getByText('3').className).toBe('bg-primary white dib br-100 tc f6 ml1 mb1 v-mid');
     expect(screen.queryByText('Resources')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Instructions'));
     expect(setActiveSection).toHaveBeenLastCalledWith('instructions');
