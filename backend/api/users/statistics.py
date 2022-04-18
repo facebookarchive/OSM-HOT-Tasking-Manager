@@ -28,7 +28,7 @@ class UsersStatisticsAPI(Resource):
               required: true
               type: string
               default: Thinkwhere
-            
+
         responses:
             200:
                 description: User found
@@ -108,12 +108,12 @@ class UsersTaskMappedAPI(Resource):
               required: true
               type: string
               default: Token sessionTokenHere==
-            - name: username
-              in: path
+            - in: path
+              name: username
               description: Mapper's OpenStreetMap username
               required: true
               type: string
-              default: Thinkwhere
+              default: null
             - in: query
               name: project_id
               description: Project id
@@ -155,13 +155,13 @@ class UsersTaskMappedAPI(Resource):
                 if request.args.get("end_date")
                 else None
             )
-            tasks_dto = UserService.get_tasks_mapped(username, start_date=start_date, end_date=end_date, project_id=project_id,)
-            
+            tasks_dto = UserService.get_tasks_mapped(username, start_date=start_date, end_date=end_date, project_id=project_id)
+
             return tasks_dto.to_primitive(), 200
         except NotFound:
-            return {"Error": "User not found"}, 404
+            return {"Error": "UsersTaskMapped not found"}, 404
         except Exception as e:
-            error_msg = f"User GET - unhandled error: {str(e)}"
+            error_msg = f"UsersTaskMapped GET - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"Error": "Unable to fetch user statistics"}, 500
 
@@ -183,8 +183,8 @@ class UsersTeamStatsAPI(Resource):
               required: true
               type: string
               default: Token sessionTokenHere==
-            - name: username
-              in: path
+            - in: path
+              name: username
               description: Mapper's OpenStreetMap username
               required: true
               type: string
@@ -231,7 +231,7 @@ class UsersTeamStatsAPI(Resource):
                 else None
             )
             teams_dto = UserService.get_teams_stats(username, start_date=start_date, end_date=end_date, team_id=team_id,)
-            
+
             return teams_dto.to_primitive(), 200
         except NotFound:
             return {"Error": "User not found"}, 404

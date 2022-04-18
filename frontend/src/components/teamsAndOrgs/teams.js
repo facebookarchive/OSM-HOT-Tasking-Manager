@@ -384,8 +384,6 @@ export function TeamsBoxList({ teams }: Object) {
   );
 }
 export function TeamsStats() {
-  // const mappingTeams = teams.filter((team) => team.role === 'MAPPER');
-  // const validationTeams = teams.filter((team) => team.role === 'VALIDATOR');
   const token = useSelector((state) => state.auth.get('token'));
   const userDetails = useSelector((state) => state.auth.get('userDetails'));
   const userName = userDetails.username;
