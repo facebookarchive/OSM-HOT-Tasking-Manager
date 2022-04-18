@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { navigate } from '@reach/router';
 import Popup from 'reactjs-popup';
+import ReactTooltip from 'react-tooltip';
 import { FormattedMessage } from 'react-intl';
 
 import messages from './messages';
@@ -224,7 +225,7 @@ export function CompletionTabForMapping({
           />
         </p>
       </div>
-      <div className="cf mv2">
+      <div className="cf mv2" data-tip>
         <Button
           className="bg-primary white w-100 fl"
           onClick={() => submitTaskAsync.execute()}
@@ -238,6 +239,11 @@ export function CompletionTabForMapping({
           <FormattedMessage {...messages.submitTask} />
         </Button>
       </div>
+      {disabled &&
+        <ReactTooltip place="top">
+          <FormattedMessage {...messages.unsavedChangesTooltip} />
+        </ReactTooltip>
+      }
       <div className="cf pb1">
         <Button
           className="bg-blue-dark white w-50 fl"
@@ -332,6 +338,12 @@ export function CompletionTabForValidation({
         navigate(`../tasks/?filter=readyToValidate`);
       });
     }
+    else if (disabled) {
+      return new Promise((resolve, reject) => {
+        setShowMapChangesModal('unlock');
+        resolve();
+      });
+    }
   };
   const submitTaskAsync = useAsync(submitTask);
 
@@ -373,7 +385,7 @@ export function CompletionTabForValidation({
           />
         ))}
       </div>
-      <div className="cf mv3">
+      <div className="cf mv3" data-tip>
         <Button
           className="bg-primary white w-100 fl"
           onClick={() => submitTaskAsync.execute()}
@@ -383,6 +395,11 @@ export function CompletionTabForValidation({
           <FormattedMessage {...messages[tasksIds.length > 1 ? 'submitTasks' : 'submitTask']} />
         </Button>
       </div>
+      {disabled &&
+        <ReactTooltip place="top">
+          <FormattedMessage {...messages.unsavedChangesTooltip} />
+        </ReactTooltip>
+      }
       <div className="cf">
         <Button
           className="blue-dark bg-white w-100 fl"
@@ -608,7 +625,7 @@ export function SidebarToggle({ setShowSidebar }: Object) {
   );
 }
 
-function UnsavedMapChangesModalContent({ close, action }: Object) {
+export function UnsavedMapChangesModalContent({ close, action }: Object) {
   return (
     <div className="blue-dark bg-white pv2 pv4-ns ph2 ph4-ns tc">
       <div className="cf tc primary pb3">
@@ -620,6 +637,7 @@ function UnsavedMapChangesModalContent({ close, action }: Object) {
       <div className="mv4 lh-title">
         {action === 'split' && <FormattedMessage {...messages.unsavedChangesToSplit} />}
         {action === 'unlock' && <FormattedMessage {...messages.unsavedChangesToUnlock} />}
+        {action === 'reload editor' && <FormattedMessage {...messages.unsavedChangesToReloadEditor} />}
       </div>
       <Button className="bg-primary white" onClick={() => close()}>
         <FormattedMessage {...messages.closeModal} />
