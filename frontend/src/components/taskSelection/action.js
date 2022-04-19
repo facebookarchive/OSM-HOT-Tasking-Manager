@@ -164,7 +164,6 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
         resolve();
       });
     }
-    window.location.reload();
   };
 
   return (
