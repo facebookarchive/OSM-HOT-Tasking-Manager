@@ -48,7 +48,7 @@ const Parameters = {
     Type: 'String',
     Default: 'db.t3.xlarge'
   },
-  DatabaseDiskSize: {
+  DatabaseSize: {
     Description: 'Database size in GB',
     Type: 'String',
     Default: '100'
