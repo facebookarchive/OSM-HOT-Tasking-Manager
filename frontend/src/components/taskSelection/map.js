@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import bbox from '@turf/bbox';
 import mapboxgl from 'mapbox-gl';
@@ -10,6 +10,7 @@ import messages from './messages';
 import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL } from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
+import { getRoadHighwayImages } from '../../utils/getRoadHighwayImages';
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
@@ -45,6 +46,14 @@ export const TasksMap = ({
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
 
   const [map, setMapObj] = useState(null);
+  
+  useEffect(() => {
+    mapResults.features.slice(0, 10).map((feature) => { // TODO temporarily slice first 10 results due to Overpass API rate limit
+      const [x, y, z] = [feature.properties.taskX, feature.properties.taskY, feature.properties.taskZoom]
+      getRoadHighwayImages(x, y, z)
+    })
+  }, [])
+  
 
   useLayoutEffect(() => {
     /* May be able to refactor this to just take
