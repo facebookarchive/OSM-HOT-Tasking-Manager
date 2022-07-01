@@ -643,7 +643,7 @@ const Resources = {
       EngineVersion: cf.ref('DatabaseEngineVersion'),
       MasterUsername: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresUser')),
       MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
-      AllocatedStorage: cf.ref('DatabaseSize'),
+      AllocatedStorage: cf.ref('DatabaseDiskSize'),
       BackupRetentionPeriod: cf.ref('DatabaseSnapshotRetentionPeriod'),
       StorageType: 'gp2',
       DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
