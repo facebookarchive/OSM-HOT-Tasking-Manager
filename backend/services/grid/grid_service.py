@@ -6,7 +6,9 @@ import shapely.geometry
 from flask import current_app
 from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
-
+import requests
+import math
+import json
 
 class GridServiceError(Exception):
     """Custom Exception to notify callers an error occurred when handling projects"""
@@ -56,6 +58,25 @@ class GridService:
                 )
                 intersecting_features.append(clipped_feature)
         return geojson.FeatureCollection(intersecting_features)
+
+    @staticmethod
+    def trim_aoi_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
+        """
+        TODO
+        :param grid_dto: the dto containing
+        :return: geojson.FeatureCollection trimmed task grid
+        """
+        trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
+        roads = []
+        for feature in trimmed_grid["features"]:
+            x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
+            bbox = GridService._tile_to_bbox(x, y, z)
+            url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"="footway"]{};way["highway"="footway"]{};relation["highway"="footway"]{};);out;>;out skel qt;'.format(bbox, bbox, bbox)
+            overpass_resp = requests.get(url)
+            parsed_resp = json.loads(overpass_resp.text)
+            if parsed_resp["elements"]:
+                roads.append(feature)
+        return geojson.FeatureCollection(roads)
 
     @staticmethod
     def tasks_from_aoi_features(feature_collection: str) -> geojson.FeatureCollection:
@@ -235,3 +256,28 @@ class GridService:
             # force Multipolygon
             geometry = MultiPolygon([geometry])
         return geometry
+    
+    def _tile_to_bbox(x: int, y: int, zoom: int) -> tuple:
+        """
+        Helper method to convert tile's xyz to bbox.
+        Code from https://www.flother.is/til/map-tile-bounding-box-python/
+        Tested against Mapbox's Tilebelt https://github.com/mapbox/tilebelt
+        :param x: tile's x coordinate
+        :param y: tile's y coordinate
+        :param z: tile's zoom level
+        :return: tuple containing bbox in format of Mapbox's Tilebelt
+        
+        """
+        def tile_lon(x: int, z: int) -> float:
+            return x / math.pow(2.0, z) * 360.0 - 180
+
+        def tile_lat(y: int, z: int) -> float:
+            return math.degrees(
+                math.atan(math.sinh(math.pi - (2.0 * math.pi * y) / math.pow(2.0, z)))
+            )
+        
+        north=tile_lat(y, zoom)
+        south=tile_lat(y + 1, zoom)
+        west=tile_lon(x, zoom)
+        east=tile_lon(x + 1, zoom)
+        return (west, south, east, north) # this is the order returned in Mapbox's Tilebelt

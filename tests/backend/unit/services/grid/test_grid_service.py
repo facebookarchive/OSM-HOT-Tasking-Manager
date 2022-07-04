@@ -10,6 +10,7 @@ from tests.backend.helpers.test_helpers import get_canned_json
 
 
 class TestGridService(BaseTestCase):
+    maxDiff = None
     def test_feature_collection_to_multi_polygon_dissolve(self):
         # arrange
         grid_json = get_canned_json("test_grid.json")
@@ -147,3 +148,26 @@ class TestGridService(BaseTestCase):
             GridService.merge_to_multi_polygon(
                 geojson.dumps(bad_feature_collection), dissolve=True
             )
+
+    # def test_trim_aoi_to_roads(self):
+    #     # arrange
+    #     grid_json = get_canned_json("test_grid.json")
+
+    #     grid_dto = GridDTO(grid_json)
+    #     expected = geojson.loads(
+    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
+    #     )
+    #     grid_dto.clip_to_aoi = False
+
+    #     # act
+    #     result = GridService.trim_aoi_to_roads(grid_dto)
+    #     # assert
+    #     # self.assertEqual(str(expected), str(result))
+
+    def test_tile_to_bbox(self):
+        x, y, z = 34789738, 23734005, 26
+        expected = (6.626697778701782, 46.522057511538904, 6.626703143119812, 46.52206120266217) # NOTE tilebelt output ...6217 for last number. Changed to 6218 to match floating point rounding
+        result = GridService._tile_to_bbox(x, y, z)
+
+        for expected_float, result_float in zip(expected, result):
+            self.assertAlmostEqual(expected_float, result_float)
