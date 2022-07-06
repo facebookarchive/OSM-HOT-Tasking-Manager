@@ -1,6 +1,6 @@
 import geojson
 import json
-from shapely.geometry import MultiPolygon, mapping
+from shapely.geometry import MultiPolygon, mapping, MultiPoint
 from shapely.ops import cascaded_union
 import shapely.geometry
 from flask import current_app
@@ -67,15 +67,20 @@ class GridService:
         :return: geojson.FeatureCollection trimmed task grid
         """
         trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
+        coords = [] # to be used to create a MultiPoint obj
         roads = []
-        for feature in trimmed_grid["features"]:
+        for feature in trimmed_grid["features"]: # combine all task grids to one
             x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
             bbox = GridService._tile_to_bbox(x, y, z)
-            url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"="footway"]{};way["highway"="footway"]{};relation["highway"="footway"]{};);out;>;out skel qt;'.format(bbox, bbox, bbox)
-            overpass_resp = requests.get(url)
-            parsed_resp = json.loads(overpass_resp.text)
-            if parsed_resp["elements"]:
-                roads.append(feature)
+            coords.append((bbox[0], bbox[1]))
+            coords.append((bbox[2], bbox[3]))
+        overarching_bbox = MultiPoint(coords).bounds
+
+        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"="footway"]{};way["highway"="footway"]{};relation["highway"="footway"]{};);out;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
+        overpass_resp = requests.get(url)
+        parsed_resp = json.loads(overpass_resp.text)
+        if parsed_resp["elements"]:
+            roads.append(feature)
         return geojson.FeatureCollection(roads)
 
     @staticmethod
