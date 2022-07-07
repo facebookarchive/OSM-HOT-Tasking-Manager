@@ -198,6 +198,7 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                   setDisable={setDisable}
                   comment={project.changesetComment}
                   presets={project.idPresets}
+                  earliestStreetImagery={project.earliestStreetImagery}
                   imagery={formatImageryUrlCallback(project.imagery)}
                   gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                   powerUser={project.rapidPowerUser}
