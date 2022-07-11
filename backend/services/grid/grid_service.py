@@ -1,6 +1,6 @@
 import geojson
 import json
-from shapely.geometry import MultiPolygon, mapping, MultiPoint
+from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape
 from shapely.ops import cascaded_union
 import shapely.geometry
 from flask import current_app
@@ -69,18 +69,20 @@ class GridService:
         trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
         coords = [] # to be used to create a MultiPoint obj
         roads = []
-        for feature in trimmed_grid["features"]: # combine all task grids to one
+        for feature in grid_dto["area_of_interest"]["features"]: # combine all grids in to one. 
+            # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
             x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
             bbox = GridService._tile_to_bbox(x, y, z)
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
         overarching_bbox = MultiPoint(coords).bounds
+        # overarching_bbox = (32.568389314727,-1.9150114059448,32.574871994676,-1.9065248966217)
 
-        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"="footway"]{};way["highway"="footway"]{};relation["highway"="footway"]{};);out;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
+        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
-        if parsed_resp["elements"]:
-            roads.append(feature)
+        roads_in_overarching_bbox = parsed_resp["elements"] # TODO convert to MultiPolygon
+        
         return geojson.FeatureCollection(roads)
 
     @staticmethod
