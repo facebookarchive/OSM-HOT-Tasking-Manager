@@ -10,28 +10,27 @@ from tests.backend.helpers.test_helpers import get_canned_json
 import re
 
 class TestGridService(BaseTestCase):
-    maxDiff = None
-    # def test_feature_collection_to_multi_polygon_dissolve(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("multi_polygon_dissolved.json"))
-    #     )
+    def test_feature_collection_to_multi_polygon_dissolve(self):
+        # arrange
+        grid_json = get_canned_json("test_grid.json")
+        grid_dto = GridDTO(grid_json)
+        aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
+        expected = geojson.loads(
+            json.dumps(get_canned_json("multi_polygon_dissolved.json"))
+        )
 
-    #     # act
-    #     result = GridService.merge_to_multi_polygon(aoi_geojson, True)
+        # act
+        result = GridService.merge_to_multi_polygon(aoi_geojson, True)
 
-    #     # assert coordinates are same. Done separately due to floating point rounding
-    #     for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
-    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
-    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
+        # assert coordinates are same. Done separately due to floating point rounding
+        for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
+            self.assertAlmostEqual(expected_coords[0], result_coords[0])
+            self.assertAlmostEqual(expected_coords[1], result_coords[1])
         
-    #     # assert everything besides floating points are the same
-    #     split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
-    #     split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
-    #     self.assertEqual(split_expected, split_result)
+        # assert everything besides floating points are the same
+        split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
+        split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
+        self.assertEqual(split_expected, split_result)
 
     def test_feature_collection_to_multi_polygon_nodissolve(self):
         # arrange
@@ -53,36 +52,36 @@ class TestGridService(BaseTestCase):
         split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
         self.assertEqual(split_expected, split_result)
 
-    # def test_trim_grid_to_aoi_clip(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
+    def test_trim_grid_to_aoi_clip(self):
+        # arrange
+        grid_json = get_canned_json("test_grid.json")
 
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
-    #     )
-    #     grid_dto.clip_to_aoi = True
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(
+            json.dumps(get_canned_json("clipped_feature_collection.json"))
+        )
+        grid_dto.clip_to_aoi = True
 
-    #     # act
-    #     result = GridService.trim_grid_to_aoi(grid_dto)
+        # act
+        result = GridService.trim_grid_to_aoi(grid_dto)
 
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    # def test_trim_grid_to_aoi_noclip(self):
-    #     # arrange
+    def test_trim_grid_to_aoi_noclip(self):
+        # arrange
 
-    #     grid_json = get_canned_json("test_grid.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     grid_dto.clip_to_aoi = False
+        grid_json = get_canned_json("test_grid.json")
+        grid_dto = GridDTO(grid_json)
+        grid_dto.clip_to_aoi = False
 
-    #     expected = geojson.loads(json.dumps(get_canned_json("feature_collection.json")))
+        expected = geojson.loads(json.dumps(get_canned_json("feature_collection.json")))
 
-    #     # act
-    #     result = GridService.trim_grid_to_aoi(grid_dto)
+        # act
+        result = GridService.trim_grid_to_aoi(grid_dto)
 
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        # assert
+        self.assertEqual(str(expected), str(result))
 
     def test_tasks_from_aoi_features(self):
         # arrange
