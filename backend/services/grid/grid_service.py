@@ -1,6 +1,6 @@
 import geojson
 import json
-from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape
+from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape, Point
 from shapely.ops import cascaded_union
 import shapely.geometry
 from flask import current_app
@@ -62,7 +62,7 @@ class GridService:
     @staticmethod
     def trim_aoi_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
         """
-        TODO
+        Extension of trim_grid_to_aoi. Further trims the grid to only those with roads
         :param grid_dto: the dto containing
         :return: geojson.FeatureCollection trimmed task grid
         """
@@ -76,13 +76,17 @@ class GridService:
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
         overarching_bbox = MultiPoint(coords).bounds
-        # overarching_bbox = (32.568389314727,-1.9150114059448,32.574871994676,-1.9065248966217)
 
         url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
-        roads_in_overarching_bbox = parsed_resp["elements"] # TODO convert to MultiPolygon
-        
+        roads_in_overarching_bbox = parsed_resp["elements"]
+        for task in trimmed_grid["features"]:
+            task_geometry = shape(task["geometry"])
+            for point in roads_in_overarching_bbox:
+                if point["type"] == "node": # "node" seems to have same lat/lon as "way"
+                    if task_geometry.intersects(Point(point["lat"], point["lon"])):
+                        roads.append(task)
         return geojson.FeatureCollection(roads)
 
     @staticmethod
