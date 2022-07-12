@@ -67,15 +67,8 @@ class GridService:
         :return: geojson.FeatureCollection trimmed task grid
         """
         trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
-        coords = [] # to be used to create a MultiPoint obj
+        overarching_bbox = GridService._create_overarching_bbox(grid_dto)
         roads = []
-        for feature in grid_dto["area_of_interest"]["features"]: # combine all grids in to one. 
-            # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
-            x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
-            bbox = GridService._tile_to_bbox(x, y, z)
-            coords.append((bbox[0], bbox[1]))
-            coords.append((bbox[2], bbox[3]))
-        overarching_bbox = MultiPoint(coords).bounds
 
         url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
         overpass_resp = requests.get(url)
@@ -292,3 +285,18 @@ class GridService:
         west=tile_lon(x, zoom)
         east=tile_lon(x + 1, zoom)
         return (west, south, east, north) # this is the order returned in Mapbox's Tilebelt
+
+    def _create_overarching_bbox(grid_dto: GridDTO) -> geojson.FeatureCollection:
+        """
+        Recreates the entire bbox given a grid. NOTE Potentially redundant
+        :param grid_dto: the dto containing
+        :return: tuple (minX, minY, maxX, maxY)
+        """
+        coords = [] # to be used to create a MultiPoint obj
+        for feature in grid_dto["area_of_interest"]["features"]: # combine all grids in to one. 
+            # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
+            x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
+            bbox = GridService._tile_to_bbox(x, y, z)
+            coords.append((bbox[0], bbox[1]))
+            coords.append((bbox[2], bbox[3]))
+        return MultiPoint(coords).bounds
