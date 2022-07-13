@@ -9,6 +9,7 @@ from tests.backend.base import BaseTestCase
 from tests.backend.helpers.test_helpers import get_canned_json
 import re
 
+
 class TestGridService(BaseTestCase):
     def test_feature_collection_to_multi_polygon_dissolve(self):
         # arrange
@@ -23,13 +24,15 @@ class TestGridService(BaseTestCase):
         result = GridService.merge_to_multi_polygon(aoi_geojson, True)
 
         # assert coordinates are same. Done separately due to floating point rounding
-        for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
+        for expected_coords, result_coords in zip(
+            expected["coordinates"][0][0], result["coordinates"][0][0]
+        ):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])
-        
+
         # assert everything besides floating points are the same
-        split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
-        split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
+        split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
+        split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
         self.assertEqual(split_expected, split_result)
 
     def test_feature_collection_to_multi_polygon_nodissolve(self):
@@ -43,13 +46,15 @@ class TestGridService(BaseTestCase):
         result = GridService.merge_to_multi_polygon(aoi_geojson, False)
 
         # assert coordinates are same. Done separately due to floating point rounding
-        for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
+        for expected_coords, result_coords in zip(
+            expected["coordinates"][0][0], result["coordinates"][0][0]
+        ):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])
-        
+
         # assert everything besides floating points are the same
-        split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
-        split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
+        split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
+        split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
         self.assertEqual(split_expected, split_result)
 
     def test_trim_grid_to_aoi_clip(self):
@@ -107,13 +112,15 @@ class TestGridService(BaseTestCase):
         result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=False)
 
         # assert coordinates are same. Done separately due to floating point rounding
-        for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
+        for expected_coords, result_coords in zip(
+            expected["coordinates"][0][0], result["coordinates"][0][0]
+        ):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])
-        
+
         # assert everything besides floating points are the same
-        split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
-        split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
+        split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
+        split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
         self.assertEqual(split_expected, split_result)
 
     def test_feature_collection_multi_polygon_with_zcoord_dissolve(self):
@@ -127,13 +134,15 @@ class TestGridService(BaseTestCase):
         result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=True)
 
         # assert coordinates are same. Done separately due to floating point rounding
-        for expected_coords, result_coords in zip(expected["coordinates"][0][0], result["coordinates"][0][0]):
+        for expected_coords, result_coords in zip(
+            expected["coordinates"][0][0], result["coordinates"][0][0]
+        ):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])
-        
+
         # assert everything besides floating points are the same
-        split_expected = re.split(r'\[\[\[\[.*?]]]]', str(expected))
-        split_result = re.split(r'\[\[\[\[.*?]]]]', str(result))
+        split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
+        split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
         self.assertEqual(split_expected, split_result)
 
     def test_raises_InvalidGeoJson_when_geometry_is_linestring(self):
@@ -193,7 +202,12 @@ class TestGridService(BaseTestCase):
 
     def test_tile_to_bbox(self):
         x, y, z = 34789738, 23734005, 26
-        expected = (6.626697778701782, 46.522057511538904, 6.626703143119812, 46.52206120266217)
+        expected = (
+            6.626697778701782,
+            46.522057511538904,
+            6.626703143119812,
+            46.52206120266217,
+        )
         result = GridService._tile_to_bbox(x, y, z)
 
         for expected_float, result_float in zip(expected, result):

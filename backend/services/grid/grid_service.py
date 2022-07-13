@@ -10,6 +10,7 @@ import requests
 import math
 import json
 
+
 class GridServiceError(Exception):
     """Custom Exception to notify callers an error occurred when handling projects"""
 
@@ -70,14 +71,18 @@ class GridService:
         overarching_bbox = GridService._create_overarching_bbox(grid_dto)
         roads = []
 
-        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(overarching_bbox, overarching_bbox, overarching_bbox)
+        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(
+            overarching_bbox, overarching_bbox, overarching_bbox
+        )
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
         roads_in_overarching_bbox = parsed_resp["elements"]
         for task in trimmed_grid["features"]:
             task_geometry = shape(task["geometry"])
             for point in roads_in_overarching_bbox:
-                if point["type"] == "node": # "node" seems to have same lat/lon as "way"
+                if (
+                    point["type"] == "node"
+                ):  # "node" seems to have same lat/lon as "way"
                     if task_geometry.intersects(Point(point["lat"], point["lon"])):
                         roads.append(task)
         return geojson.FeatureCollection(roads)
@@ -260,7 +265,7 @@ class GridService:
             # force Multipolygon
             geometry = MultiPolygon([geometry])
         return geometry
-    
+
     def _tile_to_bbox(x: int, y: int, zoom: int) -> tuple:
         """
         Helper method to convert tile's xyz to bbox.
@@ -270,8 +275,8 @@ class GridService:
         :param y: tile's y coordinate
         :param z: tile's zoom level
         :return: tuple containing bbox in format of Mapbox's Tilebelt
-        
         """
+
         def tile_lon(x: int, z: int) -> float:
             return x / math.pow(2.0, z) * 360.0 - 180
 
@@ -279,12 +284,17 @@ class GridService:
             return math.degrees(
                 math.atan(math.sinh(math.pi - (2.0 * math.pi * y) / math.pow(2.0, z)))
             )
-        
-        north=tile_lat(y, zoom)
-        south=tile_lat(y + 1, zoom)
-        west=tile_lon(x, zoom)
-        east=tile_lon(x + 1, zoom)
-        return (west, south, east, north) # this is the order returned in Mapbox's Tilebelt
+
+        north = tile_lat(y, zoom)
+        south = tile_lat(y + 1, zoom)
+        west = tile_lon(x, zoom)
+        east = tile_lon(x + 1, zoom)
+        return (
+            west,
+            south,
+            east,
+            north,
+        )  # this is the order returned in Mapbox's Tilebelt
 
     def _create_overarching_bbox(grid_dto: GridDTO) -> geojson.FeatureCollection:
         """
@@ -292,10 +302,16 @@ class GridService:
         :param grid_dto: the dto containing
         :return: tuple (minX, minY, maxX, maxY)
         """
-        coords = [] # to be used to create a MultiPoint obj
-        for feature in grid_dto["area_of_interest"]["features"]: # combine all grids in to one. 
+        coords = []  # to be used to create a MultiPoint obj
+        for feature in grid_dto["area_of_interest"][
+            "features"
+        ]:  # combine all grids in to one.
             # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
-            x, y, z = feature["properties"]["x"], feature["properties"]["y"], feature["properties"]["zoom"]
+            x, y, z = (
+                feature["properties"]["x"],
+                feature["properties"]["y"],
+                feature["properties"]["zoom"],
+            )
             bbox = GridService._tile_to_bbox(x, y, z)
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
