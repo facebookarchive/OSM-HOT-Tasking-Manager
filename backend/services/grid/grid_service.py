@@ -9,6 +9,8 @@ from backend.models.postgis.utils import InvalidGeoJson
 import requests
 import math
 import json
+import mapbox_vector_tile
+import os
 
 
 class GridServiceError(Exception):
@@ -69,6 +71,7 @@ class GridService:
         """
         trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
         overarching_bbox = GridService._create_overarching_bbox(grid_dto)
+        # overarching_bbox = (32.568389314727,-1.9150114059448,32.574871994676,-1.9065248966217)
         roads = []
 
         url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(
@@ -316,3 +319,30 @@ class GridService:
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
         return MultiPoint(coords).bounds
+
+    def _measure_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
+        """
+        TODO
+        :param grid_dto: the dto containing
+        :return: TODO
+        """
+        roads = GridService.trim_aoi_to_roads(grid_dto)
+        count_roads_with_images = 0
+        output = {"features": [], "completion": 0}  # features - roads with images
+        for feature in roads["features"]:
+            x, y, z = (
+                feature["properties"]["x"],
+                feature["properties"]["y"],
+                feature["properties"]["zoom"],
+            )
+            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/${z}/${x}/${y}?access_token={}".format(
+                x, y, z, os.getenv("MAPILLARY_ACCESS_TOKEN")
+            )
+            resp = requests.get(url)
+            detection_geometry = mapbox_vector_tile.decode(resp.content)
+            if "image" in detection_geometry:
+                # TODO add a check to see if there's intersection between road and image location
+                count_roads_with_images += 1
+                output["features"].append(feature)
+        output["completion"] = count_roads_with_images // len(roads["features"])
+        return output
