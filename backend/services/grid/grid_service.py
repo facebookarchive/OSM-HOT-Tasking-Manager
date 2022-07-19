@@ -320,29 +320,36 @@ class GridService:
             coords.append((bbox[2], bbox[3]))
         return MultiPoint(coords).bounds
 
-    def _measure_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
+    def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
         """
         TODO
+        Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
         :param grid_dto: the dto containing
         :return: TODO
         """
         roads = GridService.trim_aoi_to_roads(grid_dto)
         count_roads_with_images = 0
-        output = {"features": [], "completion": 0}  # features - roads with images
+        output = {"roads_with_images": [], "completion": 0}
         for feature in roads["features"]:
             x, y, z = (
                 feature["properties"]["x"],
                 feature["properties"]["y"],
                 feature["properties"]["zoom"],
             )
-            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/${z}/${x}/${y}?access_token={}".format(
-                x, y, z, os.getenv("MAPILLARY_ACCESS_TOKEN")
+            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
+                z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
             )
+
             resp = requests.get(url)
             detection_geometry = mapbox_vector_tile.decode(resp.content)
-            if "image" in detection_geometry:
-                # TODO add a check to see if there's intersection between road and image location
-                count_roads_with_images += 1
-                output["features"].append(feature)
-        output["completion"] = count_roads_with_images // len(roads["features"])
+            for geometry in detection_geometry["sequence"]["features"]:
+                if "image_id" in geometry["properties"]:
+                    # TODO add a check to see if there's intersection between road and image location
+                    count_roads_with_images += 1
+                    output["roads_with_images"].append(feature)
+                    break
+            break
+        print("count_roads_with_images", count_roads_with_images)
+        print('len(roads["features"]', len(roads["features"]))
+        output["completion"] = count_roads_with_images / len(roads["features"])
         return output

@@ -185,20 +185,20 @@ class TestGridService(BaseTestCase):
                 geojson.dumps(bad_feature_collection), dissolve=True
             )
 
-    # def test_trim_aoi_to_roads(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_trim_road.json")
+    def test_trim_aoi_to_roads(self):
+        # arrange
+        grid_json = get_canned_json("test_trim_road.json")
 
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
-    #     )
-    #     grid_dto.clip_to_aoi = False
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(
+            json.dumps(get_canned_json("clipped_feature_collection.json"))
+        )
+        grid_dto.clip_to_aoi = False
 
-    #     # act
-    #     result = GridService.trim_aoi_to_roads(grid_dto)
-    #     # assert
-    #     # self.assertEqual(str(expected), str(result))
+        # act
+        result = GridService.trim_aoi_to_roads(grid_dto)
+        # assert
+        # self.assertEqual(str(expected), str(result))
 
     def test_tile_to_bbox(self):
         x, y, z = 34789738, 23734005, 26
@@ -212,3 +212,19 @@ class TestGridService(BaseTestCase):
 
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
+
+    def test__task_grid_road_imagery_completeness(self):
+        # arrange
+        grid_json = get_canned_json("test_trim_road.json")
+
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(
+            json.dumps(get_canned_json("clipped_feature_collection.json"))
+        )
+        grid_dto.clip_to_aoi = False
+
+        # act
+        result = GridService._task_grid_road_imagery_completeness(grid_dto)
+        print("result", result)
+        # assert
+        # self.assertEqual(str(expected), str(result))
