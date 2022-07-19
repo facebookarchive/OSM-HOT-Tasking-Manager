@@ -187,7 +187,7 @@ class TestGridService(BaseTestCase):
 
     # def test_trim_aoi_to_roads(self):
     #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
+    #     grid_json = get_canned_json("test_trim_road.json")
 
     #     grid_dto = GridDTO(grid_json)
     #     expected = geojson.loads(
