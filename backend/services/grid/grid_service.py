@@ -71,11 +71,10 @@ class GridService:
         """
         trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
         overarching_bbox = GridService._create_overarching_bbox(grid_dto)
-        # overarching_bbox = (32.568389314727,-1.9150114059448,32.574871994676,-1.9065248966217)
         roads = []
 
-        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{};way["highway"]{};relation["highway"]{};);out geom;>;out skel qt;'.format(
-            overarching_bbox, overarching_bbox, overarching_bbox
+        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
+            bbox=overarching_bbox
         )
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
@@ -349,7 +348,5 @@ class GridService:
                     output["roads_with_images"].append(feature)
                     break
             break
-        print("count_roads_with_images", count_roads_with_images)
-        print('len(roads["features"]', len(roads["features"]))
         output["completion"] = count_roads_with_images / len(roads["features"])
         return output
