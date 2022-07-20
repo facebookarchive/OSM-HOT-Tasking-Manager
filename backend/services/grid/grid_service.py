@@ -65,7 +65,7 @@ class GridService:
     @staticmethod
     def trim_grid_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
         """
-        Extension of trim_grid_to_aoi. Further trims the grid to only those with roads
+        Removes grid squares that don't contain roads by interacting with OpenStreetMaps' Overpass API
         :param grid_dto: the dto containing
         :return: geojson.FeatureCollection trimmed task grid
         """
@@ -321,10 +321,11 @@ class GridService:
 
     def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
         """
-        TODO
-        Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
+        Returns the roads with street view images (based on Mapillary) as well as a percentage 
+        of roads in the task grid that have these images
+        NOTE Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
         :param grid_dto: the dto containing
-        :return: TODO
+        :return: dictionary/object
         """
         roads = GridService.trim_grid_to_roads(grid_dto)
         count_roads_with_images = 0
