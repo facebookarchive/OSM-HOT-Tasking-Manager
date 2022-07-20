@@ -185,7 +185,7 @@ class TestGridService(BaseTestCase):
                 geojson.dumps(bad_feature_collection), dissolve=True
             )
 
-    def test_trim_aoi_to_roads(self):
+    def trim_grid_to_roads(self):
         # arrange
         grid_json = get_canned_json("test_trim_road.json")
 
@@ -196,7 +196,7 @@ class TestGridService(BaseTestCase):
         grid_dto.clip_to_aoi = False
 
         # act
-        result = GridService.trim_aoi_to_roads(grid_dto)
+        result = GridService.trim_grid_to_roads(grid_dto)
         # assert
         # self.assertEqual(str(expected), str(result))
 
@@ -213,7 +213,7 @@ class TestGridService(BaseTestCase):
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
 
-    def test__task_grid_road_imagery_completeness(self):
+    def test_task_grid_road_imagery_completeness(self):
         # arrange
         grid_json = get_canned_json("test_trim_road.json")
 
@@ -225,6 +225,5 @@ class TestGridService(BaseTestCase):
 
         # act
         result = GridService._task_grid_road_imagery_completeness(grid_dto)
-        print("result", result)
         # assert
         # self.assertEqual(str(expected), str(result))

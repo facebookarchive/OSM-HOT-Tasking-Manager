@@ -63,13 +63,12 @@ class GridService:
         return geojson.FeatureCollection(intersecting_features)
 
     @staticmethod
-    def trim_aoi_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
+    def trim_grid_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
         """
         Extension of trim_grid_to_aoi. Further trims the grid to only those with roads
         :param grid_dto: the dto containing
         :return: geojson.FeatureCollection trimmed task grid
         """
-        trimmed_grid = GridService.trim_grid_to_aoi(grid_dto)
         overarching_bbox = GridService._create_overarching_bbox(grid_dto)
         roads = []
 
@@ -79,7 +78,7 @@ class GridService:
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
         roads_in_overarching_bbox = parsed_resp["elements"]
-        for task in trimmed_grid["features"]:
+        for task in grid_dto["area_of_interest"]["features"]:
             task_geometry = shape(task["geometry"])
             for point in roads_in_overarching_bbox:
                 if (
@@ -87,6 +86,7 @@ class GridService:
                 ):  # "node" seems to have same lat/lon as "way"
                     if task_geometry.intersects(Point(point["lat"], point["lon"])):
                         roads.append(task)
+                        break
         return geojson.FeatureCollection(roads)
 
     @staticmethod
@@ -326,7 +326,7 @@ class GridService:
         :param grid_dto: the dto containing
         :return: TODO
         """
-        roads = GridService.trim_aoi_to_roads(grid_dto)
+        roads = GridService.trim_grid_to_roads(grid_dto)
         count_roads_with_images = 0
         output = {"roads_with_images": [], "completion": 0}
         for feature in roads["features"]:
