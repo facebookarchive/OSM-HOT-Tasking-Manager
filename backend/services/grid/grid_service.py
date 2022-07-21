@@ -349,5 +349,5 @@ class GridService:
                     output["roads_with_images"].append(feature)
                     break
             break
-        output["completion"] = count_roads_with_images / len(roads["features"])
+        output["completion"] = count_roads_with_images / len(roads["features"]) if len(roads["features"]) != 0 else 0
         return output
