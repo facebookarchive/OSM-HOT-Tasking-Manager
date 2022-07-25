@@ -185,29 +185,29 @@ class TestGridService(BaseTestCase):
                 geojson.dumps(bad_feature_collection), dissolve=True
             )
 
-    def trim_grid_to_roads(self):
-        # arrange
-        grid_json = get_canned_json("test_trim_road.json")
+    # def trim_grid_to_roads(self): # TODO
+    #     # arrange
+    #     grid_json = get_canned_json("test_trim_road.json")
 
-        grid_dto = GridDTO(grid_json)
-        expected = geojson.loads(
-            json.dumps(get_canned_json("clipped_feature_collection.json"))
-        )
-        grid_dto.clip_to_aoi = False
+    #     grid_dto = GridDTO(grid_json)
+    #     expected = geojson.loads(
+    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
+    #     )
+    #     grid_dto.clip_to_aoi = False
 
-        # act
-        result = GridService.trim_grid_to_roads(grid_dto)
-        # assert
-        # self.assertEqual(str(expected), str(result))
+    #     # act
+    #     result = GridService.trim_grid_to_roads(grid_dto)
+    #     # assert
+    #     self.assertEqual(str(expected), str(result))
 
     def test_tile_to_bbox(self):
         x, y, z = 34789738, 23734005, 26
-        expected = (
-            6.626697778701782,
-            46.522057511538904,
-            6.626703143119812,
-            46.52206120266217,
-        )
+        expected = {
+            "west": 6.626697778701782,
+            "south": 46.522057511538904,
+            "east": 6.626703143119812,
+            "north": 46.52206120266217,
+        }
         result = GridService._tile_to_bbox(x, y, z)
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
@@ -223,7 +223,8 @@ class TestGridService(BaseTestCase):
         grid_dto.clip_to_aoi = False
 
         # act
-        result = GridService._task_grid_road_imagery_completeness(grid_dto)
+        roads = GridService.trim_grid_to_roads(grid_dto)
+        result = GridService._task_grid_road_imagery_completeness(roads)
 
         # assert coordinates are same. Done separately due to floating point rounding
         for expected_coords, result_coords in zip(

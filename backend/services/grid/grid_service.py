@@ -8,7 +8,6 @@ from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
 import requests
 import math
-import json
 import mapbox_vector_tile
 import os
 
@@ -291,12 +290,12 @@ class GridService:
         south = tile_lat(y + 1, zoom)
         west = tile_lon(x, zoom)
         east = tile_lon(x + 1, zoom)
-        return (
-            west,
-            south,
-            east,
-            north,
-        )  # this is the order returned in Mapbox's Tilebelt
+        return {
+            "west": west,
+            "south": south,
+            "east": east,
+            "north": north,
+        }  # Done because not all inputs expect west,south,east,north format (eg OSM Overpass)
 
     def _create_overarching_bbox(grid_dto: GridDTO) -> geojson.FeatureCollection:
         """
@@ -319,17 +318,14 @@ class GridService:
             coords.append((bbox[2], bbox[3]))
         return MultiPoint(coords).bounds
 
-    def _task_grid_road_imagery_completeness(
-        grid_dto: GridDTO, tasks_with_roads: dict
-    ) -> dict:
+    def _task_grid_road_imagery_completeness(roads: geojson.FeatureCollection) -> dict:
         """
         Returns the roads with street view images (based on Mapillary) as well as a percentage
         of roads in the task grid that have these images
         NOTE Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
-        :param grid_dto: the dto containing ONLY roads
+        :param roads: trimmed dto containing ONLY roads
         :return: dictionary/object
         """
-        roads = GridService.trim_grid_to_roads(grid_dto)
         count_roads_with_images = 0
         output = {"roads_with_images": [], "completion": 0}
         for feature in roads["features"]:
