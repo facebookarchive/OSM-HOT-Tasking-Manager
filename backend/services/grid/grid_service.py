@@ -319,12 +319,14 @@ class GridService:
             coords.append((bbox[2], bbox[3]))
         return MultiPoint(coords).bounds
 
-    def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
+    def _task_grid_road_imagery_completeness(
+        grid_dto: GridDTO, tasks_with_roads: dict
+    ) -> dict:
         """
-        Returns the roads with street view images (based on Mapillary) as well as a percentage 
+        Returns the roads with street view images (based on Mapillary) as well as a percentage
         of roads in the task grid that have these images
         NOTE Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
-        :param grid_dto: the dto containing
+        :param grid_dto: the dto containing ONLY roads
         :return: dictionary/object
         """
         roads = GridService.trim_grid_to_roads(grid_dto)
@@ -349,5 +351,9 @@ class GridService:
                     output["roads_with_images"].append(feature)
                     break
             break
-        output["completion"] = count_roads_with_images / len(roads["features"]) if len(roads["features"]) != 0 else 0
+        output["completion"] = (
+            count_roads_with_images / len(roads["features"])
+            if len(roads["features"]) != 0
+            else 0
+        )
         return output
