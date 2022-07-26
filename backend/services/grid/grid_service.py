@@ -314,8 +314,8 @@ class GridService:
                 feature["properties"]["zoom"],
             )
             bbox = GridService._tile_to_bbox(x, y, z)
-            coords.append((bbox[0], bbox[1]))
-            coords.append((bbox[2], bbox[3]))
+            coords.append((bbox["west"], bbox["south"]))
+            coords.append((bbox["east"], bbox["north"]))
         return MultiPoint(coords).bounds
 
     def _task_grid_road_imagery_completeness(roads: geojson.FeatureCollection) -> dict:
