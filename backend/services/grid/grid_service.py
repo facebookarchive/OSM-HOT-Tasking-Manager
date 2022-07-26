@@ -68,7 +68,7 @@ class GridService:
         :param grid_dto: the dto containing
         :return: geojson.FeatureCollection trimmed task grid
         """
-        overarching_bbox = GridService._create_overarching_bbox(grid_dto)
+        overarching_bbox = GridService._create_overarching_bbox(grid_dto, True)
         roads = []
 
         url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
@@ -290,17 +290,15 @@ class GridService:
         south = tile_lat(y + 1, zoom)
         west = tile_lon(x, zoom)
         east = tile_lon(x + 1, zoom)
-        return {
-            "west": west,
-            "south": south,
-            "east": east,
-            "north": north,
-        }  # Done because not all inputs expect west,south,east,north format (eg OSM Overpass)
+        return (west, south, east, north)
 
-    def _create_overarching_bbox(grid_dto: GridDTO) -> geojson.FeatureCollection:
+    def _create_overarching_bbox(
+        grid_dto: GridDTO, latlng_switch: bool = False
+    ) -> geojson.FeatureCollection:
         """
         Recreates the entire bbox given a grid. NOTE Potentially redundant
         :param grid_dto: the dto containing
+        :param latlng_switch: switch to latlng format if needed. Default is lnglat
         :return: tuple (minX, minY, maxX, maxY)
         """
         coords = []  # to be used to create a MultiPoint obj
@@ -313,10 +311,21 @@ class GridService:
                 feature["properties"]["y"],
                 feature["properties"]["zoom"],
             )
+
             bbox = GridService._tile_to_bbox(x, y, z)
-            coords.append((bbox["west"], bbox["south"]))
-            coords.append((bbox["east"], bbox["north"]))
-        return MultiPoint(coords).bounds
+            coords.append((bbox[0], bbox[1]))
+            coords.append((bbox[2], bbox[3]))
+        overarching_bbox = MultiPoint(coords).bounds
+        return (
+            overarching_bbox
+            if not latlng_switch
+            else (
+                overarching_bbox[1],
+                overarching_bbox[0],
+                overarching_bbox[3],
+                overarching_bbox[2],
+            )
+        )
 
     def _task_grid_road_imagery_completeness(roads: geojson.FeatureCollection) -> dict:
         """

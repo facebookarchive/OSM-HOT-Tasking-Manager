@@ -202,12 +202,13 @@ class TestGridService(BaseTestCase):
 
     def test_tile_to_bbox(self):
         x, y, z = 34789738, 23734005, 26
-        expected = {
-            "west": 6.626697778701782,
-            "south": 46.522057511538904,
-            "east": 6.626703143119812,
-            "north": 46.52206120266217,
-        }
+        expected = (
+            6.626697778701782,
+            46.522057511538904,
+            6.626703143119812,
+            46.52206120266217,
+        )
+
         result = GridService._tile_to_bbox(x, y, z)
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
@@ -217,9 +218,7 @@ class TestGridService(BaseTestCase):
         grid_json = get_canned_json("test_trim_road.json")
 
         grid_dto = GridDTO(grid_json)
-        expected = geojson.loads(
-            json.dumps(get_canned_json("road_imagery_completion.json"))
-        )
+        expected = get_canned_json("road_imagery_completion.json")
         grid_dto.clip_to_aoi = False
 
         # act
@@ -234,7 +233,7 @@ class TestGridService(BaseTestCase):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])
 
-        # assert everything besides floating points are the same TODO
-        # split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
-        # split_result = re.split(r"\[\[\[.*?]]]", str(result))
-        # self.assertEqual(split_expected, split_result)
+        # assert everything besides floating points are the same
+        split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
+        split_result = re.split(r"\[\[\[.*?]]]", str(result))
+        self.assertEqual(split_expected, split_result)
