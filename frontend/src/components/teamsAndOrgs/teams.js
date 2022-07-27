@@ -24,32 +24,32 @@ export function TeamsManagement({
   );
 
   return (
-    <Management
-      title={
-        managementView ? (
-          <FormattedMessage
-            {...messages.manage}
-            values={{ entity: <FormattedMessage {...messages.teams} /> }}
-          />
+      <Management
+        title={
+          managementView ? (
+            <FormattedMessage
+              {...messages.manage}
+              values={{ entity: <FormattedMessage {...messages.teams} /> }}
+            />
+          ) : (
+            <FormattedMessage {...messages.myTeams} />
+          )
+        }
+        isAdmin={userDetails.role === 'ADMIN' && managementView}
+        showAddButton={(userDetails.role === 'ADMIN' || isOrgManager) && managementView}
+        managementView={managementView}
+        userOnly={userTeamsOnly}
+        setUserOnly={setUserTeamsOnly}
+        userOnlyLabel={<FormattedMessage {...messages.myTeams} />}
+      >
+        {teams.length ? (
+          teams.map((team, n) => <TeamCard team={team} key={n} managementView={managementView} />)
         ) : (
-          <FormattedMessage {...messages.myTeams} />
-        )
-      }
-      isAdmin={userDetails.role === 'ADMIN' && managementView}
-      showAddButton={(userDetails.role === 'ADMIN' || isOrgManager) && managementView}
-      managementView={managementView}
-      userOnly={userTeamsOnly}
-      setUserOnly={setUserTeamsOnly}
-      userOnlyLabel={<FormattedMessage {...messages.myTeams} />}
-    >
-      {teams.length ? (
-        teams.map((team, n) => <TeamCard team={team} key={n} managementView={managementView} />)
-      ) : (
-        <div className="pb3 pt2">
-          <FormattedMessage {...messages.noTeams} />
-        </div>
-      )}
-    </Management>
+          <div className="pb3 pt2">
+            <FormattedMessage {...messages.noTeams} />
+          </div>
+        )}
+      </Management>
   );
 }
 

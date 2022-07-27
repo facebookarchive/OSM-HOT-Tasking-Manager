@@ -5,6 +5,8 @@ import ReactPlaceholder from 'react-placeholder';
 import { TextBlock, RectShape } from 'react-placeholder/lib/placeholders';
 import { FormattedMessage } from 'react-intl';
 import { Form } from 'react-final-form';
+import { format, startOfYear } from 'date-fns';
+
 
 import messages from './messages';
 import { useFetch } from '../hooks/UseFetch';
@@ -30,6 +32,9 @@ import { Projects } from '../components/teamsAndOrgs/projects';
 import { FormSubmitButton, CustomButton } from '../components/button';
 import { DeleteModal } from '../components/deleteModal';
 import { NotFound } from './notFound';
+import { useTeamMembersStatsQueryAPI, useTeamMembersStatsQueryParams } from '../hooks/UseTeamMembersStatsQueryAPI';
+import { useForceUpdate } from '../hooks/UseForceUpdate';
+import { TeamStats } from '../components/teamsAndOrgs/teamStats';
 
 export function ManageTeams() {
   useSetTitleTag('Manage teams');
@@ -43,6 +48,10 @@ export function MyTeams() {
       <ListTeams />
     </div>
   );
+}
+
+export function isManager(managers, username) {
+  return managers.filter((manager) => manager.username === username).length > 0;
 }
 
 export function ListTeams({ managementView = false }: Object) {
@@ -385,6 +394,20 @@ export function TeamDetail(props) {
     ).then((res) => setIsMember(false));
   };
 
+  const [query, setQuery] = useTeamMembersStatsQueryParams();
+  const [forceUpdated, forceUpdate] = useForceUpdate();
+  useEffect(() => {
+    if (!query.startDate) {
+      setQuery({ ...query, startDate: format(startOfYear(Date.now()), 'yyyy-MM-dd') }, 'replaceIn');
+    }
+  });
+  const [apiState] = useTeamMembersStatsQueryAPI(
+    { teamMemberStats: [] },
+    query,
+    team.teamId,
+    query.startDate ? forceUpdated : false,
+  );
+
   if (!loading && error) {
     return <NotFound />;
   } else {
@@ -407,6 +430,16 @@ export function TeamDetail(props) {
               showManageButtons={false}
             />
           </div>
+          { isManager(managers, userDetails.username) &&
+          <TeamStats
+            query={query}
+            setQuery={setQuery}
+            stats={apiState.stats}
+            error={apiState.isError}
+            loading={apiState.isLoading}
+            retryFn={forceUpdate}
+            teamName={team.name} />
+          }
         </div>
         <div className="fixed bottom-0 cf bg-white h3 w-100">
           <div className="w-80-ns w-60-m w-50 h-100 fl tr">

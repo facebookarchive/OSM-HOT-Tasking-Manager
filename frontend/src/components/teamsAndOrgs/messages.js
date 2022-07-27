@@ -80,6 +80,10 @@ export default defineMessages({
     id: 'management.team',
     defaultMessage: 'Team',
   },
+  teamStats: {
+    id: 'management.teamStats',
+    defaultMessage: 'Team Stats',
+  },
   projects: {
     id: 'management.projects',
     defaultMessage: 'Projects',
@@ -107,6 +111,10 @@ export default defineMessages({
   user: {
     id: 'management.user',
     defaultMessage: 'User',
+  },
+  userName: {
+    id: 'management.userName',
+    defaultMessage: 'Username',
   },
   category: {
     id: 'management.category',
@@ -434,5 +442,49 @@ export default defineMessages({
   statistics: {
     id: 'management.stats.title',
     defaultMessage: 'Statistics',
+  },
+  timeSpentValidating: {
+    id:'management.teams.stats.timeSpentValidating',
+    defaultMessage:'Time spent validating'
+  },
+  timeSpentMapping: {
+    id:'management.teams.stats.timeSpentMapping',
+    defaultMessage:'Time spent mapping'
+  },
+  averageTimePerTask: {
+    id:'management.teams.stats.averageTimePerTask',
+    defaultMessage:'Average time per task'
+  },
+  teamTaskSummary: {
+    id:'management.teams.stats.teamTaskSummary',
+    defaultMessage:'Team task summary'
+  },
+  teamMappingStatistics: {
+    id:'management.teams.stats.teamMappingStatistics',
+    defaultMessage:'Team mapping statistics'
+  },
+  teamValidationStatistics: {
+    id:'management.teams.stats.teamValidationStatistics',
+    defaultMessage:'Team validation statistics'
+  },
+  totalTime: {
+    id:'management.teams.stats.totalTime',
+    defaultMessage:'Total time'
+  },
+  summary: {
+    id:'management.teams.stats.tabs.summary',
+    defaultMessage:'Summary'
+  },
+  mapped: {
+    id:'management.teams.stats.tabs.mapped',
+    defaultMessage:'Mapped'
+  },
+  validated: {
+    id:'management.teams.stats.tabs.validated',
+    defaultMessage:'Validated'
+  },
+  exportCSV: {
+    id:'management.teams.stats.exportCSV',
+    defaultMessage:'Export CSV'
   },
 });
