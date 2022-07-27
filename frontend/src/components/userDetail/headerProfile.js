@@ -13,7 +13,7 @@ import MissingMapsLogo from '../../assets/img/organizations/missingmaps.png';
 import SlackLogo from '../../assets/img/icons/slack.png';
 import { OSM_SERVER_URL, ORG_CODE } from '../../config';
 
-const SocialMedia = ({ data }) => {
+export const SocialMedia = ({ data }) => {
   const intl = useIntl();
   const socialMediaItems = ['twitterId', 'facebookId', 'linkedinId'];
 
@@ -81,7 +81,7 @@ const SocialMedia = ({ data }) => {
         </li>
       )}
       {socialMediaItems.map((i) => {
-        if (data[i] === null) {
+        if (!data[i]) {
           return null;
         }
 
@@ -101,7 +101,7 @@ const MyContributionsNav = ({ username, authUser }) => {
   const items = [
     { url: `/contributions`, label: <FormattedMessage {...messages.myStats} /> },
     {
-      url: '/contributions/projects/?mappedByMe=1&action=any',
+      url: '/contributions/projects?mappedByMe=1&action=any',
       label: <FormattedMessage {...messages.myProjects} />,
     },
     { url: '/contributions/tasks', label: <FormattedMessage {...messages.myTasks} /> },
