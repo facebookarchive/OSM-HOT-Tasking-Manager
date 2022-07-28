@@ -10,6 +10,7 @@ import requests
 import math
 import mapbox_vector_tile
 import os
+from collections import deque
 
 
 class GridServiceError(Exception):
@@ -389,3 +390,43 @@ class GridService:
             overarching_bbox[3] - lat_offset
         )  # max_y minus the offset, because start at top left corner of tile in this special instance
         return (lon, lat)
+
+    def _get_parent_tile(x: int, y: int, z: int, desired_zoom: int = 14) -> tuple:
+        """
+        Gets the tile at lower zoom levels until zoom (z) == desired_zoom
+        Ported from mapbox's tilebelt https://github.com/mapbox/tilebelt/blob/master/index.js#L106
+        :param x: tile's x value
+        :param y: tile's y value
+        :param z: tile's z (zoom) value
+        :param desired_zoom: desired z to calculate. Default 14 is for Mapillary
+        :return: tuple containing newly calculated x, y, z
+        """
+        while z > desired_zoom:
+            x >>= 1
+            y >>= 1
+            z -= 1
+        return (x, y, z)
+
+    def _get_child_tile(x: int, y: int, z: int, desired_zoom: int = 14) -> list:
+        """
+        Gets the 4 tiles at higher zoom levels until zoom (z) == desired_zoom
+        Ported from mapbox's tilebelt https://github.com/mapbox/tilebelt/blob/master/index.js#L87
+        :param x: tile's x value
+        :param y: tile's y value
+        :param z: tile's z (zoom) value
+        :param desired_zoom: desired z to calculate. Default 14 is for Mapillary
+        :return: tuple containing newly calculated x, y, z
+        """
+        queue = deque([[x, y, z]])
+        output = []
+        while queue:
+            x, y, z = queue.popleft()
+            if z < desired_zoom:
+                queue.append([x * 2, y * 2, z + 1])
+                queue.append([x * 2 + 1, y * 2, z + 1])
+                queue.append([x * 2 + 1, y * 2 + 1, z + 1])
+                queue.append([x * 2, y * 2 + 1, z + 1])
+            else:
+                output.append([x, y, z])
+
+        return output

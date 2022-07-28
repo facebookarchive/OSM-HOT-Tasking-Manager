@@ -223,7 +223,6 @@ class TestGridService(BaseTestCase):
 
         # act
         result = GridService._task_grid_road_imagery_completeness(grid_dto)
-        print("result", result)
 
         # assert coordinates are same. Done separately due to floating point rounding
         for expected_coords, result_coords in zip(
@@ -237,3 +236,22 @@ class TestGridService(BaseTestCase):
         split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
         split_result = re.split(r"\[\[\[.*?]]]", str(result))
         self.assertEqual(split_expected, split_result)
+
+    def test_get_parent_tile(self):
+        x, y, z = 278826, 299157, 19
+        result = GridService._get_parent_tile(x, y, z)
+        expected = (8713, 9348, 14)
+
+        self.assertEqual(expected, result)
+
+    def test_get_child_tile(self):
+        x, y, z = 4356, 4674, 13
+        result = GridService._get_child_tile(x, y, z)
+        expected = [
+            [8712, 9348, 14],
+            [8713, 9348, 14],
+            [8713, 9349, 14],
+            [8712, 9349, 14],
+        ]
+
+        self.assertEqual(expected, result)
