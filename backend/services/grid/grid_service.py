@@ -312,6 +312,13 @@ class GridService:
                 feature["properties"]["y"],
                 feature["properties"]["zoom"],
             )
+            if z > 14:
+                x, y, z = GridService._get_parent_tile(x, y, z)
+            if z < 14:
+                many_tiles = GridService._get_child_tile(
+                    x, y, z
+                )  # TODO which one to pick?
+                x, y, z = many_tiles[0]  # arbitrarily pick the first one
 
             bbox = GridService._tile_to_bbox(x, y, z)
             coords.append((bbox[0], bbox[1]))
@@ -338,6 +345,12 @@ class GridService:
         """
         aoi_properties = grid_dto["area_of_interest"]["features"][0]["properties"]
         x, y, z = aoi_properties["x"], aoi_properties["y"], aoi_properties["zoom"]
+        if z > 14:
+            x, y, z = GridService._get_parent_tile(x, y, z)
+        if z < 14:
+            many_tiles = GridService._get_child_tile(x, y, z)  # TODO which one to pick?
+            x, y, z = many_tiles[0]  # arbitrarily pick the first one
+
         url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
             z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
         )
@@ -411,6 +424,7 @@ class GridService:
         """
         Gets the 4 tiles at higher zoom levels until zoom (z) == desired_zoom
         Ported from mapbox's tilebelt https://github.com/mapbox/tilebelt/blob/master/index.js#L87
+        NOTE Don't let input z be too far away from desired_zoom. O(4^n) time and space.
         :param x: tile's x value
         :param y: tile's y value
         :param z: tile's z (zoom) value

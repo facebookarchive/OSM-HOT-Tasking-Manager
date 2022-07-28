@@ -185,20 +185,29 @@ class TestGridService(BaseTestCase):
                 geojson.dumps(bad_feature_collection), dissolve=True
             )
 
-    # def trim_grid_to_roads(self): # TODO
-    #     # arrange
-    #     grid_json = get_canned_json("test_trim_road.json")
+    def test_trim_grid_to_roads(self):
+        # arrange
+        grid_json = get_canned_json("test_trim_road.json")
 
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
-    #     )
-    #     grid_dto.clip_to_aoi = False
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(json.dumps(get_canned_json("trim_roads_results.json")))
+        grid_dto.clip_to_aoi = False
 
-    #     # act
-    #     result = GridService.trim_grid_to_roads(grid_dto)
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        # act
+        result = GridService.trim_grid_to_roads(grid_dto)
+
+        # assert coordinates are same. Done separately due to floating point rounding
+        for expected_coords, result_coords in zip(
+            expected["features"][0]["geometry"]["coordinates"][0][0],
+            result["features"][0]["geometry"]["coordinates"][0][0],
+        ):
+            self.assertAlmostEqual(expected_coords[0], result_coords[0])
+            self.assertAlmostEqual(expected_coords[1], result_coords[1])
+
+        # assert everything besides floating points are the same
+        split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
+        split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
+        self.assertEqual(split_expected, split_result)
 
     def test_tile_to_bbox(self):
         x, y, z = 34789738, 23734005, 26
