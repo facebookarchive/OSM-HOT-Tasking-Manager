@@ -102,7 +102,9 @@ export const UserAvatarList = ({
   size,
 }: Object) => {
   const getColor = () =>
-    bgColor ? bgColor : getRandomArrayItem(['bg-orange', 'bg-primary', 'bg-blue-dark', 'bg-blue-grey']);
+    bgColor
+      ? bgColor
+      : getRandomArrayItem(['bg-orange', 'bg-primary', 'bg-blue-dark', 'bg-blue-grey']);
   let marginLeft = '-1.25rem';
   if (size === 'large') {
     marginLeft = '-1.5rem';

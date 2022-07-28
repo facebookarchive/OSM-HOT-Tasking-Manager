@@ -21,7 +21,9 @@ export const AddToFavorites = (props) => {
           !props.projectId ? 'dn' : ''
         } input-reset base-font bg-white blue-dark f6 bn pointer`}
       >
-        <FlagIcon className={`pt3 pr2 v-btm ${isLoading ? 'o-50' : ''} ${isFav ? 'primary' : ''}`} />
+        <FlagIcon
+          className={`pt3 pr2 v-btm ${isLoading ? 'o-50' : ''} ${isFav ? 'primary' : ''}`}
+        />
         {isFav ? (
           <FormattedMessage {...messages.removeFromFavorites} />
         ) : (
