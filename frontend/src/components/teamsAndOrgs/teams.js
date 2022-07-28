@@ -26,14 +26,14 @@ export function TeamsManagement({
   );
 
   return (
-      <Management
-        title={
-          managementView ? (
-            <FormattedMessage
-              {...messages.manage}
-              values={{ entity: <FormattedMessage {...messages.teams} /> }}
-            />
-          ) : (
+    <Management
+      title={
+        managementView ? (
+          <FormattedMessage
+            {...messages.manage}
+            values={{ entity: <FormattedMessage {...messages.teams} /> }}
+          />
+        ) : (
           <FormattedMessage {...messages.myTeams} />
         )
       }
