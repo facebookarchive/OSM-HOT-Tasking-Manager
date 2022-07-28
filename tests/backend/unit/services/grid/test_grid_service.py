@@ -222,13 +222,13 @@ class TestGridService(BaseTestCase):
         grid_dto.clip_to_aoi = False
 
         # act
-        roads = GridService.trim_grid_to_roads(grid_dto)
-        result = GridService._task_grid_road_imagery_completeness(roads)
+        result = GridService._task_grid_road_imagery_completeness(grid_dto)
+        print("result", result)
 
         # assert coordinates are same. Done separately due to floating point rounding
         for expected_coords, result_coords in zip(
-            expected["roads_with_images"][0]["geometry"]["coordinates"][0],
-            result["roads_with_images"][0]["geometry"]["coordinates"][0],
+            expected["roads_with_images"][0]["geometry"]["coordinates"][0][0],
+            result["roads_with_images"][0]["geometry"]["coordinates"][0][0],
         ):
             self.assertAlmostEqual(expected_coords[0], result_coords[0])
             self.assertAlmostEqual(expected_coords[1], result_coords[1])

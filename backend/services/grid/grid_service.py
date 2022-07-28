@@ -77,7 +77,7 @@ class GridService:
         overpass_resp = requests.get(url)
         parsed_resp = json.loads(overpass_resp.text)
         roads_in_overarching_bbox = parsed_resp["elements"]
-        for task in grid_dto["area_of_interest"]["features"]:
+        for task in grid_dto["grid"]["features"]:
             task_geometry = shape(task["geometry"])
             for point in roads_in_overarching_bbox:
                 if (
@@ -327,7 +327,7 @@ class GridService:
             )
         )
 
-    def _task_grid_road_imagery_completeness(roads: geojson.FeatureCollection) -> dict:
+    def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
         """
         Returns the roads with street view images (based on Mapillary) as well as a percentage
         of roads in the task grid that have these images
@@ -335,30 +335,57 @@ class GridService:
         :param roads: trimmed dto containing ONLY roads
         :return: dictionary/object
         """
+        aoi_properties = grid_dto["area_of_interest"]["features"][0]["properties"]
+        x, y, z = aoi_properties["x"], aoi_properties["y"], aoi_properties["zoom"]
+        url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
+            z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
+        )
+        resp = requests.get(url)
+        overarching_tile = mapbox_vector_tile.decode(resp.content)
+        overarching_bbox = GridService._create_overarching_bbox(grid_dto)
+
         count_roads_with_images = 0
         output = {"roads_with_images": [], "completion": 0}
-        for feature in roads["features"]:
-            x, y, z = (
-                feature["properties"]["x"],
-                feature["properties"]["y"],
-                feature["properties"]["zoom"],
-            )
-            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
-                z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
-            )
 
-            resp = requests.get(url)
-            detection_geometry = mapbox_vector_tile.decode(resp.content)
-            for geometry in detection_geometry["sequence"]["features"]:
-                if "image_id" in geometry["properties"]:
-                    # TODO add a check to see if there's intersection between road and image location
+        all_tasks_with_roads = GridService.trim_grid_to_roads(grid_dto)
+
+        for road in all_tasks_with_roads["features"]:
+            road_geometry = shape(road["geometry"])
+            for coordinates_obj in overarching_tile["image"]["features"]:
+                tile_extent = overarching_tile["image"]["extent"]
+                lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
+                    overarching_bbox,
+                    coordinates_obj["geometry"]["coordinates"],
+                    tile_extent,
+                )
+                if road_geometry.intersects(Point(lat, lon).buffer(1.0)):
                     count_roads_with_images += 1
-                    output["roads_with_images"].append(feature)
+                    output["roads_with_images"].append(road)
                     break
-            break
+
         output["completion"] = (
-            count_roads_with_images / len(roads["features"])
-            if len(roads["features"]) != 0
-            else 0
+            count_roads_with_images / len(all_tasks_with_roads["features"])
+            if len(all_tasks_with_roads["features"]) != 0
+            else 0  # prevent divide by 0
         )
         return output
+
+    def _convert_mapillary_coords_to_lat_lon(
+        overarching_bbox: tuple, coordinate: list, tile_extent: int
+    ) -> tuple:
+        """
+        Helper method to convert Mapillary's 4096 pixel based coordinates to lon/lat
+        :param overarching_bbox: bounding box that covers entire tile
+        :param coordinate: Mapillary coordinate arr
+        :param tile_extent: Mapillary's tile extent (usually 4096 pixels)
+        :return: tuple containing longitude and latitude
+        """
+        tile_width = abs(overarching_bbox[2] - overarching_bbox[0])  # max_x - min_x
+        tile_height = abs(overarching_bbox[3] - overarching_bbox[1])  # max_y - min_y
+        lon_offset = (coordinate[0] / tile_extent) * tile_width
+        lat_offset = (coordinate[1] / tile_extent) * tile_height
+        lon = overarching_bbox[0] + lon_offset  # max_x plus the offset
+        lat = (
+            overarching_bbox[3] - lat_offset
+        )  # max_y minus the offset, because start at top left corner of tile in this special instance
+        return (lon, lat)
