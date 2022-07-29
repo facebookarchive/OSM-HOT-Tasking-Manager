@@ -189,7 +189,7 @@ class SMTPService:
         msg.html = html_message
 
         current_app.logger.debug(f"Sending email via SMTP {to_address}")
-        if current_app.config["SMTP_SETTINGS"]["host"] is None:
+        if current_app.config["LOG_LEVEL"] == "DEBUG":
             current_app.logger.debug(msg.as_string())
         else:
             try:
