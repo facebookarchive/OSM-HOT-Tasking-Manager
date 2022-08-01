@@ -42,6 +42,7 @@
     "mapbox-gl": "^1.13.1",
     "mapbox-gl-draw-rectangle-mode": "^1.0.4",
     "marked": "^4.0.18",
+    "moment": "^2.29.3",
     "osmtogeojson": "^3.0.0-beta.3",
     "query-string": "^7.0.1",
     "react": "^17.0.2",
@@ -49,6 +50,7 @@
     "react-calendar-heatmap": "^1.8.1",
     "react-chartjs-2": "^4.1.0",
     "react-click-outside": "^3.0.1",
+    "react-data-table-component": "^7.5.2",
     "react-datepicker": "^4.1.1",
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.3.4",
@@ -59,6 +61,7 @@
     "react-redux": "^7.2.4",
     "react-scripts": "^4.0.3",
     "react-select": "^4.3.1",
+    "react-tabs": "^4.2.1",
     "react-tooltip": "^4.2.21",
     "reactjs-popup": "^1.5.0",
     "redux": "^4.1.0",
@@ -67,6 +70,7 @@
     "short-number": "^1.0.7",
     "shpjs": "^3.6.3",
     "slug": "^5.1.0",
+    "styled-components": "^5.3.5",
     "tachyons": "^4.12.0",
     "use-query-params": "^1.2.2",
     "webfontloader": "^1.6.28",
@@ -124,4 +128,3 @@
     ]
   }
 }
-
