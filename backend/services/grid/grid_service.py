@@ -8,8 +8,6 @@ from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
 import requests
 import math
-import mapbox_vector_tile
-import os
 from collections import deque
 
 
@@ -317,7 +315,7 @@ class GridService:
             if z < 14:
                 many_tiles = GridService._get_child_tile(
                     x, y, z
-                )  # TODO which one to pick?
+                )  # TODO Refactor so that it gives all 4 tiles
                 x, y, z = many_tiles[0]  # arbitrarily pick the first one
 
             bbox = GridService._tile_to_bbox(x, y, z)
@@ -334,55 +332,6 @@ class GridService:
                 overarching_bbox[2],
             )
         )
-
-    def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
-        """
-        Returns the roads with street view images (based on Mapillary) as well as a percentage
-        of roads in the task grid that have these images
-        NOTE Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
-        :param roads: trimmed dto containing ONLY roads
-        :return: dictionary/object
-        """
-        aoi_properties = grid_dto["area_of_interest"]["features"][0]["properties"]
-        x, y, z = aoi_properties["x"], aoi_properties["y"], aoi_properties["zoom"]
-        if z > 14:
-            x, y, z = GridService._get_parent_tile(x, y, z)
-        if z < 14:
-            many_tiles = GridService._get_child_tile(x, y, z)  # TODO which one to pick?
-            x, y, z = many_tiles[0]  # arbitrarily pick the first one
-
-        url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
-            z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
-        )
-        resp = requests.get(url)
-        overarching_tile = mapbox_vector_tile.decode(resp.content)
-        overarching_bbox = GridService._create_overarching_bbox(grid_dto)
-
-        count_roads_with_images = 0
-        output = {"roads_with_images": [], "completion": 0}
-
-        all_tasks_with_roads = GridService.trim_grid_to_roads(grid_dto)
-
-        for road in all_tasks_with_roads["features"]:
-            road_geometry = shape(road["geometry"])
-            for coordinates_obj in overarching_tile["image"]["features"]:
-                tile_extent = overarching_tile["image"]["extent"]
-                lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
-                    overarching_bbox,
-                    coordinates_obj["geometry"]["coordinates"],
-                    tile_extent,
-                )
-                if road_geometry.intersects(Point(lat, lon).buffer(1.0)):
-                    count_roads_with_images += 1
-                    output["roads_with_images"].append(road)
-                    break
-
-        output["completion"] = (
-            count_roads_with_images / len(all_tasks_with_roads["features"])
-            if len(all_tasks_with_roads["features"]) != 0
-            else 0  # prevent divide by 0
-        )
-        return output
 
     def _convert_mapillary_coords_to_lat_lon(
         overarching_bbox: tuple, coordinate: list, tile_extent: int
