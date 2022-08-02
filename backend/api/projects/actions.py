@@ -424,6 +424,7 @@ class ProjectActionsIntersectingTilesAPI(Resource):
             current_app.logger.critical(error_msg)
             return {"error": error_msg, "SubCode": "InternalServerError"}, 500
 
+
 class ProjectActionsIntersectingRoadsAPI(Resource):
     @tm.pm_only()
     @token_auth.login_required

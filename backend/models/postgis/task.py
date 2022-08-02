@@ -32,10 +32,13 @@ from backend.models.postgis.utils import (
 )
 from backend.models.postgis.task_annotation import TaskAnnotation
 from backend.services.grid.grid_service import GridService
+from backend.services.utils.bbox_to_tile import bbox_to_tile
 from shapely.geometry import shape, Point, MultiPoint
 import requests
 import os
 import mapbox_vector_tile
+import math
+
 
 class TaskAction(Enum):
     """Describes the possible actions that can happen to to a task, that we'll record history for"""
@@ -895,7 +898,7 @@ class Task(db.Model):
             query = query.filter(*filters)
 
         project_tasks = query.all()
-        
+
         if mapillary_roads:
             # # PSEUDO BRAINSTORM
             # get overarching bbox
@@ -904,25 +907,33 @@ class Task(db.Model):
             # mapillary query for all roads in images
             # find intersection of overpass roads and mapillary road images
             # for each task, find if there's an intersection in any of the mapillary road images
-            tasks = [json.loads(task[6])["coordinates"][0][0] for task in project_tasks]
-            overarching_bbox = MultiPoint([(x, y) for task in tasks for x, y in task]).bounds
-            # overarching_tile = 
+            tasks = [
+                json.loads(task[6])["coordinates"][0][0] for task in project_tasks
+            ]  # TODO figure out what task[6] corresponds to in SQLAlchemy Model
+            overarching_bbox = MultiPoint(
+                [(x, y) for task in tasks for x, y in task]
+            ).bounds
+            x, y, z = bbox_to_tile(overarching_bbox)
 
             url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
-                bbox=(overarching_bbox[1], overarching_bbox[0], overarching_bbox[3], overarching_bbox[2])
+                bbox=(
+                    overarching_bbox[1],
+                    overarching_bbox[0],
+                    overarching_bbox[3],
+                    overarching_bbox[2],
+                )
             )
             overpass_resp = requests.get(url)
             parsed_resp = json.loads(overpass_resp.text)
             roads_in_overarching_bbox = parsed_resp["elements"]
 
-            # # TODO convert to bbox
-            # url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
-            #     z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
-            # )
-            # resp = requests.get(url)
-            # overarching_tile = mapbox_vector_tile.decode(resp.content)
+            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
+                z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
+            )
+            resp = requests.get(url)
+            overarching_tile = mapbox_vector_tile.decode(resp.content)
 
-        tasks_features = [] # TODO add mapillary
+        tasks_features = []  # TODO add mapillary
         roads = []
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
@@ -940,7 +951,9 @@ class Task(db.Model):
             #     # does task[6] converted to shape intersect with a road?
             #     if task_properties[""]
             feature = geojson.Feature(
-                geometry=task_geometry, properties=task_properties, road_imagery_completion={}
+                geometry=task_geometry,
+                properties=task_properties,
+                road_imagery_completion={},
             )
             tasks_features.append(feature)
 

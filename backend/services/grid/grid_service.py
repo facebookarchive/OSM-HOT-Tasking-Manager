@@ -6,8 +6,9 @@ import shapely.geometry
 from flask import current_app
 from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
+from backend.services.utils.tile_to_bbox import tile_to_bbox
+
 import requests
-import math
 from collections import deque
 
 
@@ -266,31 +267,6 @@ class GridService:
             geometry = MultiPolygon([geometry])
         return geometry
 
-    def _tile_to_bbox(x: int, y: int, zoom: int) -> tuple:
-        """
-        Helper method to convert tile's xyz to bbox.
-        Code from https://www.flother.is/til/map-tile-bounding-box-python/
-        Tested against Mapbox's Tilebelt https://github.com/mapbox/tilebelt
-        :param x: tile's x coordinate
-        :param y: tile's y coordinate
-        :param z: tile's zoom level
-        :return: tuple containing bbox in format of Mapbox's Tilebelt
-        """
-
-        def tile_lon(x: int, z: int) -> float:
-            return x / math.pow(2.0, z) * 360.0 - 180
-
-        def tile_lat(y: int, z: int) -> float:
-            return math.degrees(
-                math.atan(math.sinh(math.pi - (2.0 * math.pi * y) / math.pow(2.0, z)))
-            )
-
-        north = tile_lat(y, zoom)
-        south = tile_lat(y + 1, zoom)
-        west = tile_lon(x, zoom)
-        east = tile_lon(x + 1, zoom)
-        return (west, south, east, north)
-
     def _create_overarching_bbox(
         grid_dto: GridDTO, latlng_switch: bool = False
     ) -> geojson.FeatureCollection:
@@ -318,7 +294,7 @@ class GridService:
                 )  # TODO Refactor so that it gives all 4 tiles
                 x, y, z = many_tiles[0]  # arbitrarily pick the first one
 
-            bbox = GridService._tile_to_bbox(x, y, z)
+            bbox = tile_to_bbox(x, y, z)
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
         overarching_bbox = MultiPoint(coords).bounds

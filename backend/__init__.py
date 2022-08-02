@@ -157,7 +157,7 @@ def add_api_endpoints(app):
         ProjectsActionsUnFeatureAPI,
         ProjectsActionsSetInterestsAPI,
         ProjectActionsIntersectingTilesAPI,
-        ProjectActionsIntersectingRoadsAPI
+        ProjectActionsIntersectingRoadsAPI,
     )
 
     from backend.api.projects.favorites import ProjectsFavoritesAPI

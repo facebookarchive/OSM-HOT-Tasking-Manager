@@ -114,7 +114,9 @@ class TasksQueriesJsonAPI(Resource):
                 else True
             )
 
-            tasks_json = ProjectService.get_project_tasks(int(project_id), tasks, mapillary_query = True)
+            tasks_json = ProjectService.get_project_tasks(
+                int(project_id), tasks, mapillary_query=True
+            )
 
             if as_file:
                 tasks_json = str(tasks_json).encode("utf-8")
