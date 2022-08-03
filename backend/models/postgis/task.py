@@ -908,12 +908,18 @@ class Task(db.Model):
             # find intersection of overpass roads and mapillary road images
             # for each task, find if there's an intersection in any of the mapillary road images
             tasks = [
-                json.loads(task[6])["coordinates"][0][0] for task in project_tasks
-            ]  # TODO figure out what task[6] corresponds to in SQLAlchemy Model
+                geojson.loads(task.geojson)["coordinates"][0][0]
+                for task in project_tasks
+            ]
             overarching_bbox = MultiPoint(
                 [(x, y) for task in tasks for x, y in task]
             ).bounds
             x, y, z = bbox_to_tile(overarching_bbox)
+            # if z > 14:
+            #     x, y, z = GridService._get_parent_tile(x, y, z)
+            # if z < 14:
+            #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
+            #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
 
             url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
                 bbox=(
@@ -933,8 +939,10 @@ class Task(db.Model):
             resp = requests.get(url)
             overarching_tile = mapbox_vector_tile.decode(resp.content)
 
-        tasks_features = []  # TODO add mapillary
-        roads = []
+        tasks_features = []
+        road_imagery = (
+            []
+        )  # TODO currently completion is binary. Make dynamic based on completion of each task %
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(
@@ -946,17 +954,47 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
             )
-            # print("task_properties", task_properties)
-            # if mapillary_roads:
-            #     # does task[6] converted to shape intersect with a road?
-            #     if task_properties[""]
+
+            if mapillary_roads:
+                temp_output = {"tasks_with_road_images": [], "completion": 0}
+                intersecting_road = False
+                intersecting_image = False
+                for road_obj in roads_in_overarching_bbox:
+                    if "lat" in road_obj and "lon" in road_obj:
+                        if shape(task_geometry).intersects(
+                            Point(road_obj["lon"], road_obj["lat"])
+                        ):
+                            intersecting_road = True
+                            break
+                    else:  # sometimes it's an arr of lat/lon
+                        for road_geom in road_obj["geometry"]:
+                            if shape(task_geometry).intersects(
+                                Point(road_geom["lon"], road_geom["lat"])
+                            ):
+                                intersecting_road = True
+                                break
+                for coordinates_obj in overarching_tile["sequence"]["features"]:
+                    tile_extent = overarching_tile["sequence"]["extent"]
+                    for coordinates_list in coordinates_obj["geometry"]["coordinates"]:
+                        lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
+                            overarching_bbox,
+                            coordinates_list,
+                            tile_extent,
+                        )
+                        if shape(task_geometry).intersects(Point(lon, lat)):
+                            intersecting_image = True
+                            break
+                if intersecting_road and intersecting_image:
+                    temp_output["completion"] += 1
+                    temp_output["tasks_with_road_images"].append(task)
+                road_imagery.append(temp_output)
+
             feature = geojson.Feature(
                 geometry=task_geometry,
                 properties=task_properties,
-                road_imagery_completion={},
+                road_imagery_completion=road_imagery,
             )
             tasks_features.append(feature)
-
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod
@@ -1168,52 +1206,3 @@ class Task(db.Model):
         locked_tasks = [task for task in tasks]
 
         return locked_tasks
-
-    # def _task_grid_road_imagery_completeness(grid_dto: GridDTO) -> dict:
-    #     """
-    #     Returns the roads with street view images (based on Mapillary) as well as a percentage
-    #     of roads in the task grid that have these images
-    #     NOTE Set tasking-manager.env MAPILLARY_ACCESS_TOKEN
-    #     :param roads: trimmed dto containing ONLY roads
-    #     :return: dictionary/object
-    #     """
-    #     aoi_properties = grid_dto["area_of_interest"]["features"][0]["properties"]
-    #     x, y, z = aoi_properties["x"], aoi_properties["y"], aoi_properties["zoom"]
-    #     if z > 14:
-    #         x, y, z = GridService._get_parent_tile(x, y, z)
-    #     if z < 14:
-    #         child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
-    #         x, y, z = child_tiles[0]  # arbitrarily pick the first one
-
-    #     url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
-    #         z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
-    #     )
-    #     resp = requests.get(url)
-    #     overarching_tile = mapbox_vector_tile.decode(resp.content)
-    #     overarching_bbox = GridService._create_overarching_bbox(grid_dto)
-
-    #     count_roads_with_images = 0
-    #     output = {"roads_with_images": [], "completion": 0}
-
-    #     all_tasks_with_roads = GridService.trim_grid_to_roads(grid_dto)
-
-    #     for road in all_tasks_with_roads["features"]:
-    #         road_geometry = shape(road["geometry"])
-    #         for coordinates_obj in overarching_tile["image"]["features"]:
-    #             tile_extent = overarching_tile["image"]["extent"]
-    #             lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
-    #                 overarching_bbox,
-    #                 coordinates_obj["geometry"]["coordinates"],
-    #                 tile_extent,
-    #             )
-    #             if road_geometry.intersects(Point(lat, lon).buffer(1.0)):
-    #                 count_roads_with_images += 1
-    #                 output["roads_with_images"].append(road)
-    #                 break
-
-    #     output["completion"] = (
-    #         count_roads_with_images / len(all_tasks_with_roads["features"])
-    #         if len(all_tasks_with_roads["features"]) != 0
-    #         else 0  # prevent divide by 0
-    #     )
-    #     return output
