@@ -12,139 +12,103 @@ import re
 
 
 class TestGridService(BaseTestCase):
-    # def test_feature_collection_to_multi_polygon_dissolve(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("multi_polygon_dissolved.json"))
-    #     )
+    def test_feature_collection_to_multi_polygon_dissolve(self):
+        # arrange
+        grid_json = get_canned_json("test_grid.json")
+        grid_dto = GridDTO(grid_json)
+        aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
+        expected = geojson.loads(
+            json.dumps(get_canned_json("multi_polygon_dissolved.json"))
+        )
 
-    #     # act
-    #     result = GridService.merge_to_multi_polygon(aoi_geojson, True)
+        # act
+        result = GridService.merge_to_multi_polygon(aoi_geojson, True)
 
-    #     # assert coordinates are same. Done separately due to floating point rounding
-    #     for expected_coords, result_coords in zip(
-    #         expected["coordinates"][0][0], result["coordinates"][0][0]
-    #     ):
-    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
-    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    #     # assert everything besides floating points are the same
-    #     split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
-    #     split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
-    #     self.assertEqual(split_expected, split_result)
+    def test_feature_collection_to_multi_polygon_nodissolve(self):
+        # arrange
+        grid_json = get_canned_json("test_grid.json")
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(json.dumps(get_canned_json("multi_polygon.json")))
+        aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
 
-    # def test_feature_collection_to_multi_polygon_nodissolve(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(json.dumps(get_canned_json("multi_polygon.json")))
-    #     aoi_geojson = geojson.loads(json.dumps(grid_dto.area_of_interest))
+        # act
+        result = GridService.merge_to_multi_polygon(aoi_geojson, False)
 
-    #     # act
-    #     result = GridService.merge_to_multi_polygon(aoi_geojson, False)
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    #     # assert coordinates are same. Done separately due to floating point rounding
-    #     for expected_coords, result_coords in zip(
-    #         expected["coordinates"][0][0], result["coordinates"][0][0]
-    #     ):
-    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
-    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
+    def test_trim_grid_to_aoi_clip(self):
+        # arrange
+        grid_json = get_canned_json("test_grid.json")
 
-    #     # assert everything besides floating points are the same
-    #     split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
-    #     split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
-    #     self.assertEqual(split_expected, split_result)
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(
+            json.dumps(get_canned_json("clipped_feature_collection.json"))
+        )
+        grid_dto.clip_to_aoi = True
 
-    # def test_trim_grid_to_aoi_clip(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_grid.json")
+        # act
+        result = GridService.trim_grid_to_aoi(grid_dto)
 
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("clipped_feature_collection.json"))
-    #     )
-    #     grid_dto.clip_to_aoi = True
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    #     # act
-    #     result = GridService.trim_grid_to_aoi(grid_dto)
+    def test_trim_grid_to_aoi_noclip(self):
+        # arrange
 
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        grid_json = get_canned_json("test_grid.json")
+        grid_dto = GridDTO(grid_json)
+        grid_dto.clip_to_aoi = False
 
-    # def test_trim_grid_to_aoi_noclip(self):
-    #     # arrange
+        expected = geojson.loads(json.dumps(get_canned_json("feature_collection.json")))
 
-    #     grid_json = get_canned_json("test_grid.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     grid_dto.clip_to_aoi = False
+        # act
+        result = GridService.trim_grid_to_aoi(grid_dto)
 
-    #     expected = geojson.loads(json.dumps(get_canned_json("feature_collection.json")))
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    #     # act
-    #     result = GridService.trim_grid_to_aoi(grid_dto)
+    def test_tasks_from_aoi_features(self):
+        # arrange
+        grid_json = get_canned_json("test_arbitrary.json")
+        grid_dto = GridDTO(grid_json)
+        expected = geojson.loads(
+            json.dumps(get_canned_json("tasks_from_aoi_features.json"))
+        )
 
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        # act
+        result = GridService.tasks_from_aoi_features(grid_dto.area_of_interest)
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    # def test_tasks_from_aoi_features(self):
-    #     # arrange
-    #     grid_json = get_canned_json("test_arbitrary.json")
-    #     grid_dto = GridDTO(grid_json)
-    #     expected = geojson.loads(
-    #         json.dumps(get_canned_json("tasks_from_aoi_features.json"))
-    #     )
+    def test_feature_collection_multi_polygon_with_zcoord_nodissolve(self):
+        # arrange
+        project_json = get_canned_json("canned_kml_project.json")
+        project_dto = DraftProjectDTO(project_json)
+        expected = geojson.loads(json.dumps(get_canned_json("2d_multi_polygon.json")))
+        aoi_geojson = geojson.loads(json.dumps(project_dto.area_of_interest))
 
-    #     # act
-    #     result = GridService.tasks_from_aoi_features(grid_dto.area_of_interest)
-    #     # assert
-    #     self.assertEqual(str(expected), str(result))
+        # act
+        result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=False)
 
-    # def test_feature_collection_multi_polygon_with_zcoord_nodissolve(self):
-    #     # arrange
-    #     project_json = get_canned_json("canned_kml_project.json")
-    #     project_dto = DraftProjectDTO(project_json)
-    #     expected = geojson.loads(json.dumps(get_canned_json("2d_multi_polygon.json")))
-    #     aoi_geojson = geojson.loads(json.dumps(project_dto.area_of_interest))
+        # assert
+        self.assertEqual(str(expected), str(result))
 
-    #     # act
-    #     result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=False)
+    def test_feature_collection_multi_polygon_with_zcoord_dissolve(self):
+        # arrange
+        project_json = get_canned_json("canned_kml_project.json")
+        project_dto = DraftProjectDTO(project_json)
+        expected = geojson.loads(json.dumps(get_canned_json("2d_multi_polygon.json")))
+        aoi_geojson = geojson.loads(json.dumps(project_dto.area_of_interest))
 
-    #     # assert coordinates are same. Done separately due to floating point rounding
-    #     for expected_coords, result_coords in zip(
-    #         expected["coordinates"][0][0], result["coordinates"][0][0]
-    #     ):
-    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
-    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
+        # act
+        result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=True)
 
-    #     # assert everything besides floating points are the same
-    #     split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
-    #     split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
-    #     self.assertEqual(split_expected, split_result)
-
-    # def test_feature_collection_multi_polygon_with_zcoord_dissolve(self):
-    #     # arrange
-    #     project_json = get_canned_json("canned_kml_project.json")
-    #     project_dto = DraftProjectDTO(project_json)
-    #     expected = geojson.loads(json.dumps(get_canned_json("2d_multi_polygon.json")))
-    #     aoi_geojson = geojson.loads(json.dumps(project_dto.area_of_interest))
-
-    #     # act
-    #     result = GridService.merge_to_multi_polygon(aoi_geojson, dissolve=True)
-
-    #     # assert coordinates are same. Done separately due to floating point rounding
-    #     for expected_coords, result_coords in zip(
-    #         expected["coordinates"][0][0], result["coordinates"][0][0]
-    #     ):
-    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
-    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
-
-    #     # assert everything besides floating points are the same
-    #     split_expected = re.split(r"\[\[\[\[.*?]]]]", str(expected))
-    #     split_result = re.split(r"\[\[\[\[.*?]]]]", str(result))
-    #     self.assertEqual(split_expected, split_result)
+        # assert
+        self.assertEqual(str(expected), str(result))
 
     def test_raises_InvalidGeoJson_when_geometry_is_linestring(self):
 
@@ -223,29 +187,29 @@ class TestGridService(BaseTestCase):
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
 
-    def test_task_grid_road_imagery_completeness(self):
-        # arrange
-        grid_json = get_canned_json("test_trim_road.json")
+    # def test_task_grid_road_imagery_completeness(self): # TODO move to project_services test
+    #     # arrange
+    #     grid_json = get_canned_json("test_trim_road.json")
 
-        grid_dto = GridDTO(grid_json)
-        expected = get_canned_json("road_imagery_completion.json")
-        grid_dto.clip_to_aoi = False
+    #     grid_dto = GridDTO(grid_json)
+    #     expected = get_canned_json("road_imagery_completion.json")
+    #     grid_dto.clip_to_aoi = False
 
-        # act
-        result = GridService._task_grid_road_imagery_completeness(grid_dto)
+    #     # act
+    #     result = GridService._task_grid_road_imagery_completeness(grid_dto)
 
-        # assert coordinates are same. Done separately due to floating point rounding
-        for expected_coords, result_coords in zip(
-            expected["roads_with_images"][0]["geometry"]["coordinates"][0][0],
-            result["roads_with_images"][0]["geometry"]["coordinates"][0][0],
-        ):
-            self.assertAlmostEqual(expected_coords[0], result_coords[0])
-            self.assertAlmostEqual(expected_coords[1], result_coords[1])
+    #     # assert coordinates are same. Done separately due to floating point rounding
+    #     for expected_coords, result_coords in zip(
+    #         expected["roads_with_images"][0]["geometry"]["coordinates"][0][0],
+    #         result["roads_with_images"][0]["geometry"]["coordinates"][0][0],
+    #     ):
+    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
+    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
 
-        # assert everything besides floating points are the same
-        split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
-        split_result = re.split(r"\[\[\[.*?]]]", str(result))
-        self.assertEqual(split_expected, split_result)
+    #     # assert everything besides floating points are the same
+    #     split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
+    #     split_result = re.split(r"\[\[\[.*?]]]", str(result))
+    #     self.assertEqual(split_expected, split_result)
 
     def test_get_parent_tile(self):
         x, y, z = 278826, 299157, 19

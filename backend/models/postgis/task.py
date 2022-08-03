@@ -900,13 +900,6 @@ class Task(db.Model):
         project_tasks = query.all()
 
         if mapillary_roads:
-            # # PSEUDO BRAINSTORM
-            # get overarching bbox
-            # get overarching tile
-            # overpass query for all roads
-            # mapillary query for all roads in images
-            # find intersection of overpass roads and mapillary road images
-            # for each task, find if there's an intersection in any of the mapillary road images
             tasks = [
                 geojson.loads(task.geojson)["coordinates"][0][0]
                 for task in project_tasks
@@ -915,14 +908,15 @@ class Task(db.Model):
                 [(x, y) for task in tasks for x, y in task]
             ).bounds
             x, y, z = bbox_to_tile(overarching_bbox)
-            # if z > 14:
-            #     x, y, z = GridService._get_parent_tile(x, y, z)
+            if z > 14:
+                x, y, z = GridService._get_parent_tile(x, y, z)
             # if z < 14:
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
 
             url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
                 bbox=(
+                    # Overpass is lon/lat
                     overarching_bbox[1],
                     overarching_bbox[0],
                     overarching_bbox[3],
