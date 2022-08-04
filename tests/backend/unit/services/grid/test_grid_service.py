@@ -159,7 +159,7 @@ class TestGridService(BaseTestCase):
         features = GridService._to_shapely_geometries(grid_geojson)
         # Assert
         self.assertNotEqual(0, len(features))
-        
+
     def test_trim_grid_to_roads(self):
         # arrange
         grid_json = get_canned_json("test_trim_road.json")
