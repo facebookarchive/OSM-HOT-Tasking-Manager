@@ -7,6 +7,7 @@ from schematics.types import (
     LongType,
     ListType,
     ModelType,
+    DateType,
 )
 from backend.models.postgis.statuses import TeamMemberFunctions, TeamVisibility
 
@@ -41,6 +42,9 @@ class TeamMembersDTO(Model):
     username = StringType(required=True)
     function = StringType(required=True, validators=[validate_team_member_function])
     active = StringType()
+    join_request_notifications = BooleanType(
+        default=False, serialized_name="joinRequestNotifications"
+    )
     picture_url = StringType(serialized_name="pictureUrl")
 
 
@@ -139,8 +143,47 @@ class UpdateTeamDTO(Model):
     name = StringType()
     logo = StringType()
     description = StringType()
-    invite_only = BooleanType(default=False, serialized_name="inviteOnly")
+    invite_only = BooleanType(serialized_name="inviteOnly")
     visibility = StringType(
         validators=[validate_team_visibility], serialize_when_none=False
     )
     members = ListType(ModelType(TeamMembersDTO), serialize_when_none=False)
+
+
+class TeamMembersStatsQuery(Model):
+    team_id = IntType()
+    start_date = DateType()
+    end_date = DateType()
+    project_id = IntType()
+    page = IntType()
+
+
+class TeamMemberStats(Model):
+    """ Model containing statistics about the member """
+
+    user_id = LongType(serialized_name="userId")
+    username = StringType()
+    picture_url = StringType(serialized_name="pictureUrl")
+    total_time_spent = IntType(serialized_name="totalTimeSpent")
+    time_spent_mapping = IntType(serialized_name="timeSpentMapping")
+    average_mapping_time = IntType(serialized_name="averageMappingTime")
+    average_validation_time = IntType(serialized_name="averageValidationTime")
+    time_spent_validating = IntType(serialized_name="timeSpentValidating")
+    projects_mapped = IntType(serialized_name="projectsMapped")
+    tasks_mapped = IntType(serialized_name="tasksMapped")
+    tasks_validated = IntType(serialized_name="tasksValidated")
+    tasks_invalidated = IntType(serialized_name="tasksInvalidated")
+    tasks_invalidated_by_others = IntType(serialized_name="tasksInvalidatedByOthers")
+    tasks_validated_by_others = IntType(serialized_name="tasksValidatedByOthers")
+
+
+class TeamMembersStatsDTO(Model):
+    """ DTO containing statistics about team members """
+
+    def __init__(self):
+        super().__init__()
+        self.members_stats = []
+
+    members_stats = ListType(
+        ModelType(TeamMemberStats), serialized_name="teamMembersStats"
+    )

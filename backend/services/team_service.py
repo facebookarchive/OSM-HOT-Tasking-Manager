@@ -9,6 +9,8 @@ from backend.models.dtos.team_dto import (
     TeamsListDTO,
     ProjectTeamDTO,
     TeamDetailsDTO,
+    TeamMembersStatsQuery,
+    TeamMembersStatsDTO,
 )
 
 from backend.models.dtos.message_dto import MessageDTO
@@ -49,12 +51,22 @@ class TeamService:
         is_manager = TeamService.is_user_team_manager(team_id, requesting_user)
         team = TeamService.get_team_by_id(team_id)
         user = UserService.get_user_by_username(username)
-
-        if TeamService.is_user_team_member(team.id, user.id):
-            raise TeamJoinNotAllowed(
-                "UserAlreadyInList- "
-                + "User is already a member of this team or has already requested to join"
-            )
+        member = TeamMembers.get(team_id, user.id)
+        if member:
+            if member.function == TeamMemberFunctions[role].value:
+                raise TeamJoinNotAllowed(
+                    "UserAlreadyInList- "
+                    + "User is already a member of this team or has already requested to join"
+                )
+            else:
+                if is_manager:
+                    member.function = TeamMemberFunctions[role].value
+                    member.update()
+                    return {"Success: User role updated"}
+                else:
+                    raise TeamJoinNotAllowed(
+                        "UserJoinDisallowed- User not allowed to join team"
+                    )
 
         if is_manager:
             if role:
@@ -81,13 +93,13 @@ class TeamService:
                 active = True
 
             TeamService.add_team_member(team_id, user.id, role, active)
-
             if team.invite_only:
                 team_managers = team.get_team_managers()
-                for member in team_managers:
-                    MessageService.send_request_to_join_team(
-                        user.id, user.username, member.user_id, team.name, team_id
-                    )
+                for manager in team_managers:
+                    if manager.join_request_notifications:
+                        MessageService.send_request_to_join_team(
+                            user.id, user.username, manager.user_id, team.name, team_id
+                        )
 
     @staticmethod
     def send_invite(team_id, from_user_id, username):
@@ -573,3 +585,8 @@ class TeamService:
                     messages.append(dict(message=message, user=user))
 
             MessageService._push_messages(messages)
+
+    @staticmethod
+    def get_team_members_stats(query: TeamMembersStatsQuery) -> TeamMembersStatsDTO:
+        """Gets paginated stats of team members"""
+        return Team.get_team_members_stats(query)

@@ -38,6 +38,10 @@ export default defineMessages({
     defaultMessage:
       'Organization that is coordinating the project, if there is any. The managers of that organization will have administration rights over the project.',
   },
+  admins: {
+    id: 'projects.formInputs.admins.title',
+    defaultMessage: 'TM Admins',
+  },
   selectImagery: {
     id: 'projects.formInputs.imagery.select',
     defaultMessage: 'Select imagery',
@@ -247,7 +251,8 @@ export default defineMessages({
   },
   transferProjectAlert: {
     id: 'projects.actions.transfer_project.alert',
-    defaultMessage: 'In case of wrong transfer, contact the new owner to revert the change.',
+    defaultMessage:
+      'This feature is only available to the project author, organisation manager and TM admin.',
   },
   transferProjectSuccess: {
     id: 'projects.actions.transfer_project.success',
@@ -587,5 +592,30 @@ export default defineMessages({
     id: 'projects.formInputs.custom_editor.delete.confirm',
     defaultMessage:
       'This will remove the custom editor from the project. Are you sure you don\'t want to disable the custom editor by toggling the "Enabled" checkbox above?',
+  },
+  noMappingEditor: {
+    id: 'projects.formInputs.noMappingEditor',
+    defaultMessage: 'At least one editor must be enabled for mapping',
+  },
+  noValidationEditor: {
+    id: 'projects.formInputs.noValidationEditor',
+    defaultMessage: 'At least one editor must be enabled for validation',
+  },
+  extraIdParams: {
+    id: 'projects.formInputs.extraIdParams',
+    defaultMessage: 'Additional iD URL parameters',
+  },
+  extraIdParamsDescription: {
+    id: 'projects.formInputs.extraIdParams.description',
+    defaultMessage:
+      'Any additional URL parameters that you want include when loading iD editor (both the embedded and the external ones). Use & to separate different parameters. Example: {text}.',
+  },
+  extraIdParamsDescriptionLink: {
+    id: 'projects.formInputs.extraIdParams.description.link',
+    defaultMessage: 'Check the {link} for more information.',
+  },
+  iDAPIDocs: {
+    id: 'projects.formInputs.extraIdParams.iDAPIDocs',
+    defaultMessage: 'iD editor documentation',
   },
 });

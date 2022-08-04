@@ -132,6 +132,24 @@ const Parameters = {
     Description: 'TM_SMTP_PORT environment variable',
     Type: 'String'
   },
+  TaskingManagerSMTPSSL: {
+    Description: 'TM_SMTP_USE_SSL environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '0'
+  },
+  TaskingManagerSMTPTLS: {
+    Description: 'TM_SMTP_USE_TLS environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '1'
+  },
+  TaskingManagerSendProjectUpdateEmails:{
+    Description: 'TM_SEND_PROJECT_UPDATE_EMAILS environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '1'
+  },
   TaskingManagerDefaultChangesetComment: {
     Description: 'TM_DEFAULT_CHANGESET_COMMENT environment variable',
     Type: 'String',
@@ -400,6 +418,8 @@ const Resources = {
         cf.sub('export TM_SMTP_PASSWORD="${TaskingManagerSMTPPassword}"'),
         cf.sub('export TM_SMTP_PORT="${TaskingManagerSMTPPort}"'),
         cf.sub('export TM_SMTP_USER="${TaskingManagerSMTPUser}"'),
+        cf.sub('export TM_SMTP_USE_SSL="${TaskingManagerSMTPSSL}"'),
+        cf.sub('export TM_SMTP_USE_TLS="${TaskingManagerSMTPTLS}"'),
         cf.sub('export TM_DEFAULT_CHANGESET_COMMENT="${TaskingManagerDefaultChangesetComment}"'),
         cf.sub('export TM_EMAIL_FROM_ADDRESS="${TaskingManagerEmailFromAddress}"'),
         cf.sub('export TM_EMAIL_CONTACT_ADDRESS="${TaskingManagerEmailContactAddress}"'),
@@ -643,7 +663,7 @@ const Resources = {
       EngineVersion: cf.ref('DatabaseEngineVersion'),
       MasterUsername: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresUser')),
       MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
-      AllocatedStorage: cf.ref('DatabaseSize'),
+      AllocatedStorage: cf.ref('DatabaseDiskSize'),
       BackupRetentionPeriod: cf.ref('DatabaseSnapshotRetentionPeriod'),
       StorageType: 'gp2',
       DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
