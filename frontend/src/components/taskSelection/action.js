@@ -49,11 +49,11 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
     () =>
       activeTasks
         ? activeTasks
-            .map((task) => task.taskId)
-            .sort((n1, n2) => {
-              // in ascending order
-              return n1 - n2;
-            })
+          .map((task) => task.taskId)
+          .sort((n1, n2) => {
+            // in ascending order
+            return n1 - n2;
+          })
         : [],
     [activeTasks],
   );
@@ -195,27 +195,27 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                 }
               >
                 {editor === 'ID' ? (
-              
-                <Editor
-                  setDisable={setDisable}
-                  comment={project.changesetComment}
-                  presets={project.idPresets}
-                  earliestStreetImagery={project.earliestStreetImagery}
-                  imageCaptureMode={project.imageCaptureMode}
-                  imagery={formatImageryUrlCallback(project.imagery)}
-                  gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
-                />
-              ) : (
-                <RapiDEditor
-                  setDisable={setDisable}
-                  comment={project.changesetComment}
-                  presets={project.idPresets}
-                  earliestStreetImagery={project.earliestStreetImagery}
-                  imageCaptureMode={project.imageCaptureMode}
-                  imagery={formatImageryUrlCallback(project.imagery)}
-                  gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
-                  powerUser={project.rapidPowerUser}
 
+                  <Editor
+                    setDisable={setDisable}
+                    comment={project.changesetComment}
+                    presets={project.idPresets}
+                    earliestStreetImagery={project.earliestStreetImagery}
+                    imageCaptureMode={project.imageCaptureMode}
+                    imagery={formatImageryUrlCallback(project.imagery)}
+                    gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
+                  />
+                ) : (
+                  <RapiDEditor
+                    setDisable={setDisable}
+                    comment={project.changesetComment}
+                    presets={project.idPresets}
+                    earliestStreetImagery={project.earliestStreetImagery}
+                    imageCaptureMode={project.imageCaptureMode}
+                    imagery={formatImageryUrlCallback(project.imagery)}
+                    gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
+                    powerUser={project.rapidPowerUser}
+                  />
                 )}
               </React.Suspense>
             ) : (
