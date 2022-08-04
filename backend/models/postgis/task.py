@@ -2,6 +2,7 @@ import bleach
 import datetime
 import geojson
 import json
+import re
 from enum import Enum
 from flask import current_app
 from sqlalchemy.types import Float, Text
@@ -934,9 +935,7 @@ class Task(db.Model):
             overarching_tile = mapbox_vector_tile.decode(resp.content)
 
         tasks_features = []
-        road_imagery = (
-            []
-        )  # TODO currently completion is binary. Make dynamic based on completion of each task %
+        image_completion_percent = 0  # TODO currently completion is binary. Make dynamic based on completion of each task %
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(
@@ -950,7 +949,7 @@ class Task(db.Model):
             )
 
             if mapillary_roads:
-                temp_output = {"tasks_with_road_images": [], "completion": 0}
+
                 intersecting_road = False
                 intersecting_image = False
                 for road_obj in roads_in_overarching_bbox:
@@ -979,14 +978,12 @@ class Task(db.Model):
                             intersecting_image = True
                             break
                 if intersecting_road and intersecting_image:
-                    temp_output["completion"] += 1
-                    temp_output["tasks_with_road_images"].append(task)
-                road_imagery.append(temp_output)
+                    image_completion_percent += 1
 
             feature = geojson.Feature(
                 geometry=task_geometry,
                 properties=task_properties,
-                road_imagery_completion=road_imagery,
+                road_imagery_completion=image_completion_percent,
             )
             tasks_features.append(feature)
         return geojson.FeatureCollection(tasks_features)
