@@ -927,10 +927,7 @@ class Task(db.Model):
             overpass_resp = requests.get(url)
             lat_lon_arr = re.findall(
                 r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
-            )  # TODO use this instead of json.loads
-            parsed_resp = json.loads(overpass_resp.text)
-            roads_in_overarching_bbox = parsed_resp["elements"]
-
+            )
             url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
                 z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
             )
@@ -954,20 +951,11 @@ class Task(db.Model):
             if mapillary_roads:
                 intersecting_road = False
                 intersecting_image = False
-                for road_obj in roads_in_overarching_bbox:
-                    if "lat" in road_obj and "lon" in road_obj:
-                        if shape(task_geometry).intersects(
-                            Point(road_obj["lon"], road_obj["lat"])
-                        ):
-                            intersecting_road = True
-                            break
-                    else:  # sometimes it's an arr of lat/lon
-                        for road_geom in road_obj["geometry"]:
-                            if shape(task_geometry).intersects(
-                                Point(road_geom["lon"], road_geom["lat"])
-                            ):
-                                intersecting_road = True
-                                break
+                for lat, lon in lat_lon_arr:
+                    if shape(task_geometry).intersects(Point(float(lon), float(lat))):
+                        intersecting_road = True
+                        break
+
                 for coordinates_obj in overarching_tile["sequence"]["features"]:
                     tile_extent = overarching_tile["sequence"]["extent"]
                     for coordinates_list in coordinates_obj["geometry"]["coordinates"]:
