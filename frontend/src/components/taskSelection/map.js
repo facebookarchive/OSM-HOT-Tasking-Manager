@@ -178,9 +178,7 @@ export const TasksMap = ({
             positionOptions: {
               enableHighAccuracy: true
             },
-            // When active the map will receive updates to the device's location as it changes.
             trackUserLocation: true,
-            // Draw an arrow next to the location dot to indicate which direction the device is heading.
             showUserHeading: true
           })
         );
@@ -264,6 +262,40 @@ export const TasksMap = ({
             'circle-radius': 5,
           }
         });
+
+        map.loadImage(compassIcon, (error, image) => {
+          if (error) throw error;
+
+          map.addImage('compass', image);
+
+        })
+
+        map.addSource('point', {
+          'type': 'geojson',
+          'data': {
+            'type': 'FeatureCollection',
+            'features': [
+              {
+                'type': 'Feature',
+                'geometry': {
+                  'type': 'Point',
+                  'coordinates': [0, 0]
+                }
+              }
+            ]
+          }
+        });
+
+        map.addLayer({
+          'id': 'mapillary-compass',
+          'type': 'symbol',
+          'source': 'point', // reference the data source
+          'layout': {
+            'icon-image': 'compass', // reference the image
+            'icon-size': 0.5,
+            'visibility': 'none'
+          }
+        })
 
         map.addLayer({
           id: 'selected-tasks-border',
@@ -444,44 +476,7 @@ export const TasksMap = ({
         }
       });
 
-      map.loadImage(compassIcon, (error, image) => {
-        if (error) throw error;
 
-        if (!map.hasImage('compass')) {
-          map.addImage('compass', image);
-        }
-
-        if (!map.getSource('point')) {
-          map.addSource('point', {
-            'type': 'geojson',
-            'data': {
-              'type': 'FeatureCollection',
-              'features': [
-                {
-                  'type': 'Feature',
-                  'geometry': {
-                    'type': 'Point',
-                    'coordinates': [0, 0]
-                  }
-                }
-              ]
-            }
-          });
-        }
-
-        if (!map.getLayer('mapillary-compass')) {
-          map.addLayer({
-            'id': 'mapillary-compass',
-            'type': 'symbol',
-            'source': 'point', // reference the data source
-            'layout': {
-              'icon-image': 'compass', // reference the image
-              'icon-size': 0.5,
-              'visibility': 'none'
-            }
-          });
-        }
-      })
 
 
 
