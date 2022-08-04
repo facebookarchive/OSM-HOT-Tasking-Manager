@@ -209,6 +209,7 @@ class ProjectDTO(Model):
     imagery = StringType()
     josm_preset = StringType(serialized_name="josmPreset", serialize_when_none=False)
     id_presets = ListType(StringType, serialized_name="idPresets", default=[])
+    extra_id_params = StringType(serialized_name="extraIdParams")
     rapid_power_user = BooleanType(
         serialized_name="rapidPowerUser", default=False, required=False
     )
@@ -509,6 +510,7 @@ class ProjectSummary(Model):
     imagery = StringType()
     license_id = IntType(serialized_name="licenseId")
     id_presets = ListType(StringType, serialized_name="idPresets", default=[])
+    extra_id_params = StringType(serialized_name="extraIdParams")
     rapid_power_user = BooleanType(
         serialized_name="rapidPowerUser", default=False, required=False
     )

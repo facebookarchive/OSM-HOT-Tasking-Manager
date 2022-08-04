@@ -152,8 +152,10 @@ class Project(db.Model):
     mapillaryOrganizationId = db.Column(db.String)
     josm_preset = db.Column(db.String)
     id_presets = db.Column(ARRAY(db.String))
+    extra_id_params = db.Column(db.String)
     rapid_power_user = db.Column(db.Boolean, default=False)
     last_updated = db.Column(db.DateTime, default=timestamp)
+    progress_email_sent = db.Column(db.Boolean, default=False)
     license_id = db.Column(db.Integer, db.ForeignKey("licenses.id", name="fk_licenses"))
     geometry = db.Column(Geometry("MULTIPOLYGON", srid=4326), nullable=False)
     centroid = db.Column(Geometry("POINT", srid=4326), nullable=False)
@@ -368,7 +370,8 @@ class Project(db.Model):
         """Updates project from DTO"""
         self.status = ProjectStatus[project_dto.project_status].value
         self.priority = ProjectPriority[project_dto.project_priority].value
-        if self.default_locale != project_dto.default_locale:
+        locales = [i.locale for i in project_dto.project_info_locales]
+        if project_dto.default_locale not in locales:
             new_locale_dto = ProjectInfoDTO()
             new_locale_dto.locale = project_dto.default_locale
             project_dto.project_info_locales.append(new_locale_dto)
@@ -384,6 +387,7 @@ class Project(db.Model):
         self.imagery = project_dto.imagery
         self.josm_preset = project_dto.josm_preset
         self.id_presets = project_dto.id_presets
+        self.extra_id_params = project_dto.extra_id_params
         self.rapid_power_user = project_dto.rapid_power_user
         self.last_updated = timestamp()
         self.license_id = project_dto.license_id
@@ -855,6 +859,7 @@ class Project(db.Model):
         summary.license_id = self.license_id
         summary.status = ProjectStatus(self.status).name
         summary.id_presets = self.id_presets
+        summary.extra_id_params = self.extra_id_params
         summary.rapid_power_user = self.rapid_power_user
         summary.imagery = self.imagery
         if self.organisation_id:
@@ -1022,6 +1027,7 @@ class Project(db.Model):
         base_dto.imagery = self.imagery
         base_dto.josm_preset = self.josm_preset
         base_dto.id_presets = self.id_presets
+        base_dto.extra_id_params = self.extra_id_params
         base_dto.rapid_power_user = self.rapid_power_user
         base_dto.country_tag = self.country
         base_dto.organisation_id = self.organisation_id
@@ -1174,6 +1180,14 @@ class Project(db.Model):
                 return int(tasks_validated / (total_tasks - tasks_bad_imagery) * 100)
             elif target == "bad_imagery":
                 return int((tasks_bad_imagery / total_tasks) * 100)
+            elif target == "project_completion":
+                # To calculate project completion we assign 2 points to each task
+                # one for mapping and one for validation
+                return int(
+                    (tasks_mapped + (tasks_validated * 2))
+                    / ((total_tasks - tasks_bad_imagery) * 2)
+                    * 100
+                )
         except ZeroDivisionError:
             return 0
 

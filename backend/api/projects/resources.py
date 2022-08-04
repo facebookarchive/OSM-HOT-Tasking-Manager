@@ -112,7 +112,10 @@ class ProjectsRestAPI(Resource):
 
                 return project_dto, 200
             else:
-                return {"Error": "Private Project", "SubCode": "PrivateProject"}, 403
+                return {
+                    "Error": "User not permitted: Private Project",
+                    "SubCode": "PrivateProject",
+                }, 403
         except NotFound:
             return {"Error": "Project Not Found", "SubCode": "NotFound"}, 404
         except ProjectServiceError as e:
@@ -474,9 +477,10 @@ class ProjectsRestAPI(Resource):
         """
         try:
             authenticated_user_id = token_auth.current_user()
-            ProjectAdminService.is_user_action_permitted_on_project(
+            if not ProjectAdminService.is_user_action_permitted_on_project(
                 authenticated_user_id, project_id
-            )
+            ):
+                raise ValueError()
         except ValueError:
             return {
                 "Error": "User is not a manager of the project",

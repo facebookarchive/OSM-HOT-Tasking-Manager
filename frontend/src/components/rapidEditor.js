@@ -44,9 +44,8 @@ export default function RapidEditor({ setDisable, comment, presets, imagery, gpx
       if (RapiDContext === null) {
         // we need to keep iD context on redux store because iD works better if
         // the context is not restarted while running in the same browser session
-        dispatch({ type: 'SET_RAPIDEDITOR', context: window.iD.coreContext() })
+        dispatch({ type: 'SET_RAPIDEDITOR', context: window.iD.coreContext() });
       }
-
     }
   }, [windowInit, RapiDContext, dispatch]);
 
@@ -69,8 +68,7 @@ export default function RapidEditor({ setDisable, comment, presets, imagery, gpx
         window.iD.presetManager.addablePresetIDs(null);
       }
       // setup the context
-      RapiDContext
-        .embed(true)
+      RapiDContext.embed(true)
         .assetPath('/static/rapid/')
         .locale(locale)
         .setsDocumentTitle(false)

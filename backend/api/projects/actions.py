@@ -6,7 +6,10 @@ from schematics.exceptions import DataError
 from backend.models.dtos.message_dto import MessageDTO
 from backend.models.dtos.grid_dto import GridDTO
 from backend.services.project_service import ProjectService, NotFound
-from backend.services.project_admin_service import ProjectAdminService
+from backend.services.project_admin_service import (
+    ProjectAdminService,
+    ProjectAdminServiceError,
+)
 from backend.services.grid.grid_service import GridService
 from backend.services.messaging.message_service import MessageService
 from backend.services.users.authentication_service import token_auth, tm
@@ -63,7 +66,7 @@ class ProjectsActionsTransferAPI(Resource):
                 project_id, authenticated_user_id, username
             )
             return {"Success": "Project Transferred"}, 200
-        except ValueError as e:
+        except (ValueError, ProjectAdminServiceError) as e:
             return {"Error": str(e).split("-")[1], "SubCode": str(e).split("-")[0]}, 403
         except Exception as e:
             error_msg = f"ProjectsActionsTransferAPI POST - unhandled error: {str(e)}"
@@ -134,14 +137,15 @@ class ProjectsActionsMessageContributorsAPI(Resource):
             }, 400
 
         try:
-            ProjectAdminService.is_user_action_permitted_on_project(
+            if not ProjectAdminService.is_user_action_permitted_on_project(
                 authenticated_user_id, project_id
-            )
+            ):
+                raise ValueError()
+
             threading.Thread(
                 target=MessageService.send_message_to_all_contributors,
                 args=(project_id, message_dto),
             ).start()
-
             return {"Success": "Messages started"}, 200
         except ValueError:
             return {
@@ -194,9 +198,10 @@ class ProjectsActionsFeatureAPI(Resource):
         """
         try:
             authenticated_user_id = token_auth.current_user()
-            ProjectAdminService.is_user_action_permitted_on_project(
+            if not ProjectAdminService.is_user_action_permitted_on_project(
                 authenticated_user_id, project_id
-            )
+            ):
+                raise ValueError()
         except ValueError:
             return {
                 "Error": "User is not a manager of the project",
@@ -252,9 +257,11 @@ class ProjectsActionsUnFeatureAPI(Resource):
                 description: Internal Server Error
         """
         try:
-            ProjectAdminService.is_user_action_permitted_on_project(
-                token_auth.current_user(), project_id
-            )
+            authenticated_user_id = token_auth.current_user()
+            if not ProjectAdminService.is_user_action_permitted_on_project(
+                authenticated_user_id, project_id
+            ):
+                raise ValueError()
         except ValueError:
             return {
                 "Error": "User is not a manager of the project",
@@ -320,9 +327,11 @@ class ProjectsActionsSetInterestsAPI(Resource):
                 description: Internal Server Error
         """
         try:
-            ProjectAdminService.is_user_action_permitted_on_project(
-                token_auth.current_user(), project_id
-            )
+            authenticated_user_id = token_auth.current_user()
+            if not ProjectAdminService.is_user_action_permitted_on_project(
+                authenticated_user_id, project_id
+            ):
+                raise ValueError()
         except ValueError:
             return {
                 "Error": "User is not a manager of the project",

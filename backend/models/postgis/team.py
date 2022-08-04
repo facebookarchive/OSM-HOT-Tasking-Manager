@@ -4,6 +4,9 @@ from backend.models.dtos.team_dto import (
     NewTeamDTO,
     TeamMembersDTO,
     TeamProjectDTO,
+    TeamMembersStatsDTO,
+    TeamMembersStatsQuery,
+    TeamMemberStats,
 )
 from backend.models.dtos.organisation_dto import OrganisationTeamsDTO
 from backend.models.postgis.organisation import Organisation
@@ -13,7 +16,11 @@ from backend.models.postgis.statuses import (
     TeamRoles,
 )
 from backend.models.postgis.user import User
+from backend.models.postgis.task import TaskHistory
 from backend.models.postgis.utils import NotFound
+
+from sqlalchemy.sql.expression import cast, or_
+from sqlalchemy import func, Time
 
 
 class TeamMembers(db.Model):
@@ -26,7 +33,9 @@ class TeamMembers(db.Model):
     )
     function = db.Column(db.Integer, nullable=False)  # either 'editor' or 'manager'
     active = db.Column(db.Boolean, default=False)
-
+    join_request_notifications = db.Column(
+        db.Boolean, nullable=False, default=False
+    )  # Managers can turn notifications on/off for team join requests
     member = db.relationship(
         User, backref=db.backref("teams", cascade="all, delete-orphan")
     )
@@ -43,6 +52,15 @@ class TeamMembers(db.Model):
         """ Deletes the current model from the DB """
         db.session.delete(self)
         db.session.commit()
+
+    def update(self):
+        """ Updates the current model in the DB """
+        db.session.commit()
+
+    @staticmethod
+    def get(team_id: int, user_id: int):
+        """ Returns a team member by team_id and user_id """
+        return TeamMembers.query.filter_by(team_id=team_id, user_id=user_id).first()
 
 
 class Team(db.Model):
@@ -122,18 +140,25 @@ class Team(db.Model):
 
         if team_dto.members != self._get_team_members() and team_dto.members:
             for member in self.members:
-                db.session.delete(member)
-
+                member_name = User.get_by_id(member.user_id).username
+                if member_name not in [i["username"] for i in team_dto.members]:
+                    member.delete()
             for member in team_dto.members:
-                user = User.get_by_username(member["userName"])
-
+                user = User.get_by_username(member["username"])
                 if user is None:
                     raise NotFound("User not found")
-
-                new_team_member = TeamMembers()
-                new_team_member.team = self
-                new_team_member.member = user
-                new_team_member.function = TeamMemberFunctions[member["function"]].value
+                team_member = TeamMembers.get(self.id, user.id)
+                if team_member:
+                    team_member.join_request_notifications = member[
+                        "join_request_notifications"
+                    ]
+                else:
+                    new_team_member = TeamMembers()
+                    new_team_member.team = self
+                    new_team_member.member = user
+                    new_team_member.function = TeamMemberFunctions[
+                        member["function"]
+                    ].value
 
         db.session.commit()
 
@@ -196,6 +221,7 @@ class Team(db.Model):
         member_dto.function = member_function
         member_dto.picture_url = user.picture_url
         member_dto.active = member.active
+        member_dto.join_request_notifications = member.join_request_notifications
         return member_dto
 
     def as_dto_team_project(self, project) -> TeamProjectDTO:
@@ -225,3 +251,110 @@ class Team(db.Model):
         return TeamMembers.query.filter_by(
             team_id=self.id, function=TeamMemberFunctions.MANAGER.value, active=True
         ).all()
+
+    @staticmethod
+    def get_team_members_stats(query: TeamMembersStatsQuery) -> TeamMembersStatsDTO:
+        """Get team stats by member """
+        team = Team.get(query.team_id)
+        members = team.members
+        projects = team.projects
+        project_ids = [project.project_id for project in projects]
+
+        team_stats = TeamMembersStatsDTO()
+        for member in members:
+            user = User.get_by_id(member.user_id)
+            member_stats = TeamMemberStats()
+            member_stats.user_id = user.id
+            member_stats.username = user.username
+            member_stats.picture_url = user.picture_url
+
+            member_stats.total_time_spent = 0
+            member_stats.tasks_mapped = 0
+            member_stats.tasks_validated = 0
+            member_stats.time_spent_mapping = 0
+            member_stats.time_spent_validating = 0
+            member_stats.average_mapping_time = 0
+            member_stats.average_validation_time = 0
+
+            map_stats = (
+                db.session.query(
+                    func.sum(
+                        cast(
+                            func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"),
+                            Time,
+                        )
+                    ),
+                    func.count(TaskHistory.task_id),
+                    func.avg(
+                        cast(
+                            func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"),
+                            Time,
+                        )
+                    ),
+                )
+                .filter(
+                    or_(
+                        TaskHistory.action == "LOCKED_FOR_MAPPING",
+                        TaskHistory.action == "AUTO_UNLOCKED_FOR_MAPPING",
+                    )
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.project_id.in_(project_ids))
+                .filter(
+                    TaskHistory.action_date.between(query.start_date, query.end_date)
+                )
+            )
+
+            for time, tasks_mapped, avg_mapping_time in map_stats:
+                if time:
+                    member_stats.time_spent_mapping = time.total_seconds()
+                    member_stats.total_time_spent += member_stats.time_spent_mapping
+                member_stats.tasks_mapped = tasks_mapped
+                member_stats.average_mapping_time = (
+                    avg_mapping_time.total_seconds()
+                    if avg_mapping_time is not None
+                    else 0
+                )
+
+            validation_stats = (
+                db.session.query(
+                    func.sum(
+                        cast(
+                            func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"),
+                            Time,
+                        )
+                    ),
+                    func.count(TaskHistory.task_id),
+                    func.avg(
+                        cast(
+                            func.to_timestamp(TaskHistory.action_text, "HH24:MI:SS"),
+                            Time,
+                        )
+                    ),
+                )
+                .filter(
+                    or_(
+                        TaskHistory.action == "LOCKED_FOR_VALIDATION",
+                        TaskHistory.action == "AUTO_UNLOCKED_FOR_VALIDATION",
+                    )
+                )
+                .filter(TaskHistory.user_id == user.id)
+                .filter(TaskHistory.project_id.in_(project_ids))
+                .filter(
+                    TaskHistory.action_date.between(query.start_date, query.end_date)
+                )
+            )
+
+            for time, tasks_validated, avg_validation_time in validation_stats:
+                if time:
+                    member_stats.time_spent_validating = time.total_seconds()
+                    member_stats.total_time_spent += member_stats.time_spent_validating
+                member_stats.tasks_validated = tasks_validated
+                member_stats.average_validation_time = (
+                    avg_validation_time.total_seconds()
+                    if avg_validation_time is not None
+                    else 0
+                )
+
+            team_stats.members_stats.append(member_stats)
+        return team_stats

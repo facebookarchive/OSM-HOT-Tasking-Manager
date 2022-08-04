@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { connect } from 'react-redux';
 import { Link, navigate } from '@reach/router';
 import Popup from 'reactjs-popup';
@@ -31,10 +31,18 @@ function getMenuItensForUser(userDetails, organisations) {
       authenticated: true,
     },
     { label: messages.manage, link: 'manage', authenticated: true, manager: true },
-    { label: messages.learn, link: 'learn', showAlways: true },
+    { label: messages.learn, link: 'learn/map', showAlways: true },
     { label: messages.about, link: 'about', showAlways: true },
-    { label: messages.support, link: SERVICE_DESK, showAlways: true, serviceDesk: true },
   ];
+  if (SERVICE_DESK) {
+    menuItems.push({
+      label: messages.support,
+      link: SERVICE_DESK,
+      showAlways: true,
+      serviceDesk: true,
+    });
+  }
+
   let filteredMenuItems;
   if (userDetails.username) {
     filteredMenuItems = menuItems.filter((item) => item.authenticated === true || item.showAlways);
@@ -158,8 +166,8 @@ const PopupItems = (props) => {
 
 class Header extends React.Component {
   linkCombo = 'link mh3 barlow-condensed blue-dark f4 ttu';
-  isActive = ({ isCurrent }) => {
-    return isCurrent
+  isActive = ({ isPartiallyCurrent }) => {
+    return isPartiallyCurrent
       ? { className: `${this.linkCombo} bb b--blue-dark bw1 pv2` }
       : { className: this.linkCombo };
   };
@@ -176,10 +184,10 @@ class Header extends React.Component {
 
     return (
       <div className="v-mid">
-        {filteredMenuItems.map((item, n) => (
-          <>
+        {filteredMenuItems.map((item) => (
+          <Fragment key={item.label.id}>
             {!item.serviceDesk ? (
-              <TopNavLink to={item.link} key={n} isActive={this.isActive}>
+              <TopNavLink to={item.link} isActive={this.isActive}>
                 <FormattedMessage {...item.label} />
               </TopNavLink>
             ) : (
@@ -193,7 +201,7 @@ class Header extends React.Component {
                 <ExternalLinkIcon className="pl2 v-cen" style={{ height: '15px' }} />
               </a>
             )}
-          </>
+          </Fragment>
         ))}
       </div>
     );

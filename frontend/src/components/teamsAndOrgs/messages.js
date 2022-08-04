@@ -32,6 +32,18 @@ export default defineMessages({
     id: 'management.members.edit',
     defaultMessage: 'Edit',
   },
+  alreadyInTeam: {
+    id: 'management.members.alreadyInTeam',
+    defaultMessage: 'Already in team',
+  },
+  noOptions: {
+    id: 'management.members.search.noOptions',
+    defaultMessage: 'No options',
+  },
+  UserAlreadyInListError: {
+    id: 'management.members.UserAlreadyInListError',
+    defaultMessage: 'User is already a member of this team or has already requested to join.',
+  },
   members: {
     id: 'management.members',
     defaultMessage: 'Members',
@@ -80,6 +92,10 @@ export default defineMessages({
     id: 'management.team',
     defaultMessage: 'Team',
   },
+  teamStats: {
+    id: 'management.teamStats',
+    defaultMessage: 'Team Stats',
+  },
   projects: {
     id: 'management.projects',
     defaultMessage: 'Projects',
@@ -107,6 +123,10 @@ export default defineMessages({
   user: {
     id: 'management.user',
     defaultMessage: 'User',
+  },
+  userName: {
+    id: 'management.userName',
+    defaultMessage: 'Username',
   },
   category: {
     id: 'management.category',
@@ -179,6 +199,10 @@ export default defineMessages({
   selectType: {
     id: 'management.organisations.type.select',
     defaultMessage: 'Select type',
+  },
+  requiredField: {
+    id: 'management.organisations.field.required',
+    defaultMessage: 'Required field',
   },
   free: {
     id: 'management.organisations.type.free',
@@ -401,6 +425,11 @@ export default defineMessages({
     id: 'management.teams.invite_only.description',
     defaultMessage: "Managers need to approve a member's request to join.",
   },
+  newJoinRequestNotification: {
+    id: 'management.teams.newJoinRequestNotification',
+    defaultMessage:
+      'Enable for team managers to receive (email) notifications each time a new join request is made',
+  },
   waitingApproval: {
     id: 'teamsAndOrgs.management.teams.messages.waiting_approval',
     defaultMessage: 'Your request to join this team is waiting for approval.',
@@ -434,5 +463,53 @@ export default defineMessages({
   statistics: {
     id: 'management.stats.title',
     defaultMessage: 'Statistics',
+  },
+  overview: {
+    id: 'management.stats.overview',
+    defaultMessage: 'Overview',
+  },
+  timeSpentValidating: {
+    id: 'management.teams.stats.timeSpentValidating',
+    defaultMessage: 'Time spent validating',
+  },
+  timeSpentMapping: {
+    id: 'management.teams.stats.timeSpentMapping',
+    defaultMessage: 'Time spent mapping',
+  },
+  averageTimePerTask: {
+    id: 'management.teams.stats.averageTimePerTask',
+    defaultMessage: 'Average time per task',
+  },
+  teamTaskSummary: {
+    id: 'management.teams.stats.teamTaskSummary',
+    defaultMessage: 'Team task summary',
+  },
+  teamMappingStatistics: {
+    id: 'management.teams.stats.teamMappingStatistics',
+    defaultMessage: 'Team mapping statistics',
+  },
+  teamValidationStatistics: {
+    id: 'management.teams.stats.teamValidationStatistics',
+    defaultMessage: 'Team validation statistics',
+  },
+  totalTime: {
+    id: 'management.teams.stats.totalTime',
+    defaultMessage: 'Total time',
+  },
+  summary: {
+    id: 'management.teams.stats.tabs.summary',
+    defaultMessage: 'Summary',
+  },
+  mapped: {
+    id: 'management.teams.stats.tabs.mapped',
+    defaultMessage: 'Mapped',
+  },
+  validated: {
+    id: 'management.teams.stats.tabs.validated',
+    defaultMessage: 'Validated',
+  },
+  exportCSV: {
+    id: 'management.teams.stats.exportCSV',
+    defaultMessage: 'Export CSV',
   },
 });
