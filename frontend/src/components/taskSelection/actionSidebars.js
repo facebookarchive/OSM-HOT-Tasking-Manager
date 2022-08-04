@@ -418,8 +418,9 @@ export function CompletionTabForValidation({
         <h4 className="ttu blue-grey f5">
           <FormattedMessage {...messages.editStatus} />
         </h4>
+       
         <p className="b mb2">
-          <FormattedMessage {...messages.validatedQuestion} values={{ number: tasksIds.length }} />
+          <FormattedMessage {... project.imageCaptureMode ? messages.validatedImageQuestion: messages.validatedQuestion} values={{ number: tasksIds.length }} />
         </p>
         {tasksIds.length > 3 && (
           <div className="cf w-100 db pt1 pv2 blue-dark mb2 bb b--light-gray">
@@ -579,9 +580,8 @@ const TaskValidationSelector = ({
             <FormattedMessage {...messages.incomplete} />
           </label>
           <CustomButton
-            className={`${
-              showCommentInput ? 'b--primary primary' : 'b--grey-light blue-dark'
-            } bg-white ba br1 ml3 pv2 ph3`}
+            className={`${showCommentInput ? 'b--primary primary' : 'b--grey-light blue-dark'
+              } bg-white ba br1 ml3 pv2 ph3`}
             onClick={() => setShowCommentInput(!showCommentInput)}
             icon={
               comment ? (

@@ -5,12 +5,16 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { FormattedMessage } from 'react-intl';
-
 import WebglUnsupported from '../webglUnsupported';
 import messages from './messages';
 import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL } from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
+import axios from 'axios';
+import compassIcon from '../../assets/img/mapillary-compass.png';
+import { SwitchToggle } from '../formInputs';
+
+
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
@@ -39,6 +43,8 @@ export const TasksMap = ({
   animateZoom = true,
   showTaskIds = false,
   selected: selectedOnMap,
+  earliestStreetImagery = '1970-01-01T00:00:00.000000Z',
+  mapillaryOrganizationId,
 }) => {
   const mapRef = React.createRef();
   const locale = useSelector((state) => state.preferences['locale']);
@@ -69,6 +75,8 @@ export const TasksMap = ({
     };
     // eslint-disable-next-line
   }, []);
+
+  console.log(mapResults);
 
   useLayoutEffect(() => {
     // should run only when triggered from tasks list
@@ -164,6 +172,19 @@ export const TasksMap = ({
         }
         taskStatusCondition = [...taskStatusCondition, ...[locked, 'lock', '']];
 
+
+        map.addControl(
+          new mapboxgl.GeolocateControl({
+            positionOptions: {
+              enableHighAccuracy: true
+            },
+            // When active the map will receive updates to the device's location as it changes.
+            trackUserLocation: true,
+            // Draw an arrow next to the location dot to indicate which direction the device is heading.
+            showUserHeading: true
+          })
+        );
+
         map.addLayer({
           id: 'tasks-icon',
           type: 'symbol',
@@ -211,6 +232,38 @@ export const TasksMap = ({
           },
           'tasks-icon',
         );
+
+        map.addSource('mapillary', {
+          type: 'vector',
+          tiles: ['https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|5458526104199012|c91f32db4e70dcd39a263dce9aa7f261'],
+          minzoom: 1,
+          maxzoom: 14
+        });
+
+        map.addLayer({
+          id: 'mapillary-sequences',
+          type: 'line',
+          source: 'mapillary',
+          'source-layer': 'sequence',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': ['case', ['within', mapResults.features[0]], '#000000', '#ff0000'],
+            'line-width': 2
+          }
+        });
+        map.addLayer({
+          id: 'mapillary-images',
+          type: 'circle',
+          source: 'mapillary',
+          'source-layer': 'image',
+          paint: {
+            'circle-color': '#05CB63',
+            'circle-radius': 5,
+          }
+        });
 
         map.addLayer({
           id: 'selected-tasks-border',
@@ -390,6 +443,120 @@ export const TasksMap = ({
           map.getCanvas().style.cursor = 'pointer';
         }
       });
+
+      map.loadImage(compassIcon, (error, image) => {
+        if (error) throw error;
+
+        if (!map.hasImage('compass')) {
+          map.addImage('compass', image);
+        }
+
+        if (!map.getSource('point')) {
+          map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+              'type': 'FeatureCollection',
+              'features': [
+                {
+                  'type': 'Feature',
+                  'geometry': {
+                    'type': 'Point',
+                    'coordinates': [0, 0]
+                  }
+                }
+              ]
+            }
+          });
+        }
+
+        if (!map.getLayer('mapillary-compass')) {
+          map.addLayer({
+            'id': 'mapillary-compass',
+            'type': 'symbol',
+            'source': 'point', // reference the data source
+            'layout': {
+              'icon-image': 'compass', // reference the image
+              'icon-size': 0.5,
+              'visibility': 'none'
+            }
+          });
+        }
+      })
+
+
+
+      const popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: false
+      });
+
+      function displayMapPopup(e) {
+        popup.remove();
+
+        map.getCanvas().style.cursor = 'pointer';
+        let imageObj = e.features[0].properties;
+
+        console.log(e.features);
+
+        axios.get(`https://graph.mapillary.com/${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`, {
+          headers: {
+            'Authorization': "OAuth MLY|5494923973921616|75ede84ae518fed4232a6e7eb7d53688"
+          }
+        }).then(resp => {
+          popup.setLngLat([e.lngLat.lng, e.lngLat.lat]).setHTML(`<img src="${resp.data.thumb_256_url}"></img>`).addTo(map);
+
+          const geoJsonData = {
+            'type': 'FeatureCollection',
+            'features': [
+              {
+                'type': 'Feature',
+                'geometry': {
+                  'type': 'Point',
+                  'coordinates': [e.lngLat.lng, e.lngLat.lat]
+                }
+              }
+            ]
+          }
+
+
+          map.getSource('point').setData(geoJsonData);
+          map.setLayoutProperty('mapillary-compass', 'visibility', 'visible');
+          map.setLayoutProperty('mapillary-compass', 'icon-rotate', resp.data.computed_compass_angle);
+        });
+      }
+      map.on('mousemove', 'mapillary-images', (e) => displayMapPopup(e));
+      popup.on('close', () => map.setLayoutProperty('mapillary-compass', 'visibility', 'none'));
+
+      map.on('mouseenter', 'mapillary-sequences', (e) => console.log(e));
+
+
+      // map.on('idle', () => {
+      //   mapillaryLayer ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible') : map.setLayoutProperty('mapillary-images', 'visibility', 'none')
+      //   mapillaryLayer ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible') : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none')
+      // });
+
+      map.setFilter(
+        'mapillary-images',
+        ['all', ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()]]
+      );
+
+      map.setFilter(
+        'mapillary-sequences',
+        ['all', ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()]]
+      );
+
+      if (mapillaryOrganizationId > 0) {
+        map.setFilter(
+          'mapillary-images',
+          ['all', ['==', ['get', 'organization_id'], mapillaryOrganizationId]]
+        );
+
+        map.setFilter(
+          'mapillary-sequences',
+          ['all', ['==', ['get', 'organization_id'], mapillaryOrganizationId]]
+        );
+      }
+
       map.on('click', 'tasks-fill', onSelectTaskClick);
       map.on('mouseleave', 'tasks-fill', function (e) {
         // Change the cursor style as a UI indicator.

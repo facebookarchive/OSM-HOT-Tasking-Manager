@@ -19,7 +19,6 @@ export function TasksMapLegend({ imageCaptureMode }) {
       </h4>
       {expand && (
         <div>
-          <>
             <p className={lineClasses}>
               <TaskStatus status="READY" />
             </p>
@@ -48,8 +47,6 @@ export function TasksMapLegend({ imageCaptureMode }) {
                 </p>
               </>
             )}
-          </>
-
           <p className={lineClasses}>
             <TaskStatus status="PRIORITY_AREAS" />
           </p>

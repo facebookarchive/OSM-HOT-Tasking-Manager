@@ -506,6 +506,11 @@ export default defineMessages({
     defaultMessage:
       '{number, plural, one {Is this task well mapped?} other {Are these tasks well mapped?}}',
   },
+  validatedImageQuestion: {
+    id: 'project.tasks.action.options.validated_image_question',
+    defaultMessage:
+      '{number, plural, one {Is imagery capture complete for this task?} other {Is imagery capture complete for hese tasks?}}',
+  },
   complete: {
     id: 'project.tasks.action.options.complete',
     defaultMessage: 'Yes',

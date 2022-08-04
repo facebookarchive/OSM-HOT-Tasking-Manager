@@ -23,6 +23,7 @@ import { ChangesetCommentTags } from './changesetComment';
 import { ProjectHeader } from '../projectDetail/header';
 import Contributions from './contributions';
 import { UserPermissionErrorContent } from './permissionErrorModal';
+import { TasksMapFilterControls } from './filterControls';
 
 const TaskSelectionFooter = React.lazy(() => import('./footer'));
 
@@ -367,6 +368,8 @@ export function TaskSelection({ project, type, loading }: Object) {
               taskBordersOnly={false}
               priorityAreas={priorityAreas}
               animateZoom={false}
+              earliestStreetImagery={project.earliestStreetImagery} 
+              mapillaryOrganizationId={parseInt(project.mapillaryOrganizationId) || 0}
             />
             <TasksMapLegend imageCaptureMode={project.imageCaptureMode} />
           </ReactPlaceholder>
