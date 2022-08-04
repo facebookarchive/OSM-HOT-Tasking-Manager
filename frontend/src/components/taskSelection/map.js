@@ -248,7 +248,7 @@ export const TasksMap = ({
             'line-cap': 'round',
           },
           paint: {
-            'line-color': ['case', ['within', mapResults.features[0]], '#000000', '#ff0000'],
+            'line-color': '#05CB63',
             'line-width': 2
           }
         });
@@ -475,10 +475,6 @@ export const TasksMap = ({
           map.getCanvas().style.cursor = 'pointer';
         }
       });
-
-
-
-
 
       const popup = new mapboxgl.Popup({
         closeButton: true,
