@@ -387,8 +387,7 @@ export function TeamDetail(props) {
 
   useEffect(() => {
     if (team && team.members) {
-      managersFiltered = filterActiveManagers(team.members)
-      setManagers(managersFiltered);
+      setManagers(filterActiveManagers(team.members));
       setMembers(filterActiveMembers(team.members));
       const membersFiltered = team.members.filter(
         (member) => member.username === userDetails.username,
@@ -396,7 +395,7 @@ export function TeamDetail(props) {
       if (membersFiltered.length) {
         setIsMember(membersFiltered.filter((i) => i.active === true).length ? true : 'requested');
       }
-      const managersFiltered = managersFiltered.filter((manager) => manager.username === userDetails.username);
+      const managersFiltered = filterActiveManagers(team.members).filter((manager) => manager.username === userDetails.username);
       setIsManager(managersFiltered.length > 0);
     }
   }, [team, userDetails.username]);
