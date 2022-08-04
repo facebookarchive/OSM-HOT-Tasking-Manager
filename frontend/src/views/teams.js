@@ -50,9 +50,6 @@ export function MyTeams() {
   );
 }
 
-export function isManager(managers, username) {
-  return managers.filter((manager) => manager.username === username).length > 0;
-}
 
 export function ListTeams({ managementView = false }: Object) {
   const userDetails = useSelector((state) => state.auth.get('userDetails'));
@@ -384,6 +381,7 @@ export function TeamDetail(props) {
     props.id,
   );
   const [isMember, setIsMember] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [managers, setManagers] = useState([]);
   const [members, setMembers] = useState([]);
 
@@ -397,6 +395,8 @@ export function TeamDetail(props) {
       if (membersFiltered.length) {
         setIsMember(membersFiltered.filter((i) => i.active === true).length ? true : 'requested');
       }
+      const managersFiltered = managers.filter((manager) => manager.username === userDetails.username);
+      setIsManager(managersFiltered.length > 0);
     }
   }, [team, userDetails.username]);
 
@@ -444,23 +444,25 @@ export function TeamDetail(props) {
     return (
       <>
         <div className="cf pa4-ns pa2 bg-tan blue-dark overflow-y-scroll-ns vh-minus-185-ns h-100">
-          <div className="w-40-l w-100 mt2 fl">
-            <TeamSideBar
-              team={team}
-              members={members}
-              managers={managers}
-              requestedToJoin={isMember === 'requested'}
-            />
+          <div className="w-100 h-100">
+            <div className="w-40-l w-100 mt2 fl">
+              <TeamSideBar
+                team={team}
+                members={members}
+                managers={managers}
+                requestedToJoin={isMember === 'requested'}
+              />
+            </div>
+            <div className="w-60-l w-100 mt2 pl5-l pl0 fl">
+              <Projects
+                projects={projects}
+                viewAllEndpoint={`/explore/?team=${props.id}`}
+                ownerEntity="team"
+                showManageButtons={false}
+              />
+            </div>
           </div>
-          <div className="w-60-l w-100 mt2 pl5-l pl0 fl">
-            <Projects
-              projects={projects}
-              viewAllEndpoint={`/explore/?team=${props.id}`}
-              ownerEntity="team"
-              showManageButtons={false}
-            />
-          </div>
-          {isManager(managers, userDetails.username) && (
+          {isManager && (
             <TeamStats
               query={query}
               setQuery={setQuery}
