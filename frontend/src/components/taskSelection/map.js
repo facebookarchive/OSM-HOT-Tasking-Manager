@@ -267,7 +267,6 @@ export const TasksMap = ({
           if (error) throw error;
 
           map.addImage('compass', image);
-
         })
 
         map.addSource('point', {
@@ -289,9 +288,9 @@ export const TasksMap = ({
         map.addLayer({
           'id': 'mapillary-compass',
           'type': 'symbol',
-          'source': 'point', // reference the data source
+          'source': 'point',
           'layout': {
-            'icon-image': 'compass', // reference the image
+            'icon-image': 'compass',
             'icon-size': 0.5,
             'visibility': 'none'
           }
@@ -521,10 +520,13 @@ export const TasksMap = ({
       map.on('mouseenter', 'mapillary-sequences', (e) => console.log(e));
 
 
-      // map.on('idle', () => {
-      //   mapillaryLayer ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible') : map.setLayoutProperty('mapillary-images', 'visibility', 'none')
-      //   mapillaryLayer ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible') : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none')
-      // });
+      map.on('idle', () => {
+        let element = document.getElementById("mapillary-toggle");
+        let visibility = element ? element.checked : false;
+
+        visibility ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible') : map.setLayoutProperty('mapillary-images', 'visibility', 'none')
+        visibility ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible') : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none')
+      });
 
       map.setFilter(
         'mapillary-images',
@@ -640,7 +642,13 @@ export const TasksMap = ({
             <FormattedMessage {...messages.taskId} values={{ id: hoveredTaskId }} />
           </div>
         )}
-        <div id="map" className={className} ref={mapRef}></div>
+        <div id="map" className={className} ref={mapRef}>
+          <div style={{ zIndex: 10 }} id={"mapillary-checkbox"} className={"cf left-1 top-1 pa2 absolute bg-white br1"}>
+            <input class="" type="checkbox" id="mapillary-toggle"></input>
+            <label for="mapillary-toggle">  Mapillary Layer</label>
+
+          </div>
+        </div>
       </>
     );
   }
