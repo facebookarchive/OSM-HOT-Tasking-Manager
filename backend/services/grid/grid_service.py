@@ -71,7 +71,7 @@ class GridService:
         overarching_bbox = GridService._create_overarching_bbox(grid_dto, True)
         roads = []
 
-        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
+        url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
             bbox=overarching_bbox
         )
         overpass_resp = requests.get(url)

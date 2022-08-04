@@ -915,7 +915,7 @@ class Task(db.Model):
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
 
-            url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["highway"]{bbox};way["highway"]{bbox};relation["highway"]{bbox};);out geom;>;out skel qt;'.format(
+            url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
                 bbox=(
                     # Overpass is lon/lat
                     overarching_bbox[1],
@@ -925,6 +925,9 @@ class Task(db.Model):
                 )
             )
             overpass_resp = requests.get(url)
+            lat_lon_arr = re.findall(
+                r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
+            )  # TODO use this instead of json.loads
             parsed_resp = json.loads(overpass_resp.text)
             roads_in_overarching_bbox = parsed_resp["elements"]
 
@@ -949,7 +952,6 @@ class Task(db.Model):
             )
 
             if mapillary_roads:
-
                 intersecting_road = False
                 intersecting_image = False
                 for road_obj in roads_in_overarching_bbox:
