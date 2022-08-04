@@ -644,12 +644,10 @@ export const TasksMap = ({
         )}
         <div id="map" className={className} ref={mapRef}>
           <div style={{ zIndex: 10 }} id={"mapillary-checkbox"} className={"cf left-1 top-1 pa2 absolute bg-white br1"}>
-            <input class="" type="checkbox" id="mapillary-toggle"></input>
-            <label for="mapillary-toggle">  Mapillary Layer</label>
-
+            <input type="checkbox" id="mapillary-toggle"></input>
+            <label htmlFor="mapillary-toggle">  Mapillary Layer</label>
           </div>
-        </div>
-      </>
-    );
-  }
-};
+      </div>
+    </>
+    )}
+}
