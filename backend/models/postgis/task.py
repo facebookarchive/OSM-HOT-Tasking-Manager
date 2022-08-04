@@ -38,7 +38,6 @@ from shapely.geometry import shape, Point, MultiPoint
 import requests
 import os
 import mapbox_vector_tile
-import math
 
 
 class TaskAction(Enum):
@@ -916,14 +915,17 @@ class Task(db.Model):
             # if z < 14:
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
-
-            url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
-                bbox=(
-                    # Overpass is lon/lat
-                    overarching_bbox[1],
-                    overarching_bbox[0],
-                    overarching_bbox[3],
-                    overarching_bbox[2],
+            base_url = "https://overpass-api.de/api/interpreter?data="
+            url = (
+                base_url
+                + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
+                    bbox=(
+                        # Overpass is lon/lat
+                        overarching_bbox[1],
+                        overarching_bbox[0],
+                        overarching_bbox[3],
+                        overarching_bbox[2],
+                    )
                 )
             )
             overpass_resp = requests.get(url)
@@ -937,7 +939,8 @@ class Task(db.Model):
             overarching_tile = mapbox_vector_tile.decode(resp.content)
 
         tasks_features = []
-        image_completion_percent = 0  # TODO currently completion is binary. Make dynamic based on completion of each task %
+        # TODO currently completion is binary. Change to completion of each task %
+        image_completion_percent = 0
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(
@@ -949,6 +952,7 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
             )
+            print("task_properties", task_properties)
 
             if mapillary_roads:
                 intersecting_road = False
