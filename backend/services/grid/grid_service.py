@@ -1,5 +1,6 @@
 import geojson
 import json
+import re
 from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape, Point
 from shapely.ops import cascaded_union
 import shapely.geometry
@@ -79,17 +80,15 @@ class GridService:
             )
         )
         overpass_resp = requests.get(url)
-        parsed_resp = json.loads(overpass_resp.text)
-        roads_in_overarching_bbox = parsed_resp["elements"]
+        lat_lon_arr = re.findall(
+            r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
+        )
         for task in grid_dto["grid"]["features"]:
             task_geometry = shape(task["geometry"])
-            for point in roads_in_overarching_bbox:
-                if (
-                    point["type"] == "node"
-                ):  # "node" seems to have same lat/lon as "way"
-                    if task_geometry.intersects(Point(point["lat"], point["lon"])):
-                        roads.append(task)
-                        break
+            for lat, lon in lat_lon_arr:
+                if task_geometry.intersects(Point(float(lat), float(lon))):
+                    roads.append(task)
+                    break
         return geojson.FeatureCollection(roads)
 
     @staticmethod
