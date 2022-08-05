@@ -441,7 +441,7 @@ class ProjectActionsIntersectingRoadsAPI(Resource):
         """
         Gets the tiles intersecting roads within the aoi
         ---
-        tags: TODO
+        tags:
             - grid
         produces:
             - application/json

@@ -1,8 +1,13 @@
 import math
 
 
-# TODO docstring for all utils + credit to Mapbox
 def bbox_to_tile(bbox_coords):
+    """
+    Get the smallest tile to cover a bbox. Ported over from Mapbox's tilebelt
+    https://github.com/mapbox/tilebelt/blob/master/index.js#L235
+    :param bbox_coords: bbox in lon/lat format eg [ -178, 84, -177, 85 ]
+    :return: tile x, y, z
+    """
     min = point_to_tile(bbox_coords[0], bbox_coords[1], 32)
     max = point_to_tile(bbox_coords[2], bbox_coords[3], 32)
 
@@ -27,6 +32,14 @@ def get_bbox_zoom(bbox):
 
 
 def point_to_tile_fraction(lon, lat, z):
+    """
+    Get the precise fractional tile location for a point at a zoom level. Ported over from Mapbox's tilebelt
+    https://github.com/mapbox/tilebelt/blob/master/index.js#L271
+    :param lon: longitude
+    :param lat: latitude
+    :param z: zoom level
+    :return: tile fraction
+    """
     sin = math.sin(lat * (math.pi / 180))
     z2 = math.pow(2, z)
     x = z2 * (lon / 360 + 0.5)
@@ -40,6 +53,14 @@ def point_to_tile_fraction(lon, lat, z):
 
 
 def point_to_tile(lon, lat, z):
+    """
+    Get the tile for a point at a specified zoom level. Ported over from Mapbox's tilebelt
+    https://github.com/mapbox/tilebelt/blob/master/index.js#L70
+    :param lon: longitude
+    :param lat: latitude
+    :param z: zoom level
+    :return: tile rounded down
+    """
     tile = point_to_tile_fraction(lon, lat, z)
     tile[0] = math.floor(tile[0])
     tile[1] = math.floor(tile[1])

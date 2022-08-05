@@ -952,7 +952,6 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
             )
-            print("task_properties", task_properties)
 
             if mapillary_roads:
                 intersecting_road = False
