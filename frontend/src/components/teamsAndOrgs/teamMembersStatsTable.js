@@ -181,6 +181,11 @@ export const TeamMembersStatsTable = ({ stats, teamName }) => {
       return Object.keys(stat)
         .filter((key) => keys.includes(key))
         .reduce((res, key) => {
+          // the time fields are in seconds so let's convert to useful time just like the table
+          if (key.match(/time/i)) {
+            const time = new Date(stat[key] * 1000).toISOString().slice(11, 19)
+            return {...res, [key]: time}
+          }
           return { ...res, [key]: stat[key] };
         }, {});
     });
