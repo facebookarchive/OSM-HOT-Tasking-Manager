@@ -5,7 +5,15 @@ import '@hotosm/id/dist/iD.css';
 
 import { OSM_CONSUMER_KEY, OSM_CONSUMER_SECRET, OSM_SERVER_URL } from '../config';
 
-export default function Editor({ setDisable, comment, presets, imagery, gpxUrl, earliestStreetImagery, imageCaptureMode}) {
+export default function Editor({
+  setDisable,
+  comment,
+  presets,
+  imagery,
+  gpxUrl,
+  earliestStreetImagery,
+  imageCaptureMode,
+}) {
   const dispatch = useDispatch();
   const session = useSelector((state) => state.auth.get('session'));
   const iDContext = useSelector((state) => state.editor.context);
@@ -108,12 +116,22 @@ export default function Editor({ setDisable, comment, presets, imagery, gpxUrl, 
 
       if (imageCaptureMode) {
         if (earliestStreetImagery) {
-          iDContext.photos().setDateFilter("fromDate", earliestStreetImagery.substr(0, 10), false);
+          iDContext.photos().setDateFilter('fromDate', earliestStreetImagery.substr(0, 10), false);
         }
-        window.location.href = window.location.href + "&photo_overlay=mapillary,mapillary-map-features,mapillary-signs";
-      }  
+        window.location.href =
+          window.location.href + '&photo_overlay=mapillary,mapillary-map-features,mapillary-signs';
+      }
     }
-  }, [session, iDContext, setDisable, presets, locale, gpxUrl, earliestStreetImagery, imageCaptureMode]);
+  }, [
+    session,
+    iDContext,
+    setDisable,
+    presets,
+    locale,
+    gpxUrl,
+    earliestStreetImagery,
+    imageCaptureMode,
+  ]);
 
   return <div className="w-100 vh-minus-77-ns" id="id-container"></div>;
 }

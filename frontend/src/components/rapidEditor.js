@@ -5,7 +5,16 @@ import 'RapiD/dist/RapiD.css';
 
 import { OSM_CONSUMER_KEY, OSM_CONSUMER_SECRET, OSM_SERVER_URL } from '../config';
 
-export default function RapidEditor({ setDisable, comment, presets, imagery, gpxUrl, powerUser = false, earliestStreetImagery, imageCaptureMode}) {
+export default function RapidEditor({
+  setDisable,
+  comment,
+  presets,
+  imagery,
+  gpxUrl,
+  powerUser = false,
+  earliestStreetImagery,
+  imageCaptureMode,
+}) {
   const dispatch = useDispatch();
   const session = useSelector((state) => state.auth.get('session'));
   const RapiDContext = useSelector((state) => state.editor.rapidContext);
@@ -109,13 +118,28 @@ export default function RapidEditor({ setDisable, comment, presets, imagery, gpx
 
       if (imageCaptureMode) {
         if (earliestStreetImagery) {
-          RapiDContext.photos().setDateFilter("fromDate", earliestStreetImagery.substr(0, 10), false);
+          RapiDContext.photos().setDateFilter(
+            'fromDate',
+            earliestStreetImagery.substr(0, 10),
+            false,
+          );
         }
 
-        window.location.href = window.location.href + "&photo_overlay=mapillary,mapillary-map-features,mapillary-signs";
+        window.location.href =
+          window.location.href + '&photo_overlay=mapillary,mapillary-map-features,mapillary-signs';
       }
     }
-  }, [session, RapiDContext, setDisable, presets, locale, gpxUrl, powerUser, earliestStreetImagery, imageCaptureMode]);
+  }, [
+    session,
+    RapiDContext,
+    setDisable,
+    presets,
+    locale,
+    gpxUrl,
+    powerUser,
+    earliestStreetImagery,
+    imageCaptureMode,
+  ]);
 
   return <div className="w-100 vh-minus-77-ns" id="rapid-container"></div>;
 }

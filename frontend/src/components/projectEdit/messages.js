@@ -595,38 +595,31 @@ export default defineMessages({
   },
   imageCaptureMode: {
     id: 'projects.formInputs.imageCaptureMode',
-    defaultMessage:
-      'Image capture mode',
+    defaultMessage: 'Image capture mode',
   },
   imageCaptureModeInfo: {
     id: 'projects.formInputs.imageCaptureMode.info',
-    defaultMessage:
-      'Adapts Tasking Manager to street imagery capture workflow.',
+    defaultMessage: 'Adapts Tasking Manager to street imagery capture workflow.',
   },
   imageryCaptureDate: {
     id: 'projects.formInputs.imageryCaptureDate',
-    defaultMessage:
-      'Imagery capture date'
+    defaultMessage: 'Imagery capture date',
   },
   imageryCaptureDateAfter: {
     id: 'projects.formInputs.imageryCaptureDate.after',
-    defaultMessage:
-      'After:'
+    defaultMessage: 'After',
   },
   mapillaryOrganizationId: {
-    id: "projects.formInputs.mapillaryOrganizationId",
-    defaultMessage:
-      'Mapillary organization ID'
+    id: 'projects.formInputs.mapillaryOrganizationId',
+    defaultMessage: 'Mapillary organization ID',
   },
   mapillaryOrganizationIdInfo: {
-    id: "projects.formInputs.mapillaryOrganizationId.info",
-    defaultMessage:
-      '15-digit identifier to filter Mapillary contributions.'
+    id: 'projects.formInputs.mapillaryOrganizationId.info',
+    defaultMessage: '15-digit identifier to filter Mapillary contributions.',
   },
   mapillaryOrganizationSelected: {
-    id: "projects.formInputs.mapillaryOrganizationId.selected",
-    defaultMessage:
-      'Organization: '
+    id: 'projects.formInputs.mapillaryOrganizationId.selected',
+    defaultMessage: 'Organization',
   },
   noMappingEditor: {
     id: 'projects.formInputs.noMappingEditor',
@@ -652,5 +645,5 @@ export default defineMessages({
   iDAPIDocs: {
     id: 'projects.formInputs.extraIdParams.iDAPIDocs',
     defaultMessage: 'iD editor documentation',
-  }
+  },
 });

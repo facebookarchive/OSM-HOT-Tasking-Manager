@@ -49,11 +49,11 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
     () =>
       activeTasks
         ? activeTasks
-          .map((task) => task.taskId)
-          .sort((n1, n2) => {
-            // in ascending order
-            return n1 - n2;
-          })
+            .map((task) => task.taskId)
+            .sort((n1, n2) => {
+              // in ascending order
+              return n1 - n2;
+            })
         : [],
     [activeTasks],
   );
@@ -195,7 +195,6 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                 }
               >
                 {editor === 'ID' ? (
-
                   <Editor
                     setDisable={setDisable}
                     comment={project.changesetComment}
