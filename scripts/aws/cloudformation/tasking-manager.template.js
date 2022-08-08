@@ -38,10 +38,30 @@ const Parameters = {
     Type: 'String',
     Description: 'POSTGRES_USER',
   },
-  DatabaseSize: {
+  DatabaseEngineVersion: {
+    Description: 'AWS PostgreSQL Engine version',
+    Type: 'String',
+    Default: '11.12'
+  },
+  DatabaseInstanceType: {
+    Description: 'Database instance type',
+    Type: 'String',
+    Default: 'db.t3.xlarge'
+  },
+  DatabaseDiskSize: {
     Description: 'Database size in GB',
     Type: 'String',
     Default: '100'
+  },
+  DatabaseParameterGroupName: {
+    Description: 'Name of the customized parameter group for the database',
+    Type: 'String',
+    Default: 'tm4-logging-postgres11'
+  },
+  DatabaseSnapshotRetentionPeriod: {
+    Description: 'Retention period for automatic (scheduled) snapshots in days',
+    Type: 'Number',
+    Default: 10
   },
   ELBSubnets: {
     Description: 'ELB subnets',
@@ -111,6 +131,24 @@ const Parameters = {
   TaskingManagerSMTPPort: {
     Description: 'TM_SMTP_PORT environment variable',
     Type: 'String'
+  },
+  TaskingManagerSMTPSSL: {
+    Description: 'TM_SMTP_USE_SSL environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '0'
+  },
+  TaskingManagerSMTPTLS: {
+    Description: 'TM_SMTP_USE_TLS environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '1'
+  },
+  TaskingManagerSendProjectUpdateEmails:{
+    Description: 'TM_SEND_PROJECT_UPDATE_EMAILS environment variable',
+    Type: 'Number',
+    AllowedValues: ['1', '0'],
+    Default: '1'
   },
   TaskingManagerDefaultChangesetComment: {
     Description: 'TM_DEFAULT_CHANGESET_COMMENT environment variable',
@@ -325,6 +363,7 @@ const Resources = {
       UserData: cf.userData([
         '#!/bin/bash',
         'set -x',
+        'sleep 60',
         'export DEBIAN_FRONTEND=noninteractive',
         'export LC_ALL="en_US.UTF-8"',
         'export LC_CTYPE="en_US.UTF-8"',
@@ -351,11 +390,6 @@ const Resources = {
         'sudo apt-get -y install git',
         'sudo apt-get -y install awscli',
         'sudo apt-get -y install ruby',
-        'pushd /home/ubuntu',
-        'wget https://aws-codedeploy-us-west-1.s3.us-west-1.amazonaws.com/latest/install',
-        'chmod +x ./install && sudo ./install auto',
-        'sudo systemctl start codedeploy-agent',
-        'popd',
         'git clone --recursive https://github.com/facebookincubator/OSM-HOT-Tasking-Manager.git',
         'cd OSM-HOT-Tasking-Manager/',
         cf.sub('git reset --hard ${GitSha}'),
@@ -384,6 +418,8 @@ const Resources = {
         cf.sub('export TM_SMTP_PASSWORD="${TaskingManagerSMTPPassword}"'),
         cf.sub('export TM_SMTP_PORT="${TaskingManagerSMTPPort}"'),
         cf.sub('export TM_SMTP_USER="${TaskingManagerSMTPUser}"'),
+        cf.sub('export TM_SMTP_USE_SSL="${TaskingManagerSMTPSSL}"'),
+        cf.sub('export TM_SMTP_USE_TLS="${TaskingManagerSMTPTLS}"'),
         cf.sub('export TM_DEFAULT_CHANGESET_COMMENT="${TaskingManagerDefaultChangesetComment}"'),
         cf.sub('export TM_EMAIL_FROM_ADDRESS="${TaskingManagerEmailFromAddress}"'),
         cf.sub('export TM_EMAIL_CONTACT_ADDRESS="${TaskingManagerEmailContactAddress}"'),
@@ -398,6 +434,11 @@ const Resources = {
         cf.if('DatabaseDumpFileGiven', cf.sub('aws s3 cp ${DatabaseDump} dump.sql; sudo -u postgres psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_ENDPOINT/$POSTGRES_DB" < dump.sql'), ''),
         './venv/bin/python3 manage.py db upgrade',
         'echo "------------------------------------------------------------"',
+        'pushd /home/ubuntu',
+        'wget https://aws-codedeploy-us-east-1.s3.us-east-1.amazonaws.com/latest/install',
+        'chmod +x ./install && sudo ./install auto',
+        'sudo systemctl start codedeploy-agent',
+        'popd',
         cf.sub('export NEW_RELIC_LICENSE_KEY="${NewRelicLicense}"'),
         cf.sub('export TM_SENTRY_BACKEND_DSN="${SentryBackendDSN}"'),
         'export NEW_RELIC_ENVIRONMENT=$TM_ENVIRONMENT',
@@ -613,18 +654,21 @@ const Resources = {
   },
   TaskingManagerRDS: {
     Type: 'AWS::RDS::DBInstance',
+    Metadata: {
+      Todo: 'Spin out database components into its own cloudformation template'
+    },
     Properties: {
       Engine: 'postgres',
       DBName: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresDB')),
-      EngineVersion: '11.12',
+      EngineVersion: cf.ref('DatabaseEngineVersion'),
       MasterUsername: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresUser')),
       MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
-      AllocatedStorage: cf.ref('DatabaseSize'),
-      BackupRetentionPeriod: 10,
+      AllocatedStorage: cf.ref('DatabaseDiskSize'),
+      BackupRetentionPeriod: cf.ref('DatabaseSnapshotRetentionPeriod'),
       StorageType: 'gp2',
-      DBParameterGroupName: 'tm4-logging-postgres11',
+      DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
       EnableCloudwatchLogsExports: ['postgresql'],
-      DBInstanceClass: cf.if('IsTaskingManagerProduction', 'db.t3.xlarge', 'db.t2.small'),
+      DBInstanceClass: cf.ref('DatabaseInstanceType'),
       DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
       VPCSecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
     }

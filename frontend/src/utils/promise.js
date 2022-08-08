@@ -14,16 +14,18 @@ export function cancelablePromise(promise: Promise<*>) {
   };
 }
 
-export function handleErrors(response) {
+export async function handleErrors(response) {
   if (response.ok) {
     return response;
   }
 
-  let text = response.statusText;
-  if (response.status === 409) {
-    text = 'CONFLICT';
-  }
-
+  let text;
+  await response
+    .clone()
+    .json()
+    .then((res) => {
+      text = res.SubCode || response.statusText;
+    });
   throw Error(text);
 }
 

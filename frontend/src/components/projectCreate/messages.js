@@ -147,7 +147,7 @@ export default defineMessages({
   },
   showProjectsAOILayer: {
     id: 'management.projects.create.show_aois',
-    defaultMessage: 'Show existing projects',
+    defaultMessage: 'Show existing projects AoIs',
   },
   disabledAOILayer: {
     id: 'management.projects.create.show_aois.disabled',
@@ -193,6 +193,14 @@ export default defineMessages({
   trim: {
     id: 'management.projects.create.button.trim',
     defaultMessage: 'Trim',
+  },
+  trimError: {
+    id: 'management.projects.create.trimError',
+    defaultMessage: 'An error occured while trimming the geometry.',
+  },
+  SelfIntersectingAOIError: {
+    id: 'management.projects.create.SelfIntersectingAOIError',
+    defaultMessage: 'Invalid geometry - polygon is self intersecting.',
   },
   draw: {
     id: 'management.projects.create.button.draw',
