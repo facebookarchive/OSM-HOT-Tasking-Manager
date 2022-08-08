@@ -12,9 +12,6 @@ import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
 import axios from 'axios';
 import compassIcon from '../../assets/img/mapillary-compass.png';
-import { SwitchToggle } from '../formInputs';
-
-
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
@@ -172,15 +169,14 @@ export const TasksMap = ({
         }
         taskStatusCondition = [...taskStatusCondition, ...[locked, 'lock', '']];
 
-
         map.addControl(
           new mapboxgl.GeolocateControl({
             positionOptions: {
-              enableHighAccuracy: true
+              enableHighAccuracy: true,
             },
             trackUserLocation: true,
-            showUserHeading: true
-          })
+            showUserHeading: true,
+          }),
         );
 
         map.addLayer({
@@ -233,9 +229,11 @@ export const TasksMap = ({
 
         map.addSource('mapillary', {
           type: 'vector',
-          tiles: ['https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|5458526104199012|c91f32db4e70dcd39a263dce9aa7f261'],
+          tiles: [
+            'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|5458526104199012|c91f32db4e70dcd39a263dce9aa7f261',
+          ],
           minzoom: 1,
-          maxzoom: 14
+          maxzoom: 14,
         });
 
         map.addLayer({
@@ -249,8 +247,8 @@ export const TasksMap = ({
           },
           paint: {
             'line-color': '#05CB63',
-            'line-width': 2
-          }
+            'line-width': 2,
+          },
         });
         map.addLayer({
           id: 'mapillary-images',
@@ -260,41 +258,41 @@ export const TasksMap = ({
           paint: {
             'circle-color': '#05CB63',
             'circle-radius': 5,
-          }
+          },
         });
 
         map.loadImage(compassIcon, (error, image) => {
           if (error) throw error;
 
           map.addImage('compass', image);
-        })
+        });
 
         map.addSource('point', {
-          'type': 'geojson',
-          'data': {
-            'type': 'FeatureCollection',
-            'features': [
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [
               {
-                'type': 'Feature',
-                'geometry': {
-                  'type': 'Point',
-                  'coordinates': [0, 0]
-                }
-              }
-            ]
-          }
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [0, 0],
+                },
+              },
+            ],
+          },
         });
 
         map.addLayer({
-          'id': 'mapillary-compass',
-          'type': 'symbol',
-          'source': 'point',
-          'layout': {
+          id: 'mapillary-compass',
+          type: 'symbol',
+          source: 'point',
+          layout: {
             'icon-image': 'compass',
             'icon-size': 0.5,
-            'visibility': 'none'
-          }
-        })
+            visibility: 'none',
+          },
+        });
 
         map.addLayer({
           id: 'selected-tasks-border',
@@ -477,7 +475,7 @@ export const TasksMap = ({
 
       const popup = new mapboxgl.Popup({
         closeButton: true,
-        closeOnClick: false
+        closeOnClick: false,
       });
 
       function displayMapPopup(e) {
@@ -488,66 +486,80 @@ export const TasksMap = ({
 
         console.log(e.features);
 
-        axios.get(`https://graph.mapillary.com/${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`, {
-          headers: {
-            'Authorization': "OAuth MLY|5494923973921616|75ede84ae518fed4232a6e7eb7d53688"
-          }
-        }).then(resp => {
-          popup.setLngLat([e.lngLat.lng, e.lngLat.lat]).setHTML(`<img src="${resp.data.thumb_256_url}"></img>`).addTo(map);
+        axios
+          .get(
+            `https://graph.mapillary.com/${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`,
+            {
+              headers: {
+                Authorization: 'OAuth MLY|5494923973921616|75ede84ae518fed4232a6e7eb7d53688',
+              },
+            },
+          )
+          .then((resp) => {
+            popup
+              .setLngLat([e.lngLat.lng, e.lngLat.lat])
+              .setHTML(`<img src="${resp.data.thumb_256_url}"></img>`)
+              .addTo(map);
 
-          const geoJsonData = {
-            'type': 'FeatureCollection',
-            'features': [
-              {
-                'type': 'Feature',
-                'geometry': {
-                  'type': 'Point',
-                  'coordinates': [e.lngLat.lng, e.lngLat.lat]
-                }
-              }
-            ]
-          }
+            const geoJsonData = {
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [e.lngLat.lng, e.lngLat.lat],
+                  },
+                },
+              ],
+            };
 
-
-          map.getSource('point').setData(geoJsonData);
-          map.setLayoutProperty('mapillary-compass', 'visibility', 'visible');
-          map.setLayoutProperty('mapillary-compass', 'icon-rotate', resp.data.computed_compass_angle);
-        });
+            map.getSource('point').setData(geoJsonData);
+            map.setLayoutProperty('mapillary-compass', 'visibility', 'visible');
+            map.setLayoutProperty(
+              'mapillary-compass',
+              'icon-rotate',
+              resp.data.computed_compass_angle,
+            );
+          });
       }
       map.on('mousemove', 'mapillary-images', (e) => displayMapPopup(e));
       popup.on('close', () => map.setLayoutProperty('mapillary-compass', 'visibility', 'none'));
 
       map.on('mouseenter', 'mapillary-sequences', (e) => console.log(e));
 
-
       map.on('idle', () => {
-        let element = document.getElementById("mapillary-toggle");
+        let element = document.getElementById('mapillary-toggle');
         let visibility = element ? element.checked : false;
 
-        visibility ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible') : map.setLayoutProperty('mapillary-images', 'visibility', 'none')
-        visibility ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible') : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none')
+        visibility
+          ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible')
+          : map.setLayoutProperty('mapillary-images', 'visibility', 'none');
+        visibility
+          ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible')
+          : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none');
       });
 
-      map.setFilter(
-        'mapillary-images',
-        ['all', ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()]]
-      );
+      map.setFilter('mapillary-images', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
 
-      map.setFilter(
-        'mapillary-sequences',
-        ['all', ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()]]
-      );
+      map.setFilter('mapillary-sequences', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
 
       if (mapillaryOrganizationId > 0) {
-        map.setFilter(
-          'mapillary-images',
-          ['all', ['==', ['get', 'organization_id'], mapillaryOrganizationId]]
-        );
+        map.setFilter('mapillary-images', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
 
-        map.setFilter(
-          'mapillary-sequences',
-          ['all', ['==', ['get', 'organization_id'], mapillaryOrganizationId]]
-        );
+        map.setFilter('mapillary-sequences', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
       }
 
       map.on('click', 'tasks-fill', onSelectTaskClick);
@@ -630,6 +642,8 @@ export const TasksMap = ({
     authDetails.id,
     showTaskIds,
     zoomedTaskId,
+    earliestStreetImagery,
+    mapillaryOrganizationId,
   ]);
 
   if (!mapboxgl.supported()) {
@@ -643,11 +657,16 @@ export const TasksMap = ({
           </div>
         )}
         <div id="map" className={className} ref={mapRef}>
-          <div style={{ zIndex: 10 }} id={"mapillary-checkbox"} className={"cf left-1 top-1 pa2 absolute bg-white br1"}>
+          <div
+            style={{ zIndex: 10 }}
+            id={'mapillary-checkbox'}
+            className={'cf left-1 top-1 pa2 absolute bg-white br1'}
+          >
             <input type="checkbox" id="mapillary-toggle"></input>
-            <label htmlFor="mapillary-toggle">  Mapillary Layer</label>
+            <label htmlFor="mapillary-toggle"> Mapillary Layer</label>
           </div>
-      </div>
-    </>
-    )}
-}
+        </div>
+      </>
+    );
+  }
+};
