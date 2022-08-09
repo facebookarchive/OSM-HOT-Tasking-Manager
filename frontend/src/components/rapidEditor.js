@@ -12,6 +12,8 @@ export default function RapidEditor({
   imagery,
   gpxUrl,
   powerUser = false,
+  earliestStreetImagery,
+  imageCaptureMode,
 }) {
   const dispatch = useDispatch();
   const session = useSelector((state) => state.auth.get('session'));
@@ -113,8 +115,31 @@ export default function RapidEditor({
           setDisable(false);
         }
       });
+
+      if (imageCaptureMode) {
+        if (earliestStreetImagery) {
+          RapiDContext.photos().setDateFilter(
+            'fromDate',
+            earliestStreetImagery.substr(0, 10),
+            false,
+          );
+        }
+
+        window.location.href =
+          window.location.href + '&photo_overlay=mapillary,mapillary-map-features,mapillary-signs';
+      }
     }
-  }, [session, RapiDContext, setDisable, presets, locale, gpxUrl, powerUser]);
+  }, [
+    session,
+    RapiDContext,
+    setDisable,
+    presets,
+    locale,
+    gpxUrl,
+    powerUser,
+    earliestStreetImagery,
+    imageCaptureMode,
+  ]);
 
   return <div className="w-100 vh-minus-77-ns" id="rapid-container"></div>;
 }

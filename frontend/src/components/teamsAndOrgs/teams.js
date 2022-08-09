@@ -57,8 +57,8 @@ export function TeamsManagement({
             <FormattedMessage {...messages.noTeams} />
           </div>
         )}
-      </ReactPlaceholder >
-    </Management >
+      </ReactPlaceholder>
+    </Management>
   );
 }
 

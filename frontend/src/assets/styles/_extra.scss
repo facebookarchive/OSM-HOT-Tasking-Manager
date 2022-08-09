@@ -383,6 +383,10 @@ a[href="https://www.mapbox.com/map-feedback/"] {
   }
 }
 
+div.react-datepicker-popper {
+  z-index: 5;
+}
+
 .comment-textarea {
   box-sizing: border-box;
 
