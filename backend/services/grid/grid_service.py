@@ -1,11 +1,16 @@
 import geojson
 import json
-from shapely.geometry import MultiPolygon, mapping
+import re
+from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape, Point
 from shapely.ops import cascaded_union
 import shapely.geometry
 from flask import current_app
 from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
+from backend.services.utils.tile_to_bbox import tile_to_bbox
+
+import requests
+from collections import deque
 
 
 class GridServiceError(Exception):
@@ -56,6 +61,35 @@ class GridService:
                 )
                 intersecting_features.append(clipped_feature)
         return geojson.FeatureCollection(intersecting_features)
+
+    @staticmethod
+    def trim_grid_to_roads(grid_dto: GridDTO) -> geojson.FeatureCollection:
+        """
+        Removes grid squares that don't contain roads by interacting with OpenStreetMaps' Overpass API
+        :param grid_dto: the dto containing
+        :return: geojson.FeatureCollection trimmed task grid
+        """
+        overarching_bbox = GridService._create_overarching_bbox(grid_dto, True)
+        roads = []
+
+        base_url = "https://overpass-api.de/api/interpreter?data="
+        url = (
+            base_url
+            + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
+                bbox=overarching_bbox
+            )
+        )
+        overpass_resp = requests.get(url)
+        lat_lon_arr = re.findall(
+            r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
+        )
+        for task in grid_dto["grid"]["features"]:
+            task_geometry = shape(task["geometry"])
+            for lat, lon in lat_lon_arr:
+                if task_geometry.intersects(Point(float(lat), float(lon))):
+                    roads.append(task)
+                    break
+        return geojson.FeatureCollection(roads)
 
     @staticmethod
     def tasks_from_aoi_features(feature_collection: str) -> geojson.FeatureCollection:
@@ -235,3 +269,106 @@ class GridService:
             # force Multipolygon
             geometry = MultiPolygon([geometry])
         return geometry
+
+    def _create_overarching_bbox(
+        grid_dto: GridDTO, latlng_switch: bool = False
+    ) -> geojson.FeatureCollection:
+        """
+        Recreates the entire bbox given a grid. NOTE Potentially redundant
+        :param grid_dto: the dto containing
+        :param latlng_switch: switch to latlng format if needed. Default is lnglat
+        :return: tuple (minX, minY, maxX, maxY)
+        """
+        coords = []  # to be used to create a MultiPoint obj
+        for feature in grid_dto["area_of_interest"][
+            "features"
+        ]:  # combine all grids in to one.
+            # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
+            x, y, z = (
+                feature["properties"]["x"],
+                feature["properties"]["y"],
+                feature["properties"]["zoom"],
+            )
+            if z > 14:
+                x, y, z = GridService._get_parent_tile(x, y, z)
+            if z < 14:
+                many_tiles = GridService._get_child_tile(
+                    x, y, z
+                )  # TODO Refactor so that it gives all 4 tiles
+                x, y, z = many_tiles[0]  # arbitrarily pick the first one
+
+            bbox = tile_to_bbox(x, y, z)
+            coords.append((bbox[0], bbox[1]))
+            coords.append((bbox[2], bbox[3]))
+        overarching_bbox = MultiPoint(coords).bounds
+        return (
+            overarching_bbox
+            if not latlng_switch
+            else (
+                overarching_bbox[1],
+                overarching_bbox[0],
+                overarching_bbox[3],
+                overarching_bbox[2],
+            )
+        )
+
+    def _convert_mapillary_coords_to_lat_lon(
+        overarching_bbox: tuple, coordinate: list, tile_extent: int
+    ) -> tuple:
+        """
+        Helper method to convert Mapillary's 4096 pixel based coordinates to lon/lat
+        :param overarching_bbox: bounding box that covers entire tile
+        :param coordinate: Mapillary coordinate arr
+        :param tile_extent: Mapillary's tile extent (usually 4096 pixels)
+        :return: tuple containing longitude and latitude
+        """
+        tile_width = abs(overarching_bbox[2] - overarching_bbox[0])  # max_x - min_x
+        tile_height = abs(overarching_bbox[3] - overarching_bbox[1])  # max_y - min_y
+        lon_offset = (coordinate[0] / tile_extent) * tile_width
+        lat_offset = (coordinate[1] / tile_extent) * tile_height
+        lon = overarching_bbox[0] + lon_offset  # max_x plus the offset
+        lat = (
+            overarching_bbox[3] - lat_offset
+        )  # max_y minus the offset, because start at top left corner of tile in this special instance
+        return (lon, lat)
+
+    def _get_parent_tile(x: int, y: int, z: int, desired_zoom: int = 14) -> tuple:
+        """
+        Gets the tile at lower zoom levels until zoom (z) == desired_zoom
+        Ported from mapbox's tilebelt https://github.com/mapbox/tilebelt/blob/master/index.js#L106
+        :param x: tile's x value
+        :param y: tile's y value
+        :param z: tile's z (zoom) value
+        :param desired_zoom: desired z to calculate. Default 14 is for Mapillary
+        :return: tuple containing newly calculated x, y, z
+        """
+        while z > desired_zoom:
+            x >>= 1
+            y >>= 1
+            z -= 1
+        return (x, y, z)
+
+    def _get_child_tile(x: int, y: int, z: int, desired_zoom: int = 14) -> list:
+        """
+        Gets the 4 tiles at higher zoom levels until zoom (z) == desired_zoom
+        Ported from mapbox's tilebelt https://github.com/mapbox/tilebelt/blob/master/index.js#L87
+        NOTE Don't let input z be too far away from desired_zoom. O(4^n) time and space.
+        :param x: tile's x value
+        :param y: tile's y value
+        :param z: tile's z (zoom) value
+        :param desired_zoom: desired z to calculate. Default 14 is for Mapillary
+        :return: tuple containing newly calculated x, y, z
+        """
+        queue = deque([[x, y, z]])
+        output = []
+        while queue:
+            x, y, z = queue.popleft()
+            if z < desired_zoom:
+                queue.append([x * 2, y * 2, z + 1])
+                queue.append([x * 2 + 1, y * 2, z + 1])
+                queue.append([x * 2 + 1, y * 2 + 1, z + 1])
+                queue.append([x * 2, y * 2 + 1, z + 1])
+            else:
+                output.append([x, y, z])
+
+        return output
