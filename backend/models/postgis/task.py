@@ -937,11 +937,9 @@ class Task(db.Model):
             )
             resp = requests.get(url)
             overarching_tile = mapbox_vector_tile.decode(resp.content)
-            print("overarching_tile", overarching_tile.keys())
 
         tasks_features = []
         # TODO currently completion is binary. Change to completion of each task %
-        image_completion_percent = 0
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(
@@ -953,15 +951,16 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
             )
-
+            image_completion_percent = 0
             if mapillary_roads:
+                image_completion_percent = 0
                 intersecting_road = False
                 intersecting_image = False
                 for lat, lon in lat_lon_arr:
                     if shape(task_geometry).intersects(Point(float(lon), float(lat))):
                         intersecting_road = True
                         break
-                if "sequence" in overarching_tile:  # AOI consists of 1 grid
+                if "sequence" in overarching_tile:
                     for coordinates_obj in overarching_tile["sequence"]["features"]:
                         tile_extent = overarching_tile["sequence"]["extent"]
                         for coordinates_list in coordinates_obj["geometry"][
@@ -973,7 +972,7 @@ class Task(db.Model):
                                 (
                                     lon,
                                     lat,
-                                ) = GridService._convert_mapillary_coords_to_lat_lon(
+                                ) = GridService._convert_mapillary_coords_to_lat_lon(  # TODO make into separate fn
                                     overarching_bbox,
                                     coordinates_list,
                                     tile_extent,
@@ -986,7 +985,7 @@ class Task(db.Model):
                                     (
                                         lon,
                                         lat,
-                                    ) = GridService._convert_mapillary_coords_to_lat_lon(
+                                    ) = GridService._convert_mapillary_coords_to_lat_lon(  # TODO make into separate fn
                                         overarching_bbox,
                                         coordinates,
                                         tile_extent,
@@ -994,6 +993,17 @@ class Task(db.Model):
                                 if shape(task_geometry).intersects(Point(lon, lat)):
                                     intersecting_image = True
                                     break
+                else:  # "Overview" in Mapillary json instead of "sequence"
+                    for coordinates_obj in overarching_tile["overview"]["features"]:
+                        tile_extent = overarching_tile["overview"]["extent"]
+                        lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
+                            overarching_bbox,
+                            coordinates_obj["geometry"]["coordinates"],
+                            tile_extent,
+                        )
+                        if shape(task_geometry).intersects(Point(lon, lat)):
+                            intersecting_image = True
+                            break
 
                 if intersecting_road and intersecting_image:
                     image_completion_percent += 1
