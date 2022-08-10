@@ -69,7 +69,9 @@ class GridService:
         :param grid_dto: the dto containing
         :return: geojson.FeatureCollection trimmed task grid
         """
-        overarching_bbox = GridService._create_overarching_bbox(grid_dto, True)
+        overarching_bbox = shape(
+            grid_dto["area_of_interest"]["features"][0]["geometry"]
+        ).bounds
         roads = []
 
         url = os.getenv(
