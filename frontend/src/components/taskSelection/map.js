@@ -13,6 +13,7 @@ import {
   MAP_STYLE,
   MAPBOX_RTL_PLUGIN_URL,
   MAPILLARY_TOKEN,
+  MAPILLARY_GRAPH_URL,
 } from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
@@ -520,7 +521,7 @@ export const TasksMap = ({
 
         axios
           .get(
-            `https://graph.mapillary.com/${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`,
+            `${MAPILLARY_GRAPH_URL}${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`,
             {
               headers: {
                 Authorization: `OAuth ${MAPILLARY_TOKEN}`,
