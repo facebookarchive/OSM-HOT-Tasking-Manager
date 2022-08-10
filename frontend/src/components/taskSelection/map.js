@@ -7,7 +7,7 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { FormattedMessage } from 'react-intl';
 import WebglUnsupported from '../webglUnsupported';
 import messages from './messages';
-import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL } from '../../config';
+import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL, MAPILLARY_TOKEN } from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
 import axios from 'axios';
@@ -72,8 +72,6 @@ export const TasksMap = ({
     };
     // eslint-disable-next-line
   }, []);
-
-  console.log(mapResults);
 
   useLayoutEffect(() => {
     // should run only when triggered from tasks list
@@ -230,7 +228,7 @@ export const TasksMap = ({
         map.addSource('mapillary', {
           type: 'vector',
           tiles: [
-            'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|5458526104199012|c91f32db4e70dcd39a263dce9aa7f261',
+            `https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${MAPILLARY_TOKEN}`,
           ],
           minzoom: 1,
           maxzoom: 14,
@@ -321,6 +319,29 @@ export const TasksMap = ({
           'selected-tasks-border',
         );
       }
+
+      map.setFilter('mapillary-images', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
+
+      map.setFilter('mapillary-sequences', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
+
+      if (mapillaryOrganizationId > 0) {
+        map.setFilter('mapillary-images', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
+
+        map.setFilter('mapillary-sequences', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
+      }
+
 
       if (map.getSource('tasks-outline') === undefined && taskBordersMap) {
         map.addSource('tasks-outline', {
@@ -484,14 +505,12 @@ export const TasksMap = ({
         map.getCanvas().style.cursor = 'pointer';
         let imageObj = e.features[0].properties;
 
-        console.log(e.features);
-
         axios
           .get(
             `https://graph.mapillary.com/${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`,
             {
               headers: {
-                Authorization: 'OAuth MLY|5494923973921616|75ede84ae518fed4232a6e7eb7d53688',
+                Authorization: `OAuth ${MAPILLARY_TOKEN}`,
               },
             },
           )
@@ -526,8 +545,6 @@ export const TasksMap = ({
       map.on('mousemove', 'mapillary-images', (e) => displayMapPopup(e));
       popup.on('close', () => map.setLayoutProperty('mapillary-compass', 'visibility', 'none'));
 
-      map.on('mouseenter', 'mapillary-sequences', (e) => console.log(e));
-
       map.on('idle', () => {
         let element = document.getElementById('mapillary-toggle');
         let visibility = element ? element.checked : false;
@@ -539,28 +556,6 @@ export const TasksMap = ({
           ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible')
           : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none');
       });
-
-      map.setFilter('mapillary-images', [
-        'all',
-        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
-      ]);
-
-      map.setFilter('mapillary-sequences', [
-        'all',
-        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
-      ]);
-
-      if (mapillaryOrganizationId > 0) {
-        map.setFilter('mapillary-images', [
-          'all',
-          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
-        ]);
-
-        map.setFilter('mapillary-sequences', [
-          'all',
-          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
-        ]);
-      }
 
       map.on('click', 'tasks-fill', onSelectTaskClick);
       map.on('mouseleave', 'tasks-fill', function (e) {

@@ -21,7 +21,6 @@ export const ADVANCED_LEVEL_COUNT = Number(process.env.REACT_APP_TM_MAPPER_LEVEL
 export const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || '';
 export const ENABLE_SERVICEWORKER = process.env.REACT_APP_ENABLE_SERVICEWORKER || 0;
 export const MAX_AOI_AREA = Number(process.env.REACT_APP_MAX_AOI_AREA) || 5000;
-export const MAPILLARY_TOKEN = process.env.REACT_APP_MAPILLARY_TOKEN || '';
 export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 5000000; // bytes
 
 // ORGANISATIONAL INFORMATION
@@ -49,6 +48,10 @@ export const TM_DEFAULT_CHANGESET_COMMENT =
 export const HOMEPAGE_VIDEO_URL = process.env.REACT_APP_HOMEPAGE_VIDEO_URL || '';
 // Sentry.io DSN
 export const SENTRY_FRONTEND_DSN = process.env.REACT_APP_SENTRY_FRONTEND_DSN;
+
+// Mapillary
+export const MAPILLARY_TOKEN = process.env.REACT_APP_MAPILLARY_TOKEN || '';
+export const MAPILLARY_GRAPH_URL = process.env.REACT_APP_MAPILLARY_GRAPH_URL || 'https://graph.mapillary.com/';
 
 // OSM API and Editor URLs
 export const OSM_SERVER_URL =
