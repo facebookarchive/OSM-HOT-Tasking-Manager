@@ -39,6 +39,7 @@ const removeTinyTasks = (metadata, updateMetadata) => {
 export default function TrimProject({ metadata, mapObj, updateMetadata }) {
   const token = useSelector((state) => state.auth.get('token'));
   const [clipStatus, setClipStatus] = useState(false);
+  const [roadStatus, setRoadStatus] = useState(false);
   const [tinyTasksNumber, setTinyTasksNumber] = useState(0);
 
   const trimTaskGridAsync = useAsync(trimTaskGrid);
@@ -66,16 +67,32 @@ export default function TrimProject({ metadata, mapObj, updateMetadata }) {
         </p>
         {tinyTasksNumber === 0 ? (
           <>
-            <SwitchToggle
-              isChecked={clipStatus}
-              labelPosition="right"
-              onChange={() => setClipStatus(!clipStatus)}
-              label={<FormattedMessage {...messages.trimToAOI} />}
-            />
+            <div className="pt3">
+              <SwitchToggle
+                isChecked={clipStatus}
+                labelPosition="right"
+                onChange={() => setClipStatus(!clipStatus)}
+                label={<FormattedMessage {...messages.trimToAOI} />}
+              />
+            </div>
+
+            <div className="pt3">
+              <SwitchToggle
+                isChecked={roadStatus}
+                labelPosition="right"
+                onChange={() => {
+                  setRoadStatus(!roadStatus);
+                }}
+                label={<FormattedMessage {...messages.trimCoverPathsRoads} />}
+              />
+            </div>
             <div className="pt3">
               <CustomButton
-                onClick={() =>
+                onClick={() => {
                   trimTaskGridAsync.execute({ clipStatus, metadata, updateMetadata, token })
+                  trimTaskGridAsync.execute({ clipStatus, metadata, updateMetadata, token })
+                }
+
                 }
                 className="bg-white blue-dark ba b--grey-light ph3 pv2"
                 loading={trimTaskGridAsync.status === 'pending'}
