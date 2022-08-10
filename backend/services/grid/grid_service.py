@@ -1,6 +1,8 @@
 import geojson
 import json
 import re
+import os
+import requests
 from shapely.geometry import MultiPolygon, mapping, MultiPoint, shape, Point
 from shapely.ops import cascaded_union
 import shapely.geometry
@@ -8,8 +10,6 @@ from flask import current_app
 from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
 from backend.services.utils.tile_to_bbox import tile_to_bbox
-
-import requests
 from collections import deque
 
 
@@ -72,12 +72,10 @@ class GridService:
         overarching_bbox = GridService._create_overarching_bbox(grid_dto, True)
         roads = []
 
-        base_url = "https://overpass-api.de/api/interpreter?data="
-        url = (
-            base_url
-            + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
-                bbox=overarching_bbox
-            )
+        url = os.getenv(
+            "OVERPASS_QUERY_URL"
+        ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
+            bbox=overarching_bbox
         )
         overpass_resp = requests.get(url)
         lat_lon_arr = re.findall(

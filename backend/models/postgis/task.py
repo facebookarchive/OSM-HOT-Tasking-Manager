@@ -915,17 +915,15 @@ class Task(db.Model):
             # if z < 14:
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
-            base_url = "https://overpass-api.de/api/interpreter?data="
-            url = (
-                base_url
-                + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
-                    bbox=(
-                        # Overpass is lon/lat
-                        overarching_bbox[1],
-                        overarching_bbox[0],
-                        overarching_bbox[3],
-                        overarching_bbox[2],
-                    )
+            url = os.getenv(
+                "OVERPASS_QUERY_URL"
+            ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
+                bbox=(
+                    # Overpass is lon/lat
+                    overarching_bbox[1],
+                    overarching_bbox[0],
+                    overarching_bbox[3],
+                    overarching_bbox[2],
                 )
             )
             overpass_resp = requests.get(url)
