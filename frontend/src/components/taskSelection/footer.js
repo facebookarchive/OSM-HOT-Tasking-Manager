@@ -114,7 +114,7 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
       if (project.imageCaptureMode) {
         if (navigator.userAgent.includes('Android')) {
           navigate('mapillary://mapillary/explore');
-        } else if (navigator.userAgent.includes('like Mac OS X')) {
+        } else if (navigator.userAgent.includes('iPad|iPhone|iPod')) {
           navigate('mapillary://goto/camera');
         }
       }
