@@ -51,7 +51,8 @@ export const SENTRY_FRONTEND_DSN = process.env.REACT_APP_SENTRY_FRONTEND_DSN;
 
 // Mapillary
 export const MAPILLARY_TOKEN = process.env.REACT_APP_MAPILLARY_TOKEN || '';
-export const MAPILLARY_GRAPH_URL = process.env.REACT_APP_MAPILLARY_GRAPH_URL || 'https://graph.mapillary.com/';
+export const MAPILLARY_GRAPH_URL =
+  process.env.REACT_APP_MAPILLARY_GRAPH_URL || 'https://graph.mapillary.com/';
 
 // OSM API and Editor URLs
 export const OSM_SERVER_URL =

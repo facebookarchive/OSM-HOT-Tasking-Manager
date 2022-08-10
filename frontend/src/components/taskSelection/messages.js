@@ -603,6 +603,10 @@ export default defineMessages({
     id: 'project.resources.changesets.task',
     defaultMessage: "See task's changesets",
   },
+  showMapillaryLayer: {
+    id: 'project.input.placeholder.mapillary',
+    defaultMessage: 'Show Mapillary layer',
+  },
   taskOnOSMCha: {
     id: 'project.tasks.activity.osmcha',
     defaultMessage: 'View changesets in OSMCha',

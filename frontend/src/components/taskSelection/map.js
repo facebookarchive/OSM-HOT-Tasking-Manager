@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import bbox from '@turf/bbox';
 import mapboxgl from 'mapbox-gl';
@@ -7,11 +7,18 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { FormattedMessage } from 'react-intl';
 import WebglUnsupported from '../webglUnsupported';
 import messages from './messages';
-import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL, MAPILLARY_TOKEN } from '../../config';
+import {
+  MAPBOX_TOKEN,
+  TASK_COLOURS,
+  MAP_STYLE,
+  MAPBOX_RTL_PLUGIN_URL,
+  MAPILLARY_TOKEN,
+} from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
 import axios from 'axios';
 import compassIcon from '../../assets/img/mapillary-compass.png';
+import { SwitchToggle } from '../formInputs';
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
@@ -47,6 +54,7 @@ export const TasksMap = ({
   const locale = useSelector((state) => state.preferences['locale']);
   const authDetails = useSelector((state) => state.auth.get('userDetails'));
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
+  const [mapillaryShown, setMapillaryShown] = useState(false);
 
   const [map, setMapObj] = useState(null);
 
@@ -247,6 +255,9 @@ export const TasksMap = ({
             'line-color': '#05CB63',
             'line-width': 2,
           },
+          layout: {
+            visibility: 'none',
+          },
         });
         map.addLayer({
           id: 'mapillary-images',
@@ -256,6 +267,9 @@ export const TasksMap = ({
           paint: {
             'circle-color': '#05CB63',
             'circle-radius': 5,
+          },
+          layout: {
+            visibility: 'none',
           },
         });
 
@@ -341,7 +355,6 @@ export const TasksMap = ({
           ['==', ['get', 'organization_id'], mapillaryOrganizationId],
         ]);
       }
-
 
       if (map.getSource('tasks-outline') === undefined && taskBordersMap) {
         map.addSource('tasks-outline', {
@@ -545,18 +558,6 @@ export const TasksMap = ({
       map.on('mousemove', 'mapillary-images', (e) => displayMapPopup(e));
       popup.on('close', () => map.setLayoutProperty('mapillary-compass', 'visibility', 'none'));
 
-      map.on('idle', () => {
-        let element = document.getElementById('mapillary-toggle');
-        let visibility = element ? element.checked : false;
-
-        visibility
-          ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible')
-          : map.setLayoutProperty('mapillary-images', 'visibility', 'none');
-        visibility
-          ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible')
-          : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none');
-      });
-
       map.on('click', 'tasks-fill', onSelectTaskClick);
       map.on('mouseleave', 'tasks-fill', function (e) {
         // Change the cursor style as a UI indicator.
@@ -641,6 +642,17 @@ export const TasksMap = ({
     mapillaryOrganizationId,
   ]);
 
+  useEffect(() => {
+    if (map) {
+      mapillaryShown
+        ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible')
+        : map.setLayoutProperty('mapillary-images', 'visibility', 'none');
+      mapillaryShown
+        ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible')
+        : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none');
+    }
+  }, [mapillaryShown]);
+
   if (!mapboxgl.supported()) {
     return <WebglUnsupported className={`vh-75-l vh-50 fr ${className || ''}`} />;
   } else {
@@ -657,8 +669,12 @@ export const TasksMap = ({
             id={'mapillary-checkbox'}
             className={'cf left-1 top-1 pa2 absolute bg-white br1'}
           >
-            <input type="checkbox" id="mapillary-toggle"></input>
-            <label htmlFor="mapillary-toggle"> Mapillary Layer</label>
+            <SwitchToggle
+              isChecked={mapillaryShown}
+              labelPosition="right"
+              onChange={() => setMapillaryShown(!mapillaryShown)}
+              label={<FormattedMessage {...messages.showMapillaryLayer} />}
+            />
           </div>
         </div>
       </>
