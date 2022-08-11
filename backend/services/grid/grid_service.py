@@ -73,7 +73,6 @@ class GridService:
             grid_dto["area_of_interest"]["features"][0]["geometry"]
         ).bounds
         roads = []
-
         url = os.getenv(
             "OVERPASS_QUERY_URL"
         ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(

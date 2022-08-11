@@ -16,11 +16,13 @@ const trimTaskGrid = (params) => {
   const { clipStatus, metadata, updateMetadata, token } = params;
   const body = JSON.stringify({
     areaOfInterest: metadata.geom,
-    clipToAoi: clipStatus,
+    clipToAoi: true,
     grid: metadata.tempTaskGrid,
   });
 
+  console.log(body);
   return pushToLocalJSONAPI('projects/actions/intersecting-tiles/', body, token).then((grid) => {
+    console.log(grid);
     updateMetadata({ ...metadata, tasksNumber: grid.features.length, taskGrid: grid });
   });
 };
@@ -89,7 +91,6 @@ export default function TrimProject({ metadata, mapObj, updateMetadata }) {
             <div className="pt3">
               <CustomButton
                 onClick={() => {
-                  trimTaskGridAsync.execute({ clipStatus, metadata, updateMetadata, token })
                   trimTaskGridAsync.execute({ clipStatus, metadata, updateMetadata, token })
                 }
 

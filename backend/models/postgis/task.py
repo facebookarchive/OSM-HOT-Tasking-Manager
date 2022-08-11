@@ -1005,13 +1005,14 @@ class Task(db.Model):
 
                 if intersecting_road and intersecting_image:
                     image_completion_percent += 1
-
+            task_properties["road_imagery_completion"] = image_completion_percent
             feature = geojson.Feature(
                 geometry=task_geometry,
                 properties=task_properties,
                 road_imagery_completion=image_completion_percent,
             )
             tasks_features.append(feature)
+            print("tasks_features", tasks_features) 
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod
