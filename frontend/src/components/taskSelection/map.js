@@ -94,9 +94,12 @@ export const TasksMap = ({
 
   useLayoutEffect(() => {
     const onSelectTaskClick = (e) => {
+      console.log(e.features);
+
       const task = e.features && e.features[0].properties;
       selectTask && selectTask(task.taskId, task.taskStatus);
     };
+
 
     const countryMapLayers = [
       taskBordersMap && 'outerhull-tasks-border',
@@ -204,28 +207,26 @@ export const TasksMap = ({
             paint: {
               'fill-color': [
                 'match',
-                ['get', 'taskStatus'],
-                'READY',
-                TASK_COLOURS.READY,
-                'LOCKED_FOR_MAPPING',
-                TASK_COLOURS.LOCKED_FOR_MAPPING,
-                'MAPPED',
-                TASK_COLOURS.MAPPED,
-                'LOCKED_FOR_VALIDATION',
-                TASK_COLOURS.LOCKED_FOR_VALIDATION,
-                'VALIDATED',
+                // ['get', 'taskStatus'],
+                // 'READY',
+                // TASK_COLOURS.READY,
+                // 'LOCKED_FOR_MAPPING',
+                // TASK_COLOURS.LOCKED_FOR_MAPPING,
+                // 'MAPPED',
+                // TASK_COLOURS.MAPPED,
+                // 'LOCKED_FOR_VALIDATION',
+                // TASK_COLOURS.LOCKED_FOR_VALIDATION,
+                // 'VALIDATED',
+                // TASK_COLOURS.VALIDATED,
+                // 'INVALIDATED',
+                // TASK_COLOURS.INVALIDATED,
+                // 'BADIMAGERY',
+                // TASK_COLOURS.BADIMAGERY,
+                // 'rgba(0,0,0,0)',
+                ['get', 'road_imagery_completion'],
+                0,
                 TASK_COLOURS.VALIDATED,
-                'INVALIDATED',
-                TASK_COLOURS.INVALIDATED,
-                'BADIMAGERY',
-                TASK_COLOURS.BADIMAGERY,
-                'PENDING_IMAGE_CAPTURE',
-                TASK_COLOURS.PENDING_IMAGE_CAPTURE,
-                'MORE_IMAGES_NEEDED',
-                TASK_COLOURS.MORE_IMAGES_NEEDED,
-                'IMAGE_CAPTURE_DONE',
-                TASK_COLOURS.IMAGE_CAPTURE_DONE,
-                'rgba(0,0,0,0)',
+                TASK_COLOURS.INVALIDATED
               ],
               // 'fill-opacity': ['/', ['*', 2, ['get', 'taskId']], 1000], // Temporary.... creates a gradient
               'fill-opacity': 0.8,
@@ -427,6 +428,7 @@ export const TasksMap = ({
         );
       }
 
+
       if (map.getSource('tasks-centroid') === undefined && taskBordersMap && taskCentroidMap) {
         map.addSource('tasks-centroid', {
           type: 'geojson',
@@ -474,6 +476,8 @@ export const TasksMap = ({
           'point-tasks-centroid-inner',
         );
       }
+
+
 
       if (showTaskIds) {
         map.on('mousemove', 'tasks-fill', function (e) {
