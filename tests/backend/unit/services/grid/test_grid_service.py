@@ -5,7 +5,7 @@ from backend.models.dtos.grid_dto import GridDTO
 from backend.models.dtos.project_dto import DraftProjectDTO
 from backend.models.postgis.utils import InvalidGeoJson
 from backend.services.grid.grid_service import GridService
-from backend.services.utils.tile_to_bbox import tile_to_bbox
+from backend.services.utils.tile_utils import TileUtils
 from tests.backend.base import BaseTestCase
 from tests.backend.helpers.test_helpers import get_canned_json
 import re
@@ -193,7 +193,7 @@ class TestGridService(BaseTestCase):
             46.52206120266217,
         )
 
-        result = tile_to_bbox(x, y, z)
+        result = TileUtils().tile_to_bbox(x, y, z)
         for expected_float, result_float in zip(expected, result):
             self.assertAlmostEqual(expected_float, result_float)
 

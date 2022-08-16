@@ -33,7 +33,7 @@ from backend.models.postgis.utils import (
 )
 from backend.models.postgis.task_annotation import TaskAnnotation
 from backend.services.grid.grid_service import GridService
-from backend.services.utils.bbox_to_tile import bbox_to_tile
+from backend.services.utils.tile_utils import TileUtils
 from shapely.geometry import shape, Point, MultiPoint
 import requests
 import os
@@ -909,27 +909,19 @@ class Task(db.Model):
             overarching_bbox = MultiPoint(
                 [(x, y) for task in tasks for x, y in task]
             ).bounds
-            x, y, z = bbox_to_tile(overarching_bbox)
+            x, y, z = TileUtils().bbox_to_tile(overarching_bbox)
             if z > 14:
                 x, y, z = GridService._get_parent_tile(x, y, z)
             # if z < 14:
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
-            url = os.getenv(
-                "OVERPASS_QUERY_URL"
-            ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
-                bbox=(
+            lat_lon_arr = TileUtils().get_overpass_lat_lon(bbox=(
                     # Overpass is lon/lat
                     overarching_bbox[1],
                     overarching_bbox[0],
                     overarching_bbox[3],
                     overarching_bbox[2],
-                )
-            )
-            overpass_resp = requests.get(url)
-            lat_lon_arr = re.findall(
-                r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
-            )
+                ))
             url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
                 z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
             )
@@ -1012,6 +1004,7 @@ class Task(db.Model):
                 road_imagery_completion=image_completion_percent,
             )
             tasks_features.append(feature)
+        print("tasks_features", tasks_features)
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod

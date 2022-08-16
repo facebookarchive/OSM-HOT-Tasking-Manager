@@ -9,7 +9,7 @@ import shapely.geometry
 from flask import current_app
 from backend.models.dtos.grid_dto import GridDTO
 from backend.models.postgis.utils import InvalidGeoJson
-from backend.services.utils.tile_to_bbox import tile_to_bbox
+from backend.services.utils.tile_utils import TileUtils
 from collections import deque
 
 
@@ -73,16 +73,7 @@ class GridService:
             grid_dto["area_of_interest"]["features"][0]["geometry"]
         ).bounds
         roads = []
-
-        url = os.getenv(
-            "OVERPASS_QUERY_URL"
-        ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
-            bbox=overarching_bbox
-        )
-        overpass_resp = requests.get(url)
-        lat_lon_arr = re.findall(
-            r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
-        )
+        lat_lon_arr = TileUtils().get_overpass_lat_lon(overarching_bbox)
         for task in grid_dto["grid"]["features"]:
             task_geometry = shape(task["geometry"])
             for lat, lon in lat_lon_arr:
@@ -297,7 +288,7 @@ class GridService:
                 )  # TODO Refactor so that it gives all 4 tiles
                 x, y, z = many_tiles[0]  # arbitrarily pick the first one
 
-            bbox = tile_to_bbox(x, y, z)
+            bbox = TileUtils().tile_to_bbox(x, y, z)
             coords.append((bbox[0], bbox[1]))
             coords.append((bbox[2], bbox[3]))
         overarching_bbox = MultiPoint(coords).bounds
