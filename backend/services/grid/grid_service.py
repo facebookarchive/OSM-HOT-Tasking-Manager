@@ -261,48 +261,6 @@ class GridService:
             geometry = MultiPolygon([geometry])
         return geometry
 
-    def _create_overarching_bbox(
-        grid_dto: GridDTO, latlng_switch: bool = False
-    ) -> geojson.FeatureCollection:
-        """
-        Recreates the entire bbox given a grid. NOTE Potentially redundant
-        :param grid_dto: the dto containing
-        :param latlng_switch: switch to latlng format if needed. Default is lnglat
-        :return: tuple (minX, minY, maxX, maxY)
-        """
-        coords = []  # to be used to create a MultiPoint obj
-        for feature in grid_dto["area_of_interest"][
-            "features"
-        ]:  # combine all grids in to one.
-            # NOTE This exists in aoi_bbox under _get_project_and_base_dto but couldn't figure out how to access
-            x, y, z = (
-                feature["properties"]["x"],
-                feature["properties"]["y"],
-                feature["properties"]["zoom"],
-            )
-            if z > 14:
-                x, y, z = GridService._get_parent_tile(x, y, z)
-            if z < 14:
-                many_tiles = GridService._get_child_tile(
-                    x, y, z
-                )  # TODO Refactor so that it gives all 4 tiles
-                x, y, z = many_tiles[0]  # arbitrarily pick the first one
-
-            bbox = TileUtils().tile_to_bbox(x, y, z)
-            coords.append((bbox[0], bbox[1]))
-            coords.append((bbox[2], bbox[3]))
-        overarching_bbox = MultiPoint(coords).bounds
-        return (
-            overarching_bbox
-            if not latlng_switch
-            else (
-                overarching_bbox[1],
-                overarching_bbox[0],
-                overarching_bbox[3],
-                overarching_bbox[2],
-            )
-        )
-
     def _convert_mapillary_coords_to_lat_lon(
         overarching_bbox: tuple, coordinate: list, tile_extent: int
     ) -> tuple:
