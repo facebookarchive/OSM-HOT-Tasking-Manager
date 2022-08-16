@@ -940,10 +940,9 @@ class Task(db.Model):
                 taskIsSquare=task.is_square,
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
+                image_completion_percent=0,
             )
-            image_completion_percent = 0
             if mapillary_roads:
-                image_completion_percent = 0
                 intersecting_road = False
                 intersecting_image = False
                 for lat, lon in lat_lon_arr:
@@ -996,15 +995,13 @@ class Task(db.Model):
                             break
 
                 if intersecting_road and intersecting_image:
-                    image_completion_percent += 1
+                    task_properties["image_completion_percent"] += 1
 
             feature = geojson.Feature(
                 geometry=task_geometry,
                 properties=task_properties,
-                road_imagery_completion=image_completion_percent,
             )
             tasks_features.append(feature)
-        print("tasks_features", tasks_features)
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod
