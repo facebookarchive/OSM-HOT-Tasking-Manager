@@ -160,6 +160,7 @@ def add_api_endpoints(app):
         ProjectsActionsUnFeatureAPI,
         ProjectsActionsSetInterestsAPI,
         ProjectActionsIntersectingTilesAPI,
+        ProjectActionsIntersectingRoadsAPI,
     )
 
     from backend.api.projects.favorites import ProjectsFavoritesAPI
@@ -422,6 +423,12 @@ def add_api_endpoints(app):
     api.add_resource(
         ProjectActionsIntersectingTilesAPI,
         format_url("projects/actions/intersecting-tiles/"),
+        methods=["POST"],
+    )
+
+    api.add_resource(
+        ProjectActionsIntersectingRoadsAPI,
+        format_url("projects/actions/intersecting-roads/"),
         methods=["POST"],
     )
 

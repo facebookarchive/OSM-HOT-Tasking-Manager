@@ -276,3 +276,27 @@ class TestProjectService(BaseTestCase):
             "SEND_PROJECT_EMAIL_UPDATES"
         ] = True  # Set to true for other tests
         self.assertFalse(mock_send_email.called)
+
+    # def test_task_grid_road_imagery_completeness(self): # TODO move to project_services test
+    #     # arrange
+    #     grid_json = get_canned_json("test_trim_road.json")
+
+    #     grid_dto = GridDTO(grid_json)
+    #     expected = get_canned_json("road_imagery_completion.json")
+    #     grid_dto.clip_to_aoi = False
+
+    #     # act
+    #     result = GridService._task_grid_road_imagery_completeness(grid_dto)
+
+    #     # assert coordinates are same. Done separately due to floating point rounding
+    #     for expected_coords, result_coords in zip(
+    #         expected["roads_with_images"][0]["geometry"]["coordinates"][0][0],
+    #         result["roads_with_images"][0]["geometry"]["coordinates"][0][0],
+    #     ):
+    #         self.assertAlmostEqual(expected_coords[0], result_coords[0])
+    #         self.assertAlmostEqual(expected_coords[1], result_coords[1])
+
+    #     # assert everything besides floating points are the same
+    #     split_expected = re.split(r"\[\[\[.*?]]]", str(expected))
+    #     split_result = re.split(r"\[\[\[.*?]]]", str(result))
+    #     self.assertEqual(split_expected, split_result)

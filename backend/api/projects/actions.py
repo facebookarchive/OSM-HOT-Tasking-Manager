@@ -432,3 +432,83 @@ class ProjectActionsIntersectingTilesAPI(Resource):
             error_msg = f"IntersectingTiles GET API - unhandled error: {str(e)}"
             current_app.logger.critical(error_msg)
             return {"error": error_msg, "SubCode": "InternalServerError"}, 500
+
+
+class ProjectActionsIntersectingRoadsAPI(Resource):
+    @tm.pm_only()
+    @token_auth.login_required
+    def post(self):
+        """
+        Gets the tiles intersecting roads within the aoi
+        ---
+        tags:
+            - grid
+        produces:
+            - application/json
+        parameters:
+            - in: header
+              name: Authorization
+              description: Base64 encoded session token
+              required: true
+              type: string
+              default: Token sessionTokenHere==
+            - in: body
+              name: body
+              required: true
+              description: JSON object containing aoi and tasks and bool flag for controlling clip grid to aoi
+              schema:
+                  properties:
+                      clipToAoi:
+                        type: boolean
+                        default: true
+                      areaOfInterest:
+                          schema:
+                              properties:
+                                  type:
+                                      type: string
+                                      default: FeatureCollection
+                                  features:
+                                      type: array
+                                      items:
+                                          schema:
+                                              $ref: "#/definitions/GeoJsonFeature"
+                      grid:
+                          schema:
+                              properties:
+                                  type:
+                                      type: string
+                                      default: FeatureCollection
+                                  features:
+                                      type: array
+                                      items:
+                                          schema:
+                                              $ref: "#/definitions/GeoJsonFeature"
+        responses:
+            200:
+                description: Intersecting tasks found successfully
+            400:
+                description: Client Error - Invalid Request
+            500:
+                description: Internal Server Error
+        """
+        try:
+            grid_dto = GridDTO(request.get_json())
+            grid_dto.validate()
+        except DataError as e:
+            current_app.logger.error(f"error validating request: {str(e)}")
+            return {"Error": str(e), "SubCode": "InvalidData"}, 400
+
+        try:
+            grid = GridService.trim_grid_to_roads(grid_dto)
+            return grid, 200
+        except InvalidGeoJson as e:
+            return {"Error": str(e).split("-")[1], "SubCode": str(e).split("-")[0]}, 400
+        except TopologicalError:
+            return {
+                "error": "Invalid geometry. Polygon is self intersecting",
+                "SubCode": "SelfIntersectingAOI",
+            }, 400
+        except Exception as e:
+            error_msg = f"IntersectingTiles GET API - unhandled error: {str(e)}"
+            current_app.logger.critical(error_msg)
+            return {"error": error_msg, "SubCode": "InternalServerError"}, 500
