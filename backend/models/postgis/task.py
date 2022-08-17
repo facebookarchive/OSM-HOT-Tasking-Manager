@@ -984,6 +984,8 @@ class Task(db.Model):
                                 if shape(task_geometry).intersects(Point(lon, lat)):
                                     intersecting_image = True
                                     break
+                        if intersecting_image:
+                            break
                 else:  # "Overview" in Mapillary json instead of "sequence"
                     for coordinates_obj in overarching_tile["overview"]["features"]:
                         tile_extent = overarching_tile["overview"]["extent"]
@@ -1004,6 +1006,7 @@ class Task(db.Model):
                 properties=task_properties,
             )
             tasks_features.append(feature)
+        print("tasks_features", tasks_features)
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod
