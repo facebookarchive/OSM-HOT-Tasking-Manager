@@ -3,6 +3,7 @@ import os
 import requests
 import re
 
+
 class TileUtils:
     """ Class for Tasking Manager Tile Helper Functions """
 
@@ -25,7 +26,6 @@ class TileUtils:
         y = bbox[1] >> (32 - z)
         return [x, y, z]
 
-
     def get_bbox_zoom(self, bbox):
         max_zoom = 28
         for z in range(max_zoom):
@@ -34,7 +34,6 @@ class TileUtils:
                 (bbox[1] & mask) != (bbox[3] & mask)
             ):
                 return z
-
 
     def point_to_tile_fraction(self, lon, lat, z):
         """
@@ -55,7 +54,6 @@ class TileUtils:
         if x < 0:
             x += z2
         return [x, y, z]
-
 
     def point_to_tile(self, lon, lat, z):
         """
@@ -98,10 +96,8 @@ class TileUtils:
 
     def get_overpass_lat_lon(self, bbox):
         url = os.getenv(
-                "OVERPASS_QUERY_URL"
-            ) + '[out:json][timeout:25];(way["highway"]{};);out geom;'.format(
-                bbox
-            )
+            "OVERPASS_QUERY_URL"
+        ) + '[out:json][timeout:25];(way["highway"]{};);out geom;'.format(bbox)
         overpass_resp = requests.get(url)
         lat_lon_arr = re.findall(
             r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text

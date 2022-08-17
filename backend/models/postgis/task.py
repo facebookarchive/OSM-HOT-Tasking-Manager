@@ -915,13 +915,15 @@ class Task(db.Model):
             # if z < 14:
             #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
             #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
-            lat_lon_arr = TileUtils().get_overpass_lat_lon(bbox=(
+            lat_lon_arr = TileUtils().get_overpass_lat_lon(
+                bbox=(
                     # Overpass is lon/lat
                     overarching_bbox[1],
                     overarching_bbox[0],
                     overarching_bbox[3],
                     overarching_bbox[2],
-                ))
+                )
+            )
             url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
                 z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
             )
