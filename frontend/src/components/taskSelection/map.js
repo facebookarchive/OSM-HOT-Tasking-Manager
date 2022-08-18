@@ -227,7 +227,6 @@ export const TasksMap = ({
                 TASK_COLOURS.IMAGE_CAPTURE_DONE,
                 'rgba(0,0,0,0)',
               ],
-              // 'fill-opacity': ['/', ['*', 2, ['get', 'taskId']], 1000], // Temporary.... creates a gradient
               'fill-opacity': 0.8,
             },
           },
