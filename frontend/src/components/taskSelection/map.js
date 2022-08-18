@@ -1,16 +1,25 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import bbox from '@turf/bbox';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { FormattedMessage } from 'react-intl';
-
 import WebglUnsupported from '../webglUnsupported';
 import messages from './messages';
-import { MAPBOX_TOKEN, TASK_COLOURS, MAP_STYLE, MAPBOX_RTL_PLUGIN_URL } from '../../config';
+import {
+  MAPBOX_TOKEN,
+  TASK_COLOURS,
+  MAP_STYLE,
+  MAPBOX_RTL_PLUGIN_URL,
+  MAPILLARY_TOKEN,
+  MAPILLARY_GRAPH_URL,
+} from '../../config';
 import lock from '../../assets/img/lock.png';
 import redlock from '../../assets/img/red-lock.png';
+import axios from 'axios';
+import compassIcon from '../../assets/img/mapillary-compass.png';
+import { SwitchToggle } from '../formInputs';
 
 let lockIcon = new Image(17, 20);
 lockIcon.src = lock;
@@ -39,11 +48,14 @@ export const TasksMap = ({
   animateZoom = true,
   showTaskIds = false,
   selected: selectedOnMap,
+  earliestStreetImagery = '1970-01-01T00:00:00.000000Z',
+  mapillaryOrganizationId,
 }) => {
   const mapRef = React.createRef();
   const locale = useSelector((state) => state.preferences['locale']);
   const authDetails = useSelector((state) => state.auth.get('userDetails'));
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
+  const [mapillaryShown, setMapillaryShown] = useState(false);
 
   const [map, setMapObj] = useState(null);
 
@@ -82,9 +94,12 @@ export const TasksMap = ({
 
   useLayoutEffect(() => {
     const onSelectTaskClick = (e) => {
+      console.log(e.features);
+
       const task = e.features && e.features[0].properties;
       selectTask && selectTask(task.taskId, task.taskStatus);
     };
+
 
     const countryMapLayers = [
       taskBordersMap && 'outerhull-tasks-border',
@@ -164,6 +179,16 @@ export const TasksMap = ({
         }
         taskStatusCondition = [...taskStatusCondition, ...[locked, 'lock', '']];
 
+        map.addControl(
+          new mapboxgl.GeolocateControl({
+            positionOptions: {
+              enableHighAccuracy: true,
+            },
+            trackUserLocation: true,
+            showUserHeading: true,
+          }),
+        );
+
         map.addLayer({
           id: 'tasks-icon',
           type: 'symbol',
@@ -182,28 +207,26 @@ export const TasksMap = ({
             paint: {
               'fill-color': [
                 'match',
-                ['get', 'taskStatus'],
-                'READY',
-                TASK_COLOURS.READY,
-                'LOCKED_FOR_MAPPING',
-                TASK_COLOURS.LOCKED_FOR_MAPPING,
-                'MAPPED',
-                TASK_COLOURS.MAPPED,
-                'LOCKED_FOR_VALIDATION',
-                TASK_COLOURS.LOCKED_FOR_VALIDATION,
-                'VALIDATED',
+                // ['get', 'taskStatus'],
+                // 'READY',
+                // TASK_COLOURS.READY,
+                // 'LOCKED_FOR_MAPPING',
+                // TASK_COLOURS.LOCKED_FOR_MAPPING,
+                // 'MAPPED',
+                // TASK_COLOURS.MAPPED,
+                // 'LOCKED_FOR_VALIDATION',
+                // TASK_COLOURS.LOCKED_FOR_VALIDATION,
+                // 'VALIDATED',
+                // TASK_COLOURS.VALIDATED,
+                // 'INVALIDATED',
+                // TASK_COLOURS.INVALIDATED,
+                // 'BADIMAGERY',
+                // TASK_COLOURS.BADIMAGERY,
+                // 'rgba(0,0,0,0)',
+                ['get', 'road_imagery_completion'],
+                0,
                 TASK_COLOURS.VALIDATED,
-                'INVALIDATED',
-                TASK_COLOURS.INVALIDATED,
-                'BADIMAGERY',
-                TASK_COLOURS.BADIMAGERY,
-                'PENDING_IMAGE_CAPTURE',
-                TASK_COLOURS.PENDING_IMAGE_CAPTURE,
-                'MORE_IMAGES_NEEDED',
-                TASK_COLOURS.MORE_IMAGES_NEEDED,
-                'IMAGE_CAPTURE_DONE',
-                TASK_COLOURS.IMAGE_CAPTURE_DONE,
-                'rgba(0,0,0,0)',
+                TASK_COLOURS.INVALIDATED
               ],
               // 'fill-opacity': ['/', ['*', 2, ['get', 'taskId']], 1000], // Temporary.... creates a gradient
               'fill-opacity': 0.8,
@@ -211,6 +234,79 @@ export const TasksMap = ({
           },
           'tasks-icon',
         );
+
+        map.addSource('mapillary', {
+          type: 'vector',
+          tiles: [
+            `https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${MAPILLARY_TOKEN}`,
+          ],
+          minzoom: 1,
+          maxzoom: 14,
+        });
+
+        map.addLayer({
+          id: 'mapillary-sequences',
+          type: 'line',
+          source: 'mapillary',
+          'source-layer': 'sequence',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#05CB63',
+            'line-width': 2,
+          },
+          layout: {
+            visibility: 'none',
+          },
+        });
+        map.addLayer({
+          id: 'mapillary-images',
+          type: 'circle',
+          source: 'mapillary',
+          'source-layer': 'image',
+          paint: {
+            'circle-color': '#05CB63',
+            'circle-radius': 5,
+          },
+          layout: {
+            visibility: 'none',
+          },
+        });
+
+        map.loadImage(compassIcon, (error, image) => {
+          if (error) throw error;
+
+          map.addImage('compass', image);
+        });
+
+        map.addSource('point', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [0, 0],
+                },
+              },
+            ],
+          },
+        });
+
+        map.addLayer({
+          id: 'mapillary-compass',
+          type: 'symbol',
+          source: 'point',
+          layout: {
+            'icon-image': 'compass',
+            'icon-size': 0.5,
+            visibility: 'none',
+          },
+        });
 
         map.addLayer({
           id: 'selected-tasks-border',
@@ -238,6 +334,28 @@ export const TasksMap = ({
           },
           'selected-tasks-border',
         );
+      }
+
+      map.setFilter('mapillary-images', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
+
+      map.setFilter('mapillary-sequences', [
+        'all',
+        ['>=', ['get', 'captured_at'], new Date(earliestStreetImagery).getTime()],
+      ]);
+
+      if (mapillaryOrganizationId > 0) {
+        map.setFilter('mapillary-images', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
+
+        map.setFilter('mapillary-sequences', [
+          'all',
+          ['==', ['get', 'organization_id'], mapillaryOrganizationId],
+        ]);
       }
 
       if (map.getSource('tasks-outline') === undefined && taskBordersMap) {
@@ -310,6 +428,7 @@ export const TasksMap = ({
         );
       }
 
+
       if (map.getSource('tasks-centroid') === undefined && taskBordersMap && taskCentroidMap) {
         map.addSource('tasks-centroid', {
           type: 'geojson',
@@ -358,6 +477,8 @@ export const TasksMap = ({
         );
       }
 
+
+
       if (showTaskIds) {
         map.on('mousemove', 'tasks-fill', function (e) {
           // when the user hover on a task they are validating, enable the task id dialog
@@ -390,6 +511,58 @@ export const TasksMap = ({
           map.getCanvas().style.cursor = 'pointer';
         }
       });
+
+      const popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: false,
+      });
+
+      function displayMapPopup(e) {
+        popup.remove();
+
+        map.getCanvas().style.cursor = 'pointer';
+        let imageObj = e.features[0].properties;
+
+        axios
+          .get(
+            `${MAPILLARY_GRAPH_URL}${imageObj.id}?fields=thumb_256_url,computed_compass_angle,camera_type`,
+            {
+              headers: {
+                Authorization: `OAuth ${MAPILLARY_TOKEN}`,
+              },
+            },
+          )
+          .then((resp) => {
+            popup
+              .setLngLat([e.lngLat.lng, e.lngLat.lat])
+              .setHTML(`<img src="${resp.data.thumb_256_url}"></img>`)
+              .addTo(map);
+
+            const geoJsonData = {
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [e.lngLat.lng, e.lngLat.lat],
+                  },
+                },
+              ],
+            };
+
+            map.getSource('point').setData(geoJsonData);
+            map.setLayoutProperty('mapillary-compass', 'visibility', 'visible');
+            map.setLayoutProperty(
+              'mapillary-compass',
+              'icon-rotate',
+              resp.data.computed_compass_angle,
+            );
+          });
+      }
+      map.on('mousemove', 'mapillary-images', (e) => displayMapPopup(e));
+      popup.on('close', () => map.setLayoutProperty('mapillary-compass', 'visibility', 'none'));
+
       map.on('click', 'tasks-fill', onSelectTaskClick);
       map.on('mouseleave', 'tasks-fill', function (e) {
         // Change the cursor style as a UI indicator.
@@ -470,7 +643,20 @@ export const TasksMap = ({
     authDetails.id,
     showTaskIds,
     zoomedTaskId,
+    earliestStreetImagery,
+    mapillaryOrganizationId,
   ]);
+
+  useEffect(() => {
+    if (map) {
+      mapillaryShown
+        ? map.setLayoutProperty('mapillary-images', 'visibility', 'visible')
+        : map.setLayoutProperty('mapillary-images', 'visibility', 'none');
+      mapillaryShown
+        ? map.setLayoutProperty('mapillary-sequences', 'visibility', 'visible')
+        : map.setLayoutProperty('mapillary-sequences', 'visibility', 'none');
+    }
+  }, [mapillaryShown]);
 
   if (!mapboxgl.supported()) {
     return <WebglUnsupported className={`vh-75-l vh-50 fr ${className || ''}`} />;
@@ -482,7 +668,20 @@ export const TasksMap = ({
             <FormattedMessage {...messages.taskId} values={{ id: hoveredTaskId }} />
           </div>
         )}
-        <div id="map" className={className} ref={mapRef}></div>
+        <div id="map" className={className} ref={mapRef}>
+          <div
+            style={{ zIndex: 10 }}
+            id={'mapillary-checkbox'}
+            className={'cf left-1 top-1 pa2 absolute bg-white br1'}
+          >
+            <SwitchToggle
+              isChecked={mapillaryShown}
+              labelPosition="right"
+              onChange={() => setMapillaryShown(!mapillaryShown)}
+              label={<FormattedMessage {...messages.showMapillaryLayer} />}
+            />
+          </div>
+        </div>
       </>
     );
   }

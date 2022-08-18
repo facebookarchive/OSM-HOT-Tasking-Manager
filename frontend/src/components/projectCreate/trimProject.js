@@ -16,11 +16,13 @@ const trimTaskGrid = (params) => {
   const { clipStatus, metadata, updateMetadata, token } = params;
   const body = JSON.stringify({
     areaOfInterest: metadata.geom,
-    clipToAoi: clipStatus,
+    clipToAoi: true,
     grid: metadata.tempTaskGrid,
   });
 
+  console.log(body);
   return pushToLocalJSONAPI('projects/actions/intersecting-tiles/', body, token).then((grid) => {
+    console.log(grid);
     updateMetadata({ ...metadata, tasksNumber: grid.features.length, taskGrid: grid });
   });
 };
@@ -40,7 +42,6 @@ export default function TrimProject({ metadata, mapObj, updateMetadata }) {
   const token = useSelector((state) => state.auth.get('token'));
   const [clipStatus, setClipStatus] = useState(false);
   const [roadStatus, setRoadStatus] = useState(false);
-  const [waterStatus, setWaterStatus] = useState(false);
 
   const [tinyTasksNumber, setTinyTasksNumber] = useState(0);
 
@@ -69,38 +70,31 @@ export default function TrimProject({ metadata, mapObj, updateMetadata }) {
         </p>
         {tinyTasksNumber === 0 ? (
           <>
-            <SwitchToggle
-              isChecked={clipStatus}
-              labelPosition="right"
-              onChange={() => setClipStatus(!clipStatus)}
-              label={<FormattedMessage {...messages.trimToAOI} />}
-            />
-
-          <div className="pt3">
-            <SwitchToggle
-              isChecked={waterStatus}
-              labelPosition="right"
-              onChange={() => {
-                setWaterStatus(!waterStatus);
-              }}
-              label={<FormattedMessage {...messages.trimExcludeWater} />}
-            />
-          </div>
-          <div className="pt3">
-            <SwitchToggle
-              isChecked={roadStatus}
-              labelPosition="right"
-              onChange={() => {
-                setRoadStatus(!roadStatus);
-              }}
-                label={<FormattedMessage {...messages.trimCoverPathsRoads} />}
+            <div className="pt3">
+              <SwitchToggle
+                isChecked={clipStatus}
+                labelPosition="right"
+                onChange={() => setClipStatus(!clipStatus)}
+                label={<FormattedMessage {...messages.trimToAOI} />}
               />
             </div>
 
             <div className="pt3">
+              <SwitchToggle
+                isChecked={roadStatus}
+                labelPosition="right"
+                onChange={() => {
+                  setRoadStatus(!roadStatus);
+                }}
+                label={<FormattedMessage {...messages.trimCoverPathsRoads} />}
+              />
+            </div>
+            <div className="pt3">
               <CustomButton
-                onClick={() =>
+                onClick={() => {
                   trimTaskGridAsync.execute({ clipStatus, metadata, updateMetadata, token })
+                }
+
                 }
                 className="bg-white blue-dark ba b--grey-light ph3 pv2"
                 loading={trimTaskGridAsync.status === 'pending'}

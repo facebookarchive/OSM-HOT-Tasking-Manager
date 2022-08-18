@@ -1142,11 +1142,16 @@ class Project(db.Model):
         return project_dto
 
     def tasks_as_geojson(
-        self, task_ids_str: str, order_by=None, order_by_type="ASC", status=None
+        self,
+        task_ids_str: str,
+        order_by=None,
+        order_by_type="ASC",
+        status=None,
+        mapillary_query: bool = False,
     ):
         """Creates a geojson of all areas"""
         project_tasks = Task.get_tasks_as_geojson_feature_collection(
-            self.id, task_ids_str, order_by, order_by_type, status
+            self.id, task_ids_str, order_by, order_by_type, status, mapillary_query
         )
 
         return project_tasks

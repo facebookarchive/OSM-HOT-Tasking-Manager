@@ -8,7 +8,7 @@ import { StateContext, styleClasses } from '../../views/projectEdit';
 import { Code } from '../code';
 import { fetchLocalJSONAPI } from '../../network/genericJSONRequest';
 import { useImageryOption, IMAGERY_OPTIONS } from '../../hooks/UseImageryOption';
-import { MAPILLARY_TOKEN } from '../../config';
+import { MAPILLARY_TOKEN, MAPILLARY_GRAPH_URL } from '../../config';
 import axios from 'axios';
 
 export const ImageryForm = () => {
@@ -29,7 +29,7 @@ export const ImageryForm = () => {
   if (projectInfo.mapillaryOrganizationId) {
     axios
       .get(
-        `https://graph.mapillary.com/${projectInfo.mapillaryOrganizationId}?access_token=${MAPILLARY_TOKEN}&fields=name`,
+        `${MAPILLARY_GRAPH_URL}${projectInfo.mapillaryOrganizationId}?access_token=${MAPILLARY_TOKEN}&fields=name`,
       )
       .then((resp) => setOrganization(resp.data.name))
       .catch(() => setOrganization(null));

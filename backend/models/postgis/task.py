@@ -2,6 +2,7 @@ import bleach
 import datetime
 import geojson
 import json
+import re
 from enum import Enum
 from flask import current_app
 from sqlalchemy.types import Float, Text
@@ -31,6 +32,12 @@ from backend.models.postgis.utils import (
     NotFound,
 )
 from backend.models.postgis.task_annotation import TaskAnnotation
+from backend.services.grid.grid_service import GridService
+from backend.services.utils.bbox_to_tile import bbox_to_tile
+from shapely.geometry import shape, Point, MultiPoint
+import requests
+import os
+import mapbox_vector_tile
 
 
 class TaskAction(Enum):
@@ -817,6 +824,7 @@ class Task(db.Model):
         order_by: str = None,
         order_by_type: str = "ASC",
         status: int = None,
+        mapillary_roads: bool = False,
     ):
         """
         Creates a geoJson.FeatureCollection object for tasks related to the supplied project ID
@@ -893,7 +901,43 @@ class Task(db.Model):
 
         project_tasks = query.all()
 
+        if mapillary_roads:
+            tasks = [
+                geojson.loads(task.geojson)["coordinates"][0][0]
+                for task in project_tasks
+            ]
+            overarching_bbox = MultiPoint(
+                [(x, y) for task in tasks for x, y in task]
+            ).bounds
+            x, y, z = bbox_to_tile(overarching_bbox)
+            if z > 14:
+                x, y, z = GridService._get_parent_tile(x, y, z)
+            # if z < 14:
+            #     child_tiles = GridService._get_child_tile(x, y, z)  # TODO Refactor so that it gives all 4 tiles
+            #     x, y, z = child_tiles[0]  # arbitrarily pick the first one
+            url = os.getenv(
+                "OVERPASS_QUERY_URL"
+            ) + '[out:json][timeout:25];(way["highway"]{bbox};);out geom;'.format(
+                bbox=(
+                    # Overpass is lon/lat
+                    overarching_bbox[1],
+                    overarching_bbox[0],
+                    overarching_bbox[3],
+                    overarching_bbox[2],
+                )
+            )
+            overpass_resp = requests.get(url)
+            lat_lon_arr = re.findall(
+                r'"lat":\s+(-?\d+\.\d+),\s+"lon":\s+(-?\d+\.\d+)', overpass_resp.text
+            )
+            url = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{}/{}/{}?access_token={}".format(
+                z, x, y, os.getenv("MAPILLARY_ACCESS_TOKEN")
+            )
+            resp = requests.get(url)
+            overarching_tile = mapbox_vector_tile.decode(resp.content)
+
         tasks_features = []
+        # TODO currently completion is binary. Change to completion of each task %
         for task in project_tasks:
             task_geometry = geojson.loads(task.geojson)
             task_properties = dict(
@@ -905,12 +949,70 @@ class Task(db.Model):
                 taskStatus=TaskStatus(task.task_status).name,
                 lockedBy=task.locked_by,
             )
+            image_completion_percent = 0
+            if mapillary_roads:
+                image_completion_percent = 0
+                intersecting_road = False
+                intersecting_image = False
+                for lat, lon in lat_lon_arr:
+                    if shape(task_geometry).intersects(Point(float(lon), float(lat))):
+                        intersecting_road = True
+                        break
+                if "sequence" in overarching_tile:
+                    for coordinates_obj in overarching_tile["sequence"]["features"]:
+                        tile_extent = overarching_tile["sequence"]["extent"]
+                        for coordinates_list in coordinates_obj["geometry"][
+                            "coordinates"
+                        ]:  # NOTE not converted to shapely due to Mapillary 4096px extent
+                            if (
+                                type(coordinates_list[0]) == int
+                            ):  # For when Mapillary API outputs linestring
+                                (
+                                    lon,
+                                    lat,
+                                ) = GridService._convert_mapillary_coords_to_lat_lon(  # TODO make into separate fn
+                                    overarching_bbox,
+                                    coordinates_list,
+                                    tile_extent,
+                                )
+                                if shape(task_geometry).intersects(Point(lon, lat)):
+                                    intersecting_image = True
+                                    break
+                            else:  # For when Mapillary API outputs multilinestring (arr of arr)
+                                for coordinates in coordinates_list:
+                                    (
+                                        lon,
+                                        lat,
+                                    ) = GridService._convert_mapillary_coords_to_lat_lon(  # TODO make into separate fn
+                                        overarching_bbox,
+                                        coordinates,
+                                        tile_extent,
+                                    )
+                                if shape(task_geometry).intersects(Point(lon, lat)):
+                                    intersecting_image = True
+                                    break
+                else:  # "Overview" in Mapillary json instead of "sequence"
+                    for coordinates_obj in overarching_tile["overview"]["features"]:
+                        tile_extent = overarching_tile["overview"]["extent"]
+                        lon, lat = GridService._convert_mapillary_coords_to_lat_lon(
+                            overarching_bbox,
+                            coordinates_obj["geometry"]["coordinates"],
+                            tile_extent,
+                        )
+                        if shape(task_geometry).intersects(Point(lon, lat)):
+                            intersecting_image = True
+                            break
 
+                if intersecting_road and intersecting_image:
+                    image_completion_percent += 1
+            task_properties["road_imagery_completion"] = image_completion_percent
             feature = geojson.Feature(
-                geometry=task_geometry, properties=task_properties
+                geometry=task_geometry,
+                properties=task_properties,
+                road_imagery_completion=image_completion_percent,
             )
             tasks_features.append(feature)
-
+            print("tasks_features", tasks_features) 
         return geojson.FeatureCollection(tasks_features)
 
     @staticmethod

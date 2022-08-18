@@ -110,6 +110,14 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
           }
         })
         .catch((e) => lockFailed(windowObjectReference, e.message));
+
+      if (project.imageCaptureMode) {
+        if (navigator.userAgent.includes('Android')) {
+          navigate('mapillary://mapillary/explore');
+        } else if (navigator.userAgent.includes('iPad|iPhone|iPod')) {
+          navigate('mapillary://goto/camera');
+        }
+      }
     }
     if (['resumeMapping', 'resumeValidation'].includes(taskAction)) {
       const urlParams = openEditor(

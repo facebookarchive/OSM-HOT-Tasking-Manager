@@ -367,6 +367,8 @@ export function TaskSelection({ project, type, loading }: Object) {
               taskBordersOnly={false}
               priorityAreas={priorityAreas}
               animateZoom={false}
+              earliestStreetImagery={project.earliestStreetImagery}
+              mapillaryOrganizationId={parseInt(project.mapillaryOrganizationId) || 0}
             />
             <TasksMapLegend imageCaptureMode={project.imageCaptureMode} />
           </ReactPlaceholder>
