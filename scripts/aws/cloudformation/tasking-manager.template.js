@@ -79,13 +79,13 @@ const Parameters = {
     Description: 'TM_LOG_DIR environment variable',
     Type: 'String',
   },
-  TaskingManagerConsumerKey: {
-    Description: 'TM_CONSUMER_KEY',
-    Type: 'String',
+  TaskingManagerOAuthClientID: {
+    Description: 'TM_CLIENT_ID',
+    Type: 'String'
   },
-  TaskingManagerConsumerSecret: {
-    Description: 'TM_CONSUMER_SECRET',
-    Type: 'String',
+  TaskingManagerOAuthClientSecret: {
+      Description: 'TM_CLIENT_SECRET',
+      Type: 'String'
   },
   TaskingManagerSecret: {
     Description: 'TM_SECRET',
