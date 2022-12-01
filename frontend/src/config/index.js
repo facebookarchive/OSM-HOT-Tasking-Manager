@@ -5,7 +5,7 @@ export const API_URL = process.env.REACT_APP_API_URL
   : 'http://127.0.0.1:5000/api/' + API_VERSION + '/';
 export const HOMEPAGE_STATS_API_URL =
   process.env.REACT_APP_HOMEPAGE_STATS_API_URL ||
-  'https://osmstats-api.hotosm.org/wildcard/?key=hotosm-project-*';
+  'https://osmstats-api.hotosm.org/wildcard/?key=mapwithai-project-*';
 export const USER_STATS_API_URL =
   process.env.REACT_APP_USER_STATS_API_URL ||
   'https://osm-stats-production-api.azurewebsites.net/users/';
@@ -21,7 +21,8 @@ export const ADVANCED_LEVEL_COUNT = Number(process.env.REACT_APP_TM_MAPPER_LEVEL
 export const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || '';
 export const ENABLE_SERVICEWORKER = process.env.REACT_APP_ENABLE_SERVICEWORKER || 0;
 export const MAX_AOI_AREA = Number(process.env.REACT_APP_MAX_AOI_AREA) || 5000;
-export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 1000000; // bytes
+export const MAPILLARY_TOKEN = process.env.REACT_APP_MAPILLARY_TOKEN || '';
+export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 5000000; // bytes
 
 // ORGANISATIONAL INFORMATION
 export const ORG_NAME = process.env.REACT_APP_ORG_NAME || '';
@@ -70,6 +71,9 @@ export const TASK_COLOURS = {
   INVALIDATED: '#fceca4',
   BADIMAGERY: '#d8dae4',
   PRIORITY_AREAS: '#efd1d1',
+  PENDING_IMAGE_CAPTURE: '#f8e8fb',
+  MORE_IMAGES_NEEDED: '#d497e2',
+  IMAGE_CAPTURE_DONE: '#7fc874',
 };
 
 export const CHART_COLOURS = {
@@ -78,6 +82,8 @@ export const CHART_COLOURS = {
   blue: '#3389D6',
   orange: '#f09733',
   white: '#fff',
+  magenta: '#da26d3',
+  navy: '#101d4b',
 };
 
 const fallbackRasterStyle = {

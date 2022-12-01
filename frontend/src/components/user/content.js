@@ -19,7 +19,7 @@ export function APIKeyCard({ token }) {
     setCopied(`Token ${token}`);
   };
   const link = (
-    <a className="link red" href="/api-docs/" target="_blank">
+    <a className="link primary" href="/api-docs/" target="_blank">
       <FormattedMessage {...messages.apiDocs} />
     </a>
   );
@@ -86,7 +86,7 @@ export function OSMCard({ username }: Object) {
       <div className="cf pt1">
         <div className="w-100 w-50-ns fl">
           <a
-            className="link red pb2"
+            className="link primary pb2"
             href={`${OSM_SERVER_URL}/user/${username}/account`}
             target="_blank"
             rel="noopener noreferrer"
@@ -96,7 +96,7 @@ export function OSMCard({ username }: Object) {
         </div>
         <div className="w-100 w-50-ns fl">
           <a
-            className="link red pb2"
+            className="link primary pb2"
             href={`https://osmcha.mapbox.com/?filters={"users":[{"label":"${username}","value":"${username}"}]}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -127,17 +127,17 @@ export function HelpCard() {
         <FormattedMessage {...messages.helpTitle} />
       </h3>
       <p>
-        <Link to={'/learn/map'} className="link red mr4">
+        <Link to={'/learn/map'} className="link primary mr4">
           <FormattedMessage {...messages.howToMap} />
         </Link>
-        <Link to={'/learn/quickstart'} className="link red mr4">
+        <Link to={'/learn/quickstart'} className="link primary mr4">
           <FormattedMessage {...messages.quickStart} />
         </Link>
         <a
           href="https://learnosm.org/en/beginner/start-osm/"
           target="_blank"
           rel="noopener noreferrer"
-          className="link red"
+          className="link primary"
         >
           <FormattedMessage {...messages.whatIsOSM} />
         </a>
@@ -150,7 +150,7 @@ export function FirstProjectBanner() {
   return (
     <div className="bg-white shadow-4 tc">
       <div className="pa4">
-        <MappingIcon className="red" />
+        <MappingIcon className="primary" />
         <h3 className="f2 fw8 mt2 mb4">
           <FormattedMessage {...messages.firstProjectTitle} />
         </h3>

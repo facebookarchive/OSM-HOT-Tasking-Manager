@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Link, useNavigate } from '@reach/router';
 import { FormattedMessage } from 'react-intl';
 import { Form } from 'react-final-form';
+import { format, startOfYear } from 'date-fns';
 
 import messages from './messages';
 import { useFetch } from '../hooks/UseFetch';
@@ -29,6 +30,11 @@ import { Projects } from '../components/teamsAndOrgs/projects';
 import { FormSubmitButton, CustomButton } from '../components/button';
 import { DeleteModal } from '../components/deleteModal';
 import { NotFound } from './notFound';
+import {
+  useTeamMembersStatsQueryAPI,
+  useTeamMembersStatsQueryParams,
+} from '../hooks/UseTeamMembersStatsQueryAPI';
+import { TeamStats } from '../components/teamsAndOrgs/teamStats';
 
 export function ManageTeams() {
   useSetTitleTag('Manage teams');
@@ -43,6 +49,7 @@ export function MyTeams() {
     </div>
   );
 }
+
 
 export function ListTeams({ managementView = false }: Object) {
   const userDetails = useSelector((state) => state.auth.userDetails);
@@ -199,8 +206,8 @@ export function CreateTeam() {
               <div className="w-20-l w-40-m w-50 h-100 fr">
                 <FormSubmitButton
                   disabled={submitting || pristine || !values.organisation_id}
-                  className="w-100 h-100 bg-red white"
-                  disabledClassName="bg-red o-50 white w-100 h-100"
+                  className="w-100 h-100 bg-primary white"
+                  disabledClassName="bg-primary o-50 white w-100 h-100"
                 >
                   <FormattedMessage {...messages.createTeam} />
                 </FormSubmitButton>
@@ -378,6 +385,7 @@ export function TeamDetail(props) {
     props.id,
   );
   const [isMember, setIsMember] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [managers, setManagers] = useState([]);
   const [members, setMembers] = useState([]);
 
@@ -391,6 +399,8 @@ export function TeamDetail(props) {
       if (membersFiltered.length) {
         setIsMember(membersFiltered.filter((i) => i.active === true).length ? true : 'requested');
       }
+      const managersFiltered = filterActiveManagers(team.members).filter((manager) => manager.username === userDetails.username);
+      setIsManager(managersFiltered.length > 0);
     }
   }, [team, userDetails.username]);
 
@@ -418,28 +428,55 @@ export function TeamDetail(props) {
     });
   };
 
+  const [query, setQuery] = useTeamMembersStatsQueryParams();
+  const [forceUpdated, forceUpdate] = useForceUpdate();
+  useEffect(() => {
+    if (!query.startDate) {
+      setQuery({ ...query, startDate: format(startOfYear(Date.now()), 'yyyy-MM-dd') }, 'replaceIn');
+    }
+  });
+  const [apiState] = useTeamMembersStatsQueryAPI(
+    { teamMemberStats: [] },
+    query,
+    team.teamId,
+    query.startDate ? forceUpdated : false,
+  );
+
   if (!loading && error) {
     return <NotFound />;
   } else {
     return (
       <>
         <div className="cf pa4-ns pa2 bg-tan blue-dark overflow-y-scroll-ns vh-minus-185-ns h-100">
-          <div className="w-40-l w-100 mt2 fl">
-            <TeamSideBar
-              team={team}
-              members={members}
-              managers={managers}
-              requestedToJoin={isMember === 'requested'}
-            />
+          <div className="w-100 h-100">
+            <div className="w-40-l w-100 mt2 fl">
+              <TeamSideBar
+                team={team}
+                members={members}
+                managers={managers}
+                requestedToJoin={isMember === 'requested'}
+              />
+            </div>
+            <div className="w-60-l w-100 mt2 pl5-l pl0 fl">
+              <Projects
+                projects={projects}
+                viewAllEndpoint={`/explore/?team=${props.id}`}
+                ownerEntity="team"
+                showManageButtons={false}
+              />
+            </div>
           </div>
-          <div className="w-60-l w-100 mt2 pl5-l pl0 fl">
-            <Projects
-              projects={projects}
-              viewAllEndpoint={`/explore/?team=${props.id}`}
-              ownerEntity="team"
-              showManageButtons={false}
+          {isManager && (
+            <TeamStats
+              query={query}
+              setQuery={setQuery}
+              stats={apiState.stats}
+              error={apiState.isError}
+              loading={apiState.isLoading}
+              retryFn={forceUpdate}
+              teamName={team.name}
             />
-          </div>
+          )}
         </div>
         <div className="fixed bottom-0 cf bg-white h3 w-100">
           <div
@@ -456,8 +493,8 @@ export function TeamDetail(props) {
           <div className="w-20-l w-40-m w-50 h-100 fr">
             {isMember ? (
               <CustomButton
-                className="w-100 h-100 bg-red white"
-                disabledClassName="bg-red o-50 white w-100 h-100"
+                className="w-100 h-100 bg-primary white"
+                disabledClassName="bg-primary o-50 white w-100 h-100"
                 onClick={() => leaveTeam()}
               >
                 <FormattedMessage
@@ -465,6 +502,7 @@ export function TeamDetail(props) {
                 />
               </CustomButton>
             ) : (
+<<<<<<< HEAD
               team.joinMethod !== 'BY_INVITE' && (
                 <CustomButton
                   className="w-100 h-100 bg-red white"
@@ -474,6 +512,15 @@ export function TeamDetail(props) {
                   <FormattedMessage {...messages.joinTeam} />
                 </CustomButton>
               )
+=======
+              <CustomButton
+                className="w-100 h-100 bg-primary white"
+                disabledClassName="bg-primary o-50 white w-100 h-100"
+                onClick={() => joinTeam()}
+              >
+                <FormattedMessage {...messages.joinTeam} />
+              </CustomButton>
+>>>>>>> develop
             )}
           </div>
         </div>

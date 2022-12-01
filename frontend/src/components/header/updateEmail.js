@@ -62,12 +62,12 @@ class UpdateEmail extends Component {
               }}
             </FormattedMessage>
           </p>
-          <Button className="bg-red white" type="submit">
+          <Button className="bg-primary white" type="submit">
             <FormattedMessage {...messages.emailUpdateButton} />
           </Button>
           <p className="mb0">
             <a
-              className="link pointer red fw5"
+              className="link pointer primary fw5"
               target="_blank"
               rel="noopener noreferrer"
               href={`http://${ORG_PRIVACY_POLICY_URL}`}

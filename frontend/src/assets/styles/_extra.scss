@@ -156,12 +156,23 @@ a:active {
 }
 
 // Custom class
-
-.checkbox:checked + .checkbox-wrapper {
-  background-color: $red; // @extend .bg-green;
+.checkbox:checked+.checkbox-wrapper {
+  background-color: $primary; // @extend .bg-green;
 
   .checkbox-toggle {
     left: 2rem; // @extend .left-2;
+    background-color: $white; // @extend .bg-moon-gray;
+    border-color: $primary;
+  }
+
+  .checkbox-toggle-sm {
+    left: 1rem; // @extend .left-1;
+    background-color: $white; // @extend .bg-moon-gray;
+    border-color: $primary;
+  }
+
+  .checkbox-toggle-sm {
+    left: 1rem; // @extend .left-1;
     background-color: $white; // @extend .bg-moon-gray;
     border-color: $red;
   }
@@ -174,7 +185,7 @@ a:active {
 }
 
 .checkbox-toggle:hover {
-  border: dashed red !important;
+  border: dashed $primary !important;
 }
 
 .radio-input {
@@ -182,16 +193,15 @@ a:active {
 }
 
 .radio-input:checked {
-  background-color: $red;
+  background-color: $primary;
   border: none;
 }
 
 /* mapping type by RADIO BUTTONs
 https://codepen.io/nielsenramon/pen/mLMeLY
  */
-.radiobutton:checked + .radiobutton-wrapper {
-  background-color: $red; // @extend .bg-white;
-
+.radiobutton:checked+.radiobutton-wrapper {
+  background-color: $primary; // @extend .bg-white;
   div {
     border-color: $white; // @extend .b--white;
   }
@@ -213,7 +223,7 @@ https://codepen.io/nielsenramon/pen/mLMeLY
   }
 
   a {
-    color: $red;
+    color: $primary;
     text-decoration: none;
   }
 }
@@ -231,7 +241,7 @@ textarea:disabled {
   position: absolute;
   top: -1px;
   right: 0px;
-  background: $red;
+  background: $primary;
   box-sizing: border-box;
   border-radius: 100%;
   width: 0.6rem;
@@ -247,13 +257,11 @@ p.messageSubjectLinks {
     font-weight: 500;
     letter-spacing: normal;
   }
-
-  & > a:hover {
-    & > a {
-      color: $red;
+  &>a:hover {
+    &>a {
+      color: $primary;
     }
-
-    color: $red;
+    color: $primary;
   }
 
   color: $blue-grey;
@@ -264,8 +272,8 @@ p.messageSubjectLinks {
 }
 
 div.messageBodyLinks {
-  & > a {
-    color: $red;
+  &>a {
+    color: $primary;
     text-decoration: none;
     font-weight: 600;
   }
@@ -407,6 +415,13 @@ a[href="https://www.mapbox.com/map-feedback/"]
   box-shadow: 0 1px 0 1px #d0d7de, 0 0 0 #d0d7de, 0 1px 1px #d0d7de;
 }
 
+div.react-datepicker-popper {
+  z-index: 5;
+}
+
+.comment-textarea {
+  box-sizing: border-box;
+
 .sticky-top {
   position: sticky !important;
   top: 0;
@@ -493,7 +508,7 @@ a[href="https://www.mapbox.com/map-feedback/"]
   @media screen and (max-width: 60em) {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   @media screen and (max-width: 30em) {
     grid-template-columns: repeat(1, 1fr);
   }

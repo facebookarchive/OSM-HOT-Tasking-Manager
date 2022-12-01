@@ -1,11 +1,11 @@
-const cf = require('@mapbox/cloudfriend');
+const cf = require('/usr/local/lib/node_modules/@mapbox/cloudfriend');
 
 const Parameters = {
   GitSha: {
-    Type: 'String'
+    Type: 'String',
   },
   NetworkEnvironment: {
-    Type :'String',
+    Type: 'String',
     AllowedValues: ['staging', 'production']
   },
   AutoscalingPolicy: {
@@ -24,19 +24,19 @@ const Parameters = {
   },
   NewRelicLicense: {
     Type: 'String',
-    Description: 'NEW_RELIC_LICENSE'
+    Description: 'NEW_RELIC_LICENSE',
   },
   PostgresDB: {
     Type: 'String',
-    Description: 'POSTGRES_DB'
+    Description: 'POSTGRES_DB',
   },
   PostgresPassword: {
     Type: 'String',
-    Description: 'POSTGRES_PASSWORD'
+    Description: 'POSTGRES_PASSWORD',
   },
   PostgresUser: {
     Type: 'String',
-    Description: 'POSTGRES_USER'
+    Description: 'POSTGRES_USER',
   },
   DatabaseEngineVersion: {
     Description: 'AWS PostgreSQL Engine version',
@@ -56,7 +56,7 @@ const Parameters = {
   DatabaseParameterGroupName: {
     Description: 'Name of the customized parameter group for the database',
     Type: 'String',
-    Default: 'tm3-logging-postgres11'
+    Default: 'tm4-logging-postgres11'
   },
   DatabaseSnapshotRetentionPeriod: {
     Description: 'Retention period for automatic (scheduled) snapshots in days',
@@ -65,39 +65,43 @@ const Parameters = {
   },
   ELBSubnets: {
     Description: 'ELB subnets',
-    Type: 'String'
-  },
-  SSLCertificateIdentifier: {
     Type: 'String',
-    Description: 'SSL certificate for HTTPS protocol'
+  },
+  CloudfrontSSLCertificateIdentifier: {
+    Type: 'String',
+    Description: 'SSL certificate for HTTPS protocol used for Cloudfront (must be in us-east-1)',
+  },
+  LoadBalancerSSLCertificateIdentifier: {
+    Type: 'String',
+    Description: 'SSL certificate for HTTPS protocol',
   },
   TaskingManagerLogDirectory: {
     Description: 'TM_LOG_DIR environment variable',
-    Type: 'String'
+    Type: 'String',
   },
-  TaskingManagerOAuthClientID: {
-    Description: 'TM_CLIENT_ID',
-    Type: 'String'
+  TaskingManagerConsumerKey: {
+    Description: 'TM_CONSUMER_KEY',
+    Type: 'String',
   },
-  TaskingManagerOAuthClientSecret: {
-      Description: 'TM_CLIENT_SECRET',
-      Type: 'String'
+  TaskingManagerConsumerSecret: {
+    Description: 'TM_CONSUMER_SECRET',
+    Type: 'String',
   },
   TaskingManagerSecret: {
     Description: 'TM_SECRET',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerAppBaseUrl: {
     Type: 'String',
-    Description: 'TM_APP_BASE_URL; Ex: https://example.hotosm.org'
+    Description: 'TM_APP_BASE_URL; Ex: https://example.hotosm.org',
   },
   TaskingManagerEmailFromAddress: {
     Description: 'TM_EMAIL_FROM_ADDRESS',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerEmailContactAddress: {
     Description: 'TM_EMAIL_CONTACT_ADDRESS',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerLogLevel: {
     Description: 'TM_LOG_LEVEL',
@@ -114,7 +118,7 @@ const Parameters = {
   },
   TaskingManagerSMTPHost: {
     Description: 'TM_SMTP_HOST environment variable',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerSMTPPassword: {
     Description: 'TM_SMTP_PASSWORD environment variable',
@@ -148,21 +152,21 @@ const Parameters = {
   },
   TaskingManagerDefaultChangesetComment: {
     Description: 'TM_DEFAULT_CHANGESET_COMMENT environment variable',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerURL: {
     Description: 'URL for setting CNAME in Distribution; Ex: example.hotosm.org',
     Type: 'String',
     AllowedPattern: '^([a-zA-Z0-9-]*\\.){2}(\\w){2,20}$',
-    ConstraintDescription: 'Parameter must be in the form of a url with subdomain.'
+    ConstraintDescription: 'Parameter must be in the form of a url with subdomain.',
   },
   TaskingManagerOrgName: {
     Description: 'Org Name',
-    Type: 'String'
+    Type: 'String',
   },
   TaskingManagerOrgCode: {
     Description: 'Org Code',
-    Type: 'String'
+    Type: 'String',
   },
   SentryBackendDSN: {
     Description: "DSN for sentry",
@@ -179,6 +183,7 @@ const Conditions = {
   DatabaseDumpFileGiven: cf.notEquals(cf.ref('DatabaseDump'), ''),
   IsTaskingManagerProduction: cf.equals(cf.ref('AutoscalingPolicy'), 'production'),
   IsTaskingManagerDemo: cf.equals(cf.ref('AutoscalingPolicy'), 'Demo (max 3)'),
+  IsTaskingManagerDevelopment: cf.equals(cf.ref('AutoscalingPolicy'), 'development'),
   IsHOTOSMUrl: cf.equals(
     cf.select('1', cf.split('.', cf.ref('TaskingManagerURL')))
     , 'hotosm')
@@ -196,9 +201,9 @@ const Resources = {
       MaxSize: cf.if('IsTaskingManagerProduction', 9, cf.if('IsTaskingManagerDemo', 3, 1)),
       HealthCheckGracePeriod: 600,
       LaunchConfigurationName: cf.ref('TaskingManagerLaunchConfiguration'),
-      TargetGroupARNs: [ cf.ref('TaskingManagerTargetGroup') ],
+      TargetGroupARNs: [cf.ref('TaskingManagerTargetGroup')],
       HealthCheckType: 'EC2',
-      AvailabilityZones: ['us-east-1a', 'us-east-1b', 'us-east-1c', 'us-east-1d', 'us-east-1f'],
+      AvailabilityZones: ['us-west-1a', 'us-west-1b'],
       Tags: [{
         Key: 'Name',
         PropagateAtLaunch: true,
@@ -207,37 +212,37 @@ const Resources = {
     },
     UpdatePolicy: {
       AutoScalingRollingUpdate: {
-        PauseTime: 'PT60M',
+        PauseTime: cf.if('IsTaskingManagerDevelopment', 'PT0S', 'PT60M'),
         MaxBatchSize: 2,
-        WaitOnResourceSignals: true
+        WaitOnResourceSignals: cf.if('IsTaskingManagerDevelopment', false, true)
       }
     }
   },
   TaskingManagerScaleUp: {
-      Type: "AWS::AutoScaling::ScalingPolicy",
-      Properties: {
-        AutoScalingGroupName: cf.ref('TaskingManagerASG'),
-        PolicyType: 'TargetTrackingScaling',
-        TargetTrackingConfiguration: {
-          TargetValue: 500,
-          PredefinedMetricSpecification: {
-            PredefinedMetricType: 'ALBRequestCountPerTarget',
-            ResourceLabel: cf.join('/', [
-              cf.select(1,
-                cf.split('loadbalancer/',
-                  cf.select(5,
-                    cf.split(':', cf.ref("TaskingManagerLoadBalancer"))
-                  )
+    Type: "AWS::AutoScaling::ScalingPolicy",
+    Properties: {
+      AutoScalingGroupName: cf.ref('TaskingManagerASG'),
+      PolicyType: 'TargetTrackingScaling',
+      TargetTrackingConfiguration: {
+        TargetValue: 500,
+        PredefinedMetricSpecification: {
+          PredefinedMetricType: 'ALBRequestCountPerTarget',
+          ResourceLabel: cf.join('/', [
+            cf.select(1,
+              cf.split('loadbalancer/',
+                cf.select(5,
+                  cf.split(':', cf.ref("TaskingManagerLoadBalancer"))
                 )
-              ),
-              cf.select(5,
-                cf.split(':', cf.ref("TaskingManagerTargetGroup"))
               )
-            ])
-          }
-        },
-        Cooldown: 300
-      }
+            ),
+            cf.select(5,
+              cf.split(':', cf.ref("TaskingManagerTargetGroup"))
+            )
+          ])
+        }
+      },
+      Cooldown: 300
+    }
   },
   TaskingManagerLaunchConfiguration: {
     Type: "AWS::AutoScaling::LaunchConfiguration",
@@ -252,38 +257,38 @@ const Resources = {
           "UpdateEnvironment": [
             "02_config-amazon-cloudwatch-agent",
             "03_restart_amazon-cloudwatch-agent"
-            ]
+          ]
         },
         // Definition of json configuration of AmazonCloudWatchAgent, you can change the configuration below.
         "02_config-amazon-cloudwatch-agent": {
           "files": {
             '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json': {
               "content": cf.join("\n", [
-                  "{\"logs\": {",
-                  "\"logs_collected\": {",
-                  "\"files\": {",
-                  "\"collect_list\": [",
-                  "{",
-                  "\"file_path\": \"/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log\",",
-                  cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
-                  cf.sub("\"log_stream_name\": \"${AWS::StackName}-cloudwatch-agent.log\","),
-                  "\"timezone\": \"UTC\"",
-                  "},",
-                  "{",
-                  cf.sub("\"file_path\": \"${TaskingManagerLogDirectory}/tasking-manager.log\","),
-                  cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
-                  cf.sub("\"log_stream_name\": \"${AWS::StackName}.log\","),
-                  "\"timezone\": \"UTC\"",
-                  "},",
-                  "{",
-                  cf.sub("\"file_path\": \"${TaskingManagerLogDirectory}/gunicorn-access.log\","),
-                  cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
-                  cf.sub("\"log_stream_name\": \"${AWS::StackName}-gunicorn.log\","),
-                  "\"timezone\": \"UTC\"",
-                  "}]}},",
-                  cf.sub("\"log_stream_name\": \"${AWS::StackName}-logs\","),
-                  "\"force_flush_interval\" : 15",
-                  "}}"
+                "{\"logs\": {",
+                "\"logs_collected\": {",
+                "\"files\": {",
+                "\"collect_list\": [",
+                "{",
+                "\"file_path\": \"/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log\",",
+                cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
+                cf.sub("\"log_stream_name\": \"${AWS::StackName}-cloudwatch-agent.log\","),
+                "\"timezone\": \"UTC\"",
+                "},",
+                "{",
+                cf.sub("\"file_path\": \"${TaskingManagerLogDirectory}/tasking-manager.log\","),
+                cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
+                cf.sub("\"log_stream_name\": \"${AWS::StackName}.log\","),
+                "\"timezone\": \"UTC\"",
+                "},",
+                "{",
+                cf.sub("\"file_path\": \"${TaskingManagerLogDirectory}/gunicorn-access.log\","),
+                cf.sub("\"log_group_name\": \"${AWS::StackName}.log\","),
+                cf.sub("\"log_stream_name\": \"${AWS::StackName}-gunicorn.log\","),
+                "\"timezone\": \"UTC\"",
+                "}]}},",
+                cf.sub("\"log_stream_name\": \"${AWS::StackName}-logs\","),
+                "\"force_flush_interval\" : 15",
+                "}}"
               ])
             }
           }
@@ -336,12 +341,12 @@ const Resources = {
                 "Restart=always",
                 "[Install]",
                 "WantedBy=multi-user.target"
-                ])
+              ])
             }
           },
           "commands": {
             "01enable_cfn_hup": {
-            "command": "systemctl enable cfn-hup.service"
+              "command": "systemctl enable cfn-hup.service"
             },
             "02start_cfn_hup": {
               "command": "systemctl start cfn-hup.service"
@@ -352,9 +357,9 @@ const Resources = {
     },
     Properties: {
       IamInstanceProfile: cf.ref('TaskingManagerEC2InstanceProfile'),
-      ImageId: 'ami-00fa576fb10a52a1c',
+      ImageId: 'ami-066c6938fb715719f',
       InstanceType: 'c5d.large',
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
       UserData: cf.userData([
         '#!/bin/bash',
         'set -x',
@@ -385,8 +390,8 @@ const Resources = {
         'sudo apt-get -y install git',
         'sudo apt-get -y install awscli',
         'sudo apt-get -y install ruby',
-        'git clone --recursive https://github.com/hotosm/tasking-manager.git',
-        'cd tasking-manager/',
+        'git clone --recursive https://github.com/facebookincubator/OSM-HOT-Tasking-Manager.git',
+        'cd OSM-HOT-Tasking-Manager/',
         cf.sub('git reset --hard ${GitSha}'),
         'python3 -m venv ./venv',
         '. ./venv/bin/activate',
@@ -400,7 +405,7 @@ const Resources = {
         'python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz',
         'echo "Exporting environment variables:"',
         cf.sub('export NEW_RELIC_LICENSE=${NewRelicLicense}'),
-        cf.join('', ['export POSTGRES_ENDPOINT=', cf.getAtt('TaskingManagerRDS','Endpoint.Address')]),
+        cf.join('', ['export POSTGRES_ENDPOINT=', cf.getAtt('TaskingManagerRDS', 'Endpoint.Address')]),
         cf.sub('export POSTGRES_DB=${PostgresDB}'),
         cf.sub('export POSTGRES_PASSWORD="${PostgresPassword}"'),
         cf.sub('export POSTGRES_USER="${PostgresUser}"'),
@@ -443,7 +448,7 @@ const Resources = {
         cf.sub('sudo /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource TaskingManagerLaunchConfiguration --region ${AWS::Region} --configsets default'),
         cf.sub('/opt/aws/bin/cfn-signal --exit-code $? --region ${AWS::Region} --resource TaskingManagerASG --stack ${AWS::StackName}')
       ]),
-      KeyName: 'mbtiles'
+      KeyName: 'tm4'
     }
   },
   TaskingManagerEC2Role: {
@@ -454,21 +459,21 @@ const Resources = {
         Statement: [{
           Effect: "Allow",
           Principal: {
-             Service: [ "ec2.amazonaws.com" ]
+            Service: ["ec2.amazonaws.com"]
           },
-          Action: [ "sts:AssumeRole" ]
+          Action: ["sts:AssumeRole"]
         }]
       },
       ManagedPolicyArns: [
-          'arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy',
-          'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy',
-          'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        'arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy',
+        'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy',
+        'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
       ],
       Policies: [{
         PolicyName: "RDSPolicy",
         PolicyDocument: {
           Version: "2012-10-17",
-          Statement:[{
+          Statement: [{
             Action: ['rds:DescribeDBInstances'],
             Effect: 'Allow',
             Resource: ['arn:aws:rds:*']
@@ -478,7 +483,7 @@ const Resources = {
         PolicyName: "CloudFormationPermissions",
         PolicyDocument: {
           Version: "2012-10-17",
-          Statement:[{
+          Statement: [{
             Action: [
               'cloudformation:SignalResource',
               'cloudformation:DescribeStackResource'
@@ -501,16 +506,16 @@ const Resources = {
         Statement: [{
           Effect: "Allow",
           Principal: {
-             Service: [ "ec2.amazonaws.com" ]
+            Service: ["ec2.amazonaws.com"]
           },
-          Action: [ "sts:AssumeRole" ]
+          Action: ["sts:AssumeRole"]
         }]
       },
       Policies: [{
         PolicyName: "RDSPolicy",
         PolicyDocument: {
           Version: "2012-10-17",
-          Statement:[{
+          Statement: [{
             Action: ['rds:DescribeDBInstances'],
             Effect: 'Allow',
             Resource: ['arn:aws:rds:*']
@@ -520,7 +525,7 @@ const Resources = {
         PolicyName: "CloudFormationPermissions",
         PolicyDocument: {
           Version: "2012-10-17",
-          Statement:[{
+          Statement: [{
             Action: [
               'cloudformation:SignalResource',
               'cloudformation:DescribeStackResource'
@@ -533,10 +538,10 @@ const Resources = {
         PolicyName: "AccessToDatabaseDump",
         PolicyDocument: {
           Version: "2012-10-17",
-          Statement:[{
-            Action: [ 's3:ListBucket'],
+          Statement: [{
+            Action: ['s3:ListBucket'],
             Effect: 'Allow',
-            Resource: [ cf.join('',
+            Resource: [cf.join('',
               ['arn:aws:s3:::',
                 cf.select(0,
                   cf.split('/',
@@ -559,7 +564,7 @@ const Resources = {
               ['arn:aws:s3:::',
                 cf.select(1,
                   cf.split('s3://', cf.ref('DatabaseDump'))
-              )]
+                )]
             )]
           }]
         }
@@ -568,17 +573,17 @@ const Resources = {
     }
   },
   TaskingManagerEC2InstanceProfile: {
-     Type: "AWS::IAM::InstanceProfile",
-     Properties: {
-        Roles: cf.if('DatabaseDumpFileGiven', [cf.ref('TaskingManagerDatabaseDumpAccessRole')], [cf.ref('TaskingManagerEC2Role')]),
-        InstanceProfileName: cf.join('-', [cf.stackName, 'ec2', 'instance', 'profile'])
-     }
+    Type: "AWS::IAM::InstanceProfile",
+    Properties: {
+      Roles: cf.if('DatabaseDumpFileGiven', [cf.ref('TaskingManagerDatabaseDumpAccessRole')], [cf.ref('TaskingManagerEC2Role')]),
+      InstanceProfileName: cf.join('-', [cf.stackName, 'ec2', 'instance', 'profile'])
+    }
   },
   TaskingManagerLoadBalancer: {
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer',
     Properties: {
       Name: cf.stackName,
-      SecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
+      SecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'elbs-security-group', cf.region]))],
       Subnets: cf.split(',', cf.ref('ELBSubnets')),
       Type: 'application'
     }
@@ -586,13 +591,13 @@ const Resources = {
   TaskingManagerLoadBalancerRoute53: {
     Type: 'AWS::Route53::RecordSet',
     Properties: {
-      Name: cf.join('-', [cf.stackName, 'api.hotosm.org']),
+      Name: cf.join('-', [cf.stackName, 'api.mapwith.ai']),
       Type: 'A',
       AliasTarget: {
         DNSName: cf.getAtt('TaskingManagerLoadBalancer', 'DNSName'),
         HostedZoneId: cf.getAtt('TaskingManagerLoadBalancer', 'CanonicalHostedZoneID')
       },
-      HostedZoneId: 'Z2O929GW6VWG99',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   },
   TaskingManagerTargetGroup: {
@@ -607,8 +612,8 @@ const Resources = {
       HealthCheckPath: '/api/v2/system/heartbeat/',
       Port: 8000,
       Protocol: 'HTTP',
-      VpcId: cf.importValue(cf.join('-', ['hotosm-network-production', 'default-vpc', cf.region])),
-      Tags: [ { "Key": "stack_name", "Value": cf.stackName } ],
+      VpcId: cf.importValue(cf.join('-', ['mapwithai-network-production', 'default-vpc', cf.region])),
+      Tags: [{ "Key": "stack_name", "Value": cf.stackName }],
       Matcher: {
         HttpCode: '200,202,302,304'
       }
@@ -617,8 +622,8 @@ const Resources = {
   TaskingManagerLoadBalancerHTTPSListener: {
     Type: 'AWS::ElasticLoadBalancingV2::Listener',
     Properties: {
-      Certificates: [ {
-        CertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier'))
+      Certificates: [{
+        CertificateArn: cf.arn('acm', cf.join('/', ['certificate', cf.ref('LoadBalancerSSLCertificateIdentifier')]))
       }],
       DefaultActions: [{
         Type: 'forward',
@@ -655,19 +660,19 @@ const Resources = {
       Todo: 'Spin out database components into its own cloudformation template'
     },
     Properties: {
-        Engine: 'postgres',
-        DBName: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresDB')),
-        EngineVersion: cf.ref('DatabaseEngineVersion'),
-        MasterUsername: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresUser')),
-        MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
-        AllocatedStorage: cf.ref('DatabaseDiskSize'),
-        BackupRetentionPeriod: cf.ref('DatabaseSnapshotRetentionPeriod'),
-        StorageType: 'gp2',
-        DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
-        EnableCloudwatchLogsExports: ['postgresql'],
-        DBInstanceClass: cf.ref('DatabaseInstanceType'),
-        DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
-        VPCSecurityGroups: [cf.importValue(cf.join('-', ['hotosm-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
+      Engine: 'postgres',
+      DBName: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresDB')),
+      EngineVersion: cf.ref('DatabaseEngineVersion'),
+      MasterUsername: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresUser')),
+      MasterUserPassword: cf.if('UseASnapshot', cf.noValue, cf.ref('PostgresPassword')),
+      AllocatedStorage: cf.ref('DatabaseDiskSize'),
+      BackupRetentionPeriod: cf.ref('DatabaseSnapshotRetentionPeriod'),
+      StorageType: 'gp2',
+      DBParameterGroupName: cf.ref('DatabaseParameterGroupName'),
+      EnableCloudwatchLogsExports: ['postgresql'],
+      DBInstanceClass: cf.ref('DatabaseInstanceType'),
+      DBSnapshotIdentifier: cf.if('UseASnapshot', cf.ref('DBSnapshot'), cf.noValue),
+      VPCSecurityGroups: [cf.importValue(cf.join('-', ['mapwithai-network-production', cf.ref('NetworkEnvironment'), 'ec2s-security-group', cf.region]))],
     }
   },
   TaskingManagerReactBucket: {
@@ -690,16 +695,16 @@ const Resources = {
   TaskingManagerReactBucketPolicy: {
     Type: 'AWS::S3::BucketPolicy',
     Properties: {
-      Bucket : cf.ref('TaskingManagerReactBucket'),
+      Bucket: cf.ref('TaskingManagerReactBucket'),
       PolicyDocument: {
         Version: "2012-10-17",
-        Statement:[{
-          Action: [ 's3:GetObject'],
+        Statement: [{
+          Action: ['s3:GetObject'],
           Effect: 'Allow',
           Principal: '*',
-          Resource: [ cf.join('',
+          Resource: [cf.join('',
             [
-              cf.getAtt('TaskingManagerReactBucket', 'Arn'), 
+              cf.getAtt('TaskingManagerReactBucket', 'Arn'),
               '/*'
             ]
           )],
@@ -725,12 +730,12 @@ const Resources = {
           }
         }],
         CustomErrorResponses: [{
-          ErrorCachingMinTTL : 0,
+          ErrorCachingMinTTL: 0,
           ErrorCode: 403,
           ResponseCode: 200,
           ResponsePagePath: '/index.html'
-        },{
-          ErrorCachingMinTTL : 0,
+        }, {
+          ErrorCachingMinTTL: 0,
           ErrorCode: 404,
           ResponseCode: 200,
           ResponsePagePath: '/index.html'
@@ -750,7 +755,16 @@ const Resources = {
           ViewerProtocolPolicy: "redirect-to-https"
         },
         ViewerCertificate: {
-          AcmCertificateArn: cf.arn('acm', cf.ref('SSLCertificateIdentifier')),
+          // This one has to be handled specially because a cert for a Cloudfront certificate
+          // MUST be imported to the us-east-1 region regardless of where the rest of the stack lives
+          AcmCertificateArn: cf.sub(
+            'arn:${AWS::Partition}:${service}:${region}:${AWS::AccountId}:certificate/${suffix}',
+            {
+              'service': 'acm',
+              'suffix': cf.ref('CloudfrontSSLCertificateIdentifier'),
+              'region': 'us-east-1',
+            }
+          ),
           MinimumProtocolVersion: 'TLSv1.2_2018',
           SslSupportMethod: 'sni-only'
         }
@@ -759,7 +773,7 @@ const Resources = {
   },
   TaskingManagerRoute53: {
     Type: 'AWS::Route53::RecordSet',
-    Condition: 'IsHOTOSMUrl',
+    // Condition: 'IsHOTOSMUrl',
     Properties: {
       Name: cf.ref('TaskingManagerURL'),
       Type: 'A',
@@ -767,7 +781,7 @@ const Resources = {
         DNSName: cf.getAtt('TaskingManagerReactCloudfront', 'DomainName'),
         HostedZoneId: 'Z2FDTNDATAQYW2'
       },
-      HostedZoneId: 'Z2O929GW6VWG99',
+      HostedZoneId: 'Z101197737ML3WN063NTD',
     }
   }
 };

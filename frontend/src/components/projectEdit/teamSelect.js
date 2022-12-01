@@ -133,7 +133,7 @@ export const TeamSelect = () => {
                   <PencilIcon className="h1 w1 blue-dark" />
                 </span>
                 <span
-                  className=" ml1 pa2 br-100 pointer bg-grey-light red"
+                  className=" ml1 pa2 br-100 pointer bg-grey-light primary"
                   onClick={() => removeTeam(t.teamId)}
                 >
                   <WasteIcon className="h1 w1" />
@@ -190,7 +190,7 @@ export const TeamSelect = () => {
         </Button>
         <Button
           onClick={() => setTeamSelect(nullState)}
-          className="bg-red white fl mr2 f6"
+          className="bg-primary white fl mr2 f6"
           disabled={!teamSelect.edit}
         >
           <FormattedMessage {...messages.cancel} />

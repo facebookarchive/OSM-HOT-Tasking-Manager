@@ -239,6 +239,8 @@ export function TaskMapAction({
                     setDisable={setDisable}
                     comment={project.changesetComment}
                     presets={project.idPresets}
+                    earliestStreetImagery={project.earliestStreetImagery}
+                    imageCaptureMode={project.imageCaptureMode}
                     imagery={formatImageryUrlCallback(project.imagery)}
                     gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                   />
@@ -247,6 +249,8 @@ export function TaskMapAction({
                     setDisable={setDisable}
                     comment={project.changesetComment}
                     presets={project.idPresets}
+                    earliestStreetImagery={project.earliestStreetImagery}
+                    imageCaptureMode={project.imageCaptureMode}
                     imagery={formatImageryUrlCallback(project.imagery)}
                     gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                     powerUser={project.rapidPowerUser}
@@ -296,7 +300,7 @@ export function TaskMapAction({
                     <span className="pl2">&#183;</span>
                     {tasksIds.map((task, n) => (
                       <span key={n}>
-                        <span className="red dib ph2">{`#${task}`}</span>
+                        <span className="primary dib ph2">{`#${task}`}</span>
                         {tasksIds.length > 1 && n !== tasksIds.length - 1 ? (
                           <span className="blue-light">&#183;</span>
                         ) : (
@@ -459,7 +463,7 @@ export function TaskMapAction({
                 <h3 className="blue-dark f5">#{project.projectId}</h3>
                 <div>
                   {tasksIds.map((task, n) => (
-                    <span key={n} className="red fw8 f5 db pb2">{`#${task}`}</span>
+                    <span key={n} className="primary fw8 f5 db pb2">{`#${task}`}</span>
                   ))}
                 </div>
               </div>

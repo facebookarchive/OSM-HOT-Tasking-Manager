@@ -201,8 +201,15 @@ export const TasksMap = ({
                 TASK_COLOURS.INVALIDATED,
                 'BADIMAGERY',
                 TASK_COLOURS.BADIMAGERY,
+                'PENDING_IMAGE_CAPTURE',
+                TASK_COLOURS.PENDING_IMAGE_CAPTURE,
+                'MORE_IMAGES_NEEDED',
+                TASK_COLOURS.MORE_IMAGES_NEEDED,
+                'IMAGE_CAPTURE_DONE',
+                TASK_COLOURS.IMAGE_CAPTURE_DONE,
                 'rgba(0,0,0,0)',
               ],
+              // 'fill-opacity': ['/', ['*', 2, ['get', 'taskId']], 1000], // Temporary.... creates a gradient
               'fill-opacity': 0.8,
             },
           },
@@ -499,7 +506,7 @@ export const TasksMap = ({
     return (
       <>
         {showTaskIds && hoveredTaskId && (
-          <div className="absolute top-1 left-1 bg-red white base-font fw8 f5 ph3 pv2 z-5 mr2 ">
+          <div className="absolute top-1 left-1 bg-primary white base-font fw8 f5 ph3 pv2 z-5 mr2 ">
             <FormattedMessage {...messages.taskId} values={{ id: hoveredTaskId }} />
           </div>
         )}

@@ -78,7 +78,7 @@ const Avatar = ({ username, size, colorClasses, removeFn, picture, text, editMod
     >
       {removeFn && editMode && (
         <div
-          className="relative top-0 z-1 fr br-100 f7 tc h1 w1 bg-red white pointer"
+          className="relative top-0 z-1 fr br-100 f7 tc h1 w1 bg-primary white pointer"
           style={closeIconStyle}
           onClick={() => removeFn(username)}
         >
@@ -102,7 +102,9 @@ export const UserAvatarList = ({
   size,
 }: Object) => {
   const getColor = () =>
-    bgColor ? bgColor : getRandomArrayItem(['bg-orange', 'bg-red', 'bg-blue-dark', 'bg-blue-grey']);
+    bgColor
+      ? bgColor
+      : getRandomArrayItem(['bg-orange', 'bg-primary', 'bg-blue-dark', 'bg-blue-grey']);
   let marginLeft = '-1.25rem';
   if (size === 'large') {
     marginLeft = '-1.5rem';
