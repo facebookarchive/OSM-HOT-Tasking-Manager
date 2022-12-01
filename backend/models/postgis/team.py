@@ -11,6 +11,7 @@ from backend.models.dtos.team_dto import (
 from backend.models.dtos.organisation_dto import OrganisationTeamsDTO
 from backend.models.postgis.organisation import Organisation
 from backend.models.postgis.statuses import (
+    TeamJoinMethod,
     TeamVisibility,
     TeamMemberFunctions,
     TeamRoles,
@@ -78,7 +79,9 @@ class Team(db.Model):
     name = db.Column(db.String(512), nullable=False)
     logo = db.Column(db.String)  # URL of a logo
     description = db.Column(db.String)
-    invite_only = db.Column(db.Boolean, default=False, nullable=False)
+    join_method = db.Column(
+        db.Integer, default=TeamJoinMethod.ANY.value, nullable=False
+    )
     visibility = db.Column(
         db.Integer, default=TeamVisibility.PUBLIC.value, nullable=False
     )
@@ -97,7 +100,7 @@ class Team(db.Model):
 
         new_team.name = new_team_dto.name
         new_team.description = new_team_dto.description
-        new_team.invite_only = new_team_dto.invite_only
+        new_team.join_method = TeamJoinMethod[new_team_dto.join_method].value
         new_team.visibility = TeamVisibility[new_team_dto.visibility].value
 
         org = Organisation.get(new_team_dto.organisation_id)
@@ -125,6 +128,8 @@ class Team(db.Model):
         for attr, value in team_dto.items():
             if attr == "visibility" and value is not None:
                 value = TeamVisibility[team_dto.visibility].value
+            if attr == "join_method" and value is not None:
+                value = TeamJoinMethod[team_dto.join_method].value
 
             if attr in ("members", "organisation"):
                 continue
@@ -192,7 +197,7 @@ class Team(db.Model):
         team_dto = TeamDTO()
         team_dto.team_id = self.id
         team_dto.description = self.description
-        team_dto.invite_only = self.invite_only
+        team_dto.join_method = TeamJoinMethod(self.join_method).name
         team_dto.members = self._get_team_members()
         team_dto.name = self.name
         team_dto.organisation = self.organisation.name
@@ -207,7 +212,7 @@ class Team(db.Model):
         team_dto.team_id = self.id
         team_dto.name = self.name
         team_dto.description = self.description
-        team_dto.invite_only = self.invite_only
+        team_dto.join_method = TeamJoinMethod(self.join_method).name
         team_dto.members = self._get_team_members()
         team_dto.visibility = TeamVisibility(self.visibility).name
         return team_dto

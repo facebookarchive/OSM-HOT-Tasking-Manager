@@ -37,7 +37,7 @@ const removeTinyTasks = (metadata, updateMetadata) => {
 };
 
 export default function TrimProject({ metadata, mapObj, updateMetadata }) {
-  const token = useSelector((state) => state.auth.get('token'));
+  const token = useSelector((state) => state.auth.token);
   const [clipStatus, setClipStatus] = useState(false);
   const [roadStatus, setRoadStatus] = useState(false);
   const [waterStatus, setWaterStatus] = useState(false);
