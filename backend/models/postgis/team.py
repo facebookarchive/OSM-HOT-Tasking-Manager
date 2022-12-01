@@ -22,7 +22,7 @@ from backend.models.postgis.utils import NotFound
 
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.sql.expression import cast, or_
-from sqlalchemy import func, Time
+from sqlalchemy import func
 
 
 class TeamMembers(db.Model):
