@@ -502,25 +502,15 @@ export function TeamDetail(props) {
                 />
               </CustomButton>
             ) : (
-<<<<<<< HEAD
               team.joinMethod !== 'BY_INVITE' && (
                 <CustomButton
-                  className="w-100 h-100 bg-red white"
-                  disabledClassName="bg-red o-50 white w-100 h-100"
+                  className="w-100 h-100 bg-primary white"
+                  disabledClassName="bg-primary o-50 white w-100 h-100"
                   onClick={() => joinTeam()}
                 >
                   <FormattedMessage {...messages.joinTeam} />
                 </CustomButton>
               )
-=======
-              <CustomButton
-                className="w-100 h-100 bg-primary white"
-                disabledClassName="bg-primary o-50 white w-100 h-100"
-                onClick={() => joinTeam()}
-              >
-                <FormattedMessage {...messages.joinTeam} />
-              </CustomButton>
->>>>>>> develop
             )}
           </div>
         </div>
