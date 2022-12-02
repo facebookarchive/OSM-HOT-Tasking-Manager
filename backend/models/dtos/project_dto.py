@@ -11,7 +11,6 @@ from schematics.types import (
 )
 from schematics.types.compound import ListType, ModelType
 from backend.models.dtos.task_annotation_dto import TaskAnnotationDTO
-from backend.models.dtos.user_dto import is_known_mapping_level
 from backend.models.dtos.stats_dto import Pagination
 from backend.models.dtos.team_dto import ProjectTeamDTO
 from backend.models.dtos.interests_dto import InterestDTO
@@ -23,6 +22,7 @@ from backend.models.postgis.statuses import (
     Editors,
     MappingPermission,
     ValidationPermission,
+    ProjectDifficulty,
 )
 from backend.models.dtos.campaign_dto import CampaignDTO
 
@@ -118,6 +118,22 @@ def is_known_validation_permission(value):
         )
 
 
+def is_known_project_difficulty(value):
+    """Validates that supplied project difficulty is known value"""
+    if value.upper() == "ALL":
+        return True
+
+    try:
+        value = value.split(",")
+        for difficulty in value:
+            ProjectDifficulty[difficulty.upper()]
+    except KeyError:
+        raise ValidationError(
+            f"Unknown projectDifficulty: {value} Valid values are {ProjectDifficulty.EASY.name}, "
+            f"{ProjectDifficulty.MODERATE.name}, {ProjectDifficulty.CHALLENGING.name} and ALL."
+        )
+
+
 class DraftProjectDTO(Model):
     """ Describes JSON model used for creating draft project """
 
@@ -181,10 +197,10 @@ class ProjectDTO(Model):
         serialized_name="projectInfoLocales",
         serialize_when_none=False,
     )
-    mapper_level = StringType(
+    difficulty = StringType(
         required=True,
-        serialized_name="mapperLevel",
-        validators=[is_known_mapping_level],
+        serialized_name="difficulty",
+        validators=[is_known_project_difficulty],
     )
     mapping_permission = StringType(
         required=True,
@@ -199,7 +215,11 @@ class ProjectDTO(Model):
     enforce_random_task_selection = BooleanType(
         required=False, default=False, serialized_name="enforceRandomTaskSelection"
     )
-
+    earliest_street_imagery = UTCDateTimeType(serialized_name="earliestStreetImagery")
+    image_capture_mode = BooleanType(
+        required=False, default=False, serialized_name="imageCaptureMode"
+    )
+    mapillary_organization_id = StringType(serialized_name="mapillaryOrganizationId")
     private = BooleanType(required=True)
     changeset_comment = StringType(serialized_name="changesetComment")
     osmcha_filter_id = StringType(serialized_name="osmchaFilterId")
@@ -286,7 +306,7 @@ class ProjectSearchDTO(Model):
     """ Describes the criteria users use to filter active projects"""
 
     preferred_locale = StringType(default="en")
-    mapper_level = StringType(validators=[is_known_mapping_level])
+    difficulty = StringType(validators=[is_known_project_difficulty])
     action = StringType()
     mapping_types = ListType(StringType, validators=[is_known_mapping_type])
     mapping_types_exact = BooleanType(required=False)
@@ -342,7 +362,7 @@ class ProjectSearchDTO(Model):
         return hash(
             (
                 self.preferred_locale,
-                self.mapper_level,
+                self.difficulty,
                 hashable_mapping_types,
                 hashable_project_statuses,
                 hashable_teams,
@@ -371,7 +391,7 @@ class ListSearchResultDTO(Model):
     locale = StringType(required=True)
     name = StringType(default="")
     short_description = StringType(serialized_name="shortDescription", default="")
-    mapper_level = StringType(required=True, serialized_name="mapperLevel")
+    difficulty = StringType(required=True, serialized_name="difficulty")
     priority = StringType(required=True)
     organisation_name = StringType(serialized_name="organisationName")
     organisation_logo = StringType(serialized_name="organisationLogo")
@@ -462,6 +482,11 @@ class ProjectSummary(Model):
     author = StringType()
     created = UTCDateTimeType()
     due_date = UTCDateTimeType(serialized_name="dueDate")
+    earliest_street_imagery = UTCDateTimeType(serialized_name="earliestStreetImagery")
+    image_capture_mode = BooleanType(
+        required=False, default=False, serialized_name="imageCaptureMode"
+    )
+    mapillary_organization_id = StringType(serialized_name="mapillaryOrganizationId")
     last_updated = UTCDateTimeType(serialized_name="lastUpdated")
     priority = StringType(serialized_name="projectPriority")
     campaigns = ListType(ModelType(CampaignDTO), default=[])
@@ -480,7 +505,7 @@ class ProjectSummary(Model):
     percent_validated = IntType(serialized_name="percentValidated")
     percent_bad_imagery = IntType(serialized_name="percentBadImagery")
     aoi_centroid = BaseType(serialized_name="aoiCentroid")
-    mapper_level = StringType(serialized_name="mapperLevel")
+    difficulty = StringType(serialized_name="difficulty")
     mapping_permission = IntType(
         serialized_name="mappingPermission", validators=[is_known_mapping_permission]
     )

@@ -22,14 +22,17 @@ html {
     background-color: $blue-dark;
     opacity: 0.8;
   }
+
+  .vh-minus-122 {
+    height: calc(100vh - 122px);
+  }
 }
 
 @media screen and (min-width: 30em) {
   #jumbotron {
-
     video,
     img {
-      object-position: 0 0;
+      object-position: 0 40%;
     }
   }
 
@@ -64,11 +67,11 @@ html {
   .flex-two-items-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 4%,
+    gap: 4%;
   }
 
-  .flex-two-items-row>div {
-    flex: 46%
+  .flex-two-items-row > div {
+    flex: 46%;
   }
 }
 
@@ -101,8 +104,6 @@ html {
     position: sticky !important;
     top: 0;
   }
-
-
 }
 
 @media screen and (max-width: 60em) {
@@ -207,6 +208,8 @@ https://codepen.io/nielsenramon/pen/mLMeLY
 }
 
 .markdown-content {
+  line-height: 1.44;
+
   h1 {
     font-size: 1.25rem;
   }
@@ -246,11 +249,13 @@ textarea:disabled {
 }
 
 div.messageSubjectLinks,
-strong.messageSubjectLinks {
-  &>a {
+p.messageSubjectLinks {
+  letter-spacing: -0.0857513px;
+  & > a {
     color: $blue-dark;
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 500;
+    letter-spacing: normal;
   }
   &>a:hover {
     &>a {
@@ -261,7 +266,7 @@ strong.messageSubjectLinks {
 
   color: $blue-grey;
 
-  &.bodycard>a {
+  &.bodycard > a {
     text-decoration: underline;
   }
 }
@@ -291,7 +296,8 @@ div.messageBodyLinks {
 }
 
 .mapbox-improve-map,
-a[href="https://www.mapbox.com/map-feedback/"] {
+a[href="https://www.mapbox.com/map-feedback/"]
+{
   display: none;
 }
 
@@ -310,40 +316,40 @@ a[href="https://www.mapbox.com/map-feedback/"] {
 }
 
 .overflow-empty {
-  text-overflow: "";
+  text-overflow: '';
 }
 
 .react-select {
   &__control {
-    border-color: $grey-light  !important;
+    border-color: $grey-light !important;
     min-height: 1.5rem !important;
-    border-radius: .125rem !important;
+    border-radius: 0.125rem !important;
 
     &--is-focused {
-      box-shadow: 0 0 1px $grey-light  !important;
+      box-shadow: 0 0 1px $grey-light !important;
     }
 
     &:hover {
-      border-color: $grey-light  !important;
+      border-color: $grey-light !important;
     }
   }
 
   &__placeholder {
-    color: $blue-dark  !important;
+    color: $blue-dark !important;
   }
 
   &__option {
-    color: $blue-dark  !important;
+    color: $blue-dark !important;
 
     &:hover,
     &:active,
     &--is-focused {
-      background-color: $tan  !important;
+      background-color: $tan !important;
       cursor: pointer;
     }
 
     &--is-selected {
-      background-color: $white  !important;
+      background-color: $white !important;
     }
 
     &--is-disabled {
@@ -372,9 +378,29 @@ a[href="https://www.mapbox.com/map-feedback/"] {
   border: 1px solid #909;
   border-radius: 5px;
   background: rgb(203, 16, 237);
-  background: -webkit-gradient(linear, left bottom, left top, color-stop(6%, rgba(108, 1, 167, 1)), color-stop(50%, rgba(203, 16, 237, 1)), color-stop(90%, rgb(229, 140, 253)), to(rgb(201, 42, 251)));
-  background: -o-linear-gradient(bottom, rgba(108, 1, 167, 1) 6%, rgba(203, 16, 237, 1) 50%, rgb(229, 140, 253) 90%, rgb(201, 42, 251) 100%);
-  background: linear-gradient(0deg, rgba(108, 1, 167, 1) 6%, rgba(203, 16, 237, 1) 50%, rgb(229, 140, 253) 90%, rgb(201, 42, 251) 100%);
+  background: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(6%, rgba(108, 1, 167, 1)),
+    color-stop(50%, rgba(203, 16, 237, 1)),
+    color-stop(90%, rgb(229, 140, 253)),
+    to(rgb(201, 42, 251))
+  );
+  background: -o-linear-gradient(
+    bottom,
+    rgba(108, 1, 167, 1) 6%,
+    rgba(203, 16, 237, 1) 50%,
+    rgb(229, 140, 253) 90%,
+    rgb(201, 42, 251) 100%
+  );
+  background: linear-gradient(
+    0deg,
+    rgba(108, 1, 167, 1) 6%,
+    rgba(203, 16, 237, 1) 50%,
+    rgb(229, 140, 253) 90%,
+    rgb(201, 42, 251) 100%
+  );
 
   &:before {
     content: '\03b2';
@@ -383,19 +409,108 @@ a[href="https://www.mapbox.com/map-feedback/"] {
   }
 }
 
+.textareaDetail {
+  border-radius: 0px 0px 3px 3px;
+  border-width: 0;
+  box-shadow: 0 1px 0 1px #d0d7de, 0 0 0 #d0d7de, 0 1px 1px #d0d7de;
+}
+
+div.react-datepicker-popper {
+  z-index: 5;
+}
+
 .comment-textarea {
   box-sizing: border-box;
-
-  &:focus-within {
-    outline: -webkit-focus-ring-color auto 1px;
-
-    .textareaDetail {
-      border-bottom-color: transparent;
-    }
-  }
 }
 
 .sticky-top {
   position: sticky !important;
   top: 0;
+}
+
+.notifications-header {
+  h3 {
+    letter-spacing: -0.110252px;
+    line-height: 20px;
+  }
+}
+
+.notifications-header > div {
+  padding: 1.5rem;
+}
+
+.explore-projects-container {
+  display: grid;
+  gap: 1.875rem;
+}
+
+.one-column {
+  grid-template-columns: 1fr;
+}
+
+.two-column {
+  grid-template-columns: 6fr 4fr;
+}
+
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  grid-auto-rows: 370px;
+}
+
+.b--card {
+  border-color: #ecebed;
+}
+
+.explore-projects-map {
+  height: calc(100vh - 190px);
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+}
+
+// Box Shadow Overrides Starts
+
+.shadow-1 {
+  box-shadow: 0px 4px 10px rgb(0 0 0 / 10%);
+}
+
+.shadow-2 {
+  box-shadow: 0px 1px 2px rgba(150, 156, 160, 0.158033);
+}
+
+.shadow-3 {
+  box-shadow: 0px 7px 64px rgba(0, 0, 0, 0.07);
+}
+
+.shadow-6 {
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.w-md-editor {
+  border-radius: 3px 3px 0px 0px !important;
+}
+
+.w-md-editor-toolbar li > button:hover,
+.w-md-editor-toolbar li > button:focus {
+  color: $red !important;
+}
+
+.task-list:hover {
+  box-shadow: 0px 7px 20px rgba(0, 0, 0, 0.08);
+}
+
+.project-edit-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+
+  @media screen and (max-width: 60em) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media screen and (max-width: 30em) {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }

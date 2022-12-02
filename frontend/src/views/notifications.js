@@ -45,9 +45,10 @@ export const NotificationPopout = (props) => {
           minWidth: '390px',
           width: '390px',
           zIndex: '100',
+          filter: 'drop-shadow(0px 2px 24px rgba(0, 0, 0, 0.5))',
           ...popoutPosition,
         }}
-        className={`fr ${props.isPopoutFocus ? '' : 'dn '}br2 absolute shadow-2 ph4 pb3 bg-white`}
+        className={`fr ${props.isPopoutFocus ? '' : 'dn '}br2 absolute bg-white`}
       >
         <InboxNavMini
           newMsgCount={
@@ -80,7 +81,7 @@ export const NotificationPopout = (props) => {
 
 export const NotificationsPage = (props) => {
   useSetTitleTag('Notifications');
-  const userToken = useSelector((state) => state.auth.get('token'));
+  const userToken = useSelector((state) => state.auth.token);
   const [inboxQuery, setInboxQuery] = useInboxQueryParams();
   const [forceUpdated, forceUpdate] = useForceUpdate();
   const [error, loading, notifications] = useFetch(
@@ -93,12 +94,12 @@ export const NotificationsPage = (props) => {
   }
 
   return (
-    <div className="pt4-l pb5 ph5-l ph2 pt180 pull-center bg-tan">
+    <div className="pb5 ph6-l ph2 pt180 pull-center bg-washed-blue notifications-container">
       {
         props.children
         /* This is where the full notification body component is rendered using the router, as a child route. */
       }
-      <section className="cf">
+      <section>
         <InboxNav />
         <NotificationResults
           retryFn={forceUpdate}
@@ -106,11 +107,13 @@ export const NotificationsPage = (props) => {
           loading={loading}
           notifications={notifications}
         />
-        <Paginator
-          inboxQuery={inboxQuery}
-          notifications={notifications}
-          setInboxQuery={setInboxQuery}
-        />
+        <div className="flex justify-end mw8">
+          <Paginator
+            inboxQuery={inboxQuery}
+            notifications={notifications}
+            setInboxQuery={setInboxQuery}
+          />
+        </div>
       </section>
     </div>
   );

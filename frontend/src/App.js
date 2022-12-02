@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Router, Redirect, globalHistory } from '@reach/router';
 import { QueryParamProvider } from 'use-query-params';
 import ReactPlaceholder from 'react-placeholder';
@@ -6,6 +6,8 @@ import { useMeta } from 'react-meta-elements';
 import { connect } from 'react-redux';
 import * as Sentry from '@sentry/react';
 
+import { getUserDetails } from './store/actions/auth';
+import { store } from './store';
 import './assets/styles/index.scss';
 import { ORG_NAME, MATOMO_ID } from './config';
 import { Header } from './components/header';
@@ -58,6 +60,7 @@ import {
   NotificationDetail,
 } from './views/notifications';
 import { Banner, ArchivalNotificationBanner } from './components/banner/index';
+import TopBanner from './components/banner/TopBanner';
 
 const ProjectEdit = React.lazy(() =>
   import('./views/projectEdit' /* webpackChunkName: "projectEdit" */),
@@ -68,12 +71,20 @@ let App = (props) => {
   useMeta({ name: 'author', content: ORG_NAME });
   const { isLoading } = props;
 
+  useEffect(() => {
+    // fetch user details endpoint when the user is returning to a logged in session
+    store.dispatch(getUserDetails(store.getState()));
+  }, []);
+
   return (
     <Sentry.ErrorBoundary fallback={<FallbackComponent />}>
       {isLoading ? (
         <Preloader />
       ) : (
         <div className="w-100 base-font bg-white" lang={props.locale}>
+          <Router>
+            <TopBanner path="/" />
+          </Router>
           <Router>
             <Header path="/*" />
           </Router>

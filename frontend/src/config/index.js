@@ -21,6 +21,7 @@ export const ADVANCED_LEVEL_COUNT = Number(process.env.REACT_APP_TM_MAPPER_LEVEL
 export const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || '';
 export const ENABLE_SERVICEWORKER = process.env.REACT_APP_ENABLE_SERVICEWORKER || 0;
 export const MAX_AOI_AREA = Number(process.env.REACT_APP_MAX_AOI_AREA) || 5000;
+export const MAPILLARY_TOKEN = process.env.REACT_APP_MAPILLARY_TOKEN || '';
 export const MAX_FILESIZE = parseInt(process.env.REACT_APP_MAX_FILESIZE) || 5000000; // bytes
 
 // ORGANISATIONAL INFORMATION
@@ -30,8 +31,9 @@ export const ORG_URL = process.env.REACT_APP_ORG_URL || '';
 export const ORG_LOGO = process.env.REACT_APP_ORG_LOGO || '';
 export const HOMEPAGE_IMG_HIGH = process.env.REACT_APP_HOMEPAGE_IMG_HIGH || '';
 export const HOMEPAGE_IMG_LOW = process.env.REACT_APP_HOMEPAGE_IMG_LOW || '';
-export const OSM_CONSUMER_KEY = process.env.REACT_APP_OSM_CONSUMER_KEY || '';
-export const OSM_CONSUMER_SECRET = process.env.REACT_APP_OSM_CONSUMER_SECRET || '';
+export const OSM_CLIENT_ID = process.env.REACT_APP_OSM_CLIENT_ID || '';
+export const OSM_CLIENT_SECRET = process.env.REACT_APP_OSM_CLIENT_SECRET || '';
+export const OSM_REDIRECT_URI = process.env.REACT_APP_OSM_REDIRECT_URI || '';
 export const ORG_PRIVACY_POLICY_URL = process.env.REACT_APP_ORG_PRIVACY_POLICY_URL || '';
 export const OSM_REGISTER_URL =
   process.env.REACT_APP_OSM_REGISTER_URL || 'https://www.openstreetmap.org/user/new';
@@ -69,6 +71,9 @@ export const TASK_COLOURS = {
   INVALIDATED: '#fceca4',
   BADIMAGERY: '#d8dae4',
   PRIORITY_AREAS: '#efd1d1',
+  PENDING_IMAGE_CAPTURE: '#f8e8fb',
+  MORE_IMAGES_NEEDED: '#d497e2',
+  IMAGE_CAPTURE_DONE: '#7fc874',
 };
 
 export const CHART_COLOURS = {
