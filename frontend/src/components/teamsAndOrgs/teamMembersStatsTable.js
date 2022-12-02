@@ -9,6 +9,11 @@ import { Link } from '@reach/router';
 import { UserAvatar } from '../user/avatar';
 import messages from './messages';
 
+const secondsToHHMMSS = (seconds) => {
+  return (Math.floor(seconds / 3600)) + ":" + ("0" + Math.floor(seconds / 60) % 60).slice(-2) + ":" + ("0" + seconds % 60).slice(-2)
+}
+
+
 const UserCell = ({ row }) => {
   return (
     <span>
@@ -49,7 +54,7 @@ export const TeamMembersStatsTable = ({ stats, teamName }) => {
 
       {
         name: <FormattedMessage {...messages.totalTime} />,
-        selector: (row) => new Date(row['totalTimeSpent'] * 1000).toISOString().slice(11, 19),
+        selector: (row) => secondsToHHMMSS(row['totalTimeSpent']),
         sortable: true,
         grow: 2,
         minWidth: '100px',
@@ -101,15 +106,14 @@ export const TeamMembersStatsTable = ({ stats, teamName }) => {
       },
       {
         name: <FormattedMessage {...messages.timeSpentValidating} />,
-        selector: (row) => new Date(row['timeSpentValidating'] * 1000).toISOString().slice(11, 19),
+        selector: (row) => secondsToHHMMSS(row['timeSpentValidating']),
         sortable: true,
         grow: 2,
         minWidth: '100px',
       },
       {
         name: <FormattedMessage {...messages.averageTimePerTask} />,
-        selector: (row) =>
-          new Date(row['averageValidationTime'] * 1000).toISOString().slice(11, 19),
+        selector: (row) => secondsToHHMMSS(row['averageValidationTime']),
         sortable: true,
         grow: 2,
         minWidth: '200px',
@@ -140,14 +144,14 @@ export const TeamMembersStatsTable = ({ stats, teamName }) => {
       },
       {
         name: <FormattedMessage {...messages.timeSpentMapping} />,
-        selector: (row) => new Date(row['timeSpentMapping'] * 1000).toISOString().slice(11, 19),
+        selector: (row) => secondsToHHMMSS(row['timeSpentMapping']),
         sortable: true,
         grow: 2,
         minWidth: '100px',
       },
       {
         name: <FormattedMessage {...messages.averageTimePerTask} />,
-        selector: (row) => new Date(row['averageMappingTime'] * 1000).toISOString().slice(11, 19),
+        selector: (row) => secondsToHHMMSS(row['averageMappingTime']),
         sortable: true,
         grow: 2,
         minWidth: '200px',
@@ -183,8 +187,8 @@ export const TeamMembersStatsTable = ({ stats, teamName }) => {
         .reduce((res, key) => {
           // the time fields are in seconds so let's convert to useful time just like the table
           if (key.match(/time/i)) {
-            const time = new Date(stat[key] * 1000).toISOString().slice(11, 19)
-            return {...res, [key]: time}
+            const time = secondsToHHMMSS(stat[key]);
+            return {...res, [key]: time};
           }
           return { ...res, [key]: stat[key] };
         }, {});
