@@ -83,10 +83,8 @@ There are two ways to configure Tasking Manager. You can set some environment va
   - `POSTGRES_ENDPOINT`=database-endpoint-can-be-localhost
   - `POSTGRES_PORT`=database-port
   - `TM_SECRET`=define-freely-any-number-and-letter-combination
-  - `TM_CLIENT_ID`=oauth-client-id-from-openstreetmap
-  - `TM_CLIENT_SECRET`=oauth-client-secret-key-from-openstreetmap
-  - `TM_REDIRECT_URI`=oauth-client-redirect_uri
-  - `TM_SCOPE`=oauth-client-scopes
+  - `TM_CONSUMER_KEY`=oauth-consumer-key-from-openstreetmap
+  - `TM_CONSUMER_SECRET`=oauth-consumer-secret-key-from-openstreetmap
 
 In order to send email correctly, set these variables as well:
   - `TM_SMTP_HOST`
@@ -256,10 +254,3 @@ export TM_DB=postgresql://hottm:hottm@localhost/tasking-manager
 It is possible to install and run the Tasking Manager using [Docker](https://docker.com) and [Docker Compose](https://docs.docker.com/compose/).
 
 Clone the Tasking Manager repository and use `docker-compose up` to get a working version of the API running.
-
-## Sysadmins guide
-
-* [System architecture](../sysadmins/architecture.md)
-* [Managing CI/CD with CircleCI](../sysadmins/ci-cd.md)
-* [Deployment Guide](../sysadmins/deployment.md)
-

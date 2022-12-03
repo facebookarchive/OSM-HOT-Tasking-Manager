@@ -141,10 +141,6 @@ export default defineMessages({
     id: 'teamsAndOrgs.management.organisation.remaining_tasks',
     defaultMessage: 'Total remaining',
   },
-  orgProjectStats: {
-    id: 'teamsAndOrgs.management.organisation.project_stats',
-    defaultMessage: 'Projects Statistics',
-  },
   tier: {
     id: 'teamsAndOrgs.management.organisation.usage_tier',
     defaultMessage: 'Tier',

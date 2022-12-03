@@ -57,7 +57,6 @@ class TestMappingService(BaseTestCase):
     ):
         # Arrange
         self.task_stub.task_status = TaskStatus.MAPPED.value
-        self.task_stub.locked_by = None
         mock_task.return_value = self.task_stub
 
         # Act / Assert
@@ -70,7 +69,6 @@ class TestMappingService(BaseTestCase):
         self, mock_task, mock_project
     ):
         # Arrange
-        self.task_stub.locked_by = None
         mock_task.return_value = self.task_stub
         mock_project.return_value = (
             False,
@@ -87,7 +85,6 @@ class TestMappingService(BaseTestCase):
         self, mock_task, mock_project
     ):
         # Arrange
-        self.task_stub.locked_by = None
         mock_task.return_value = self.task_stub
         mock_project.return_value = False, MappingNotAllowed.USER_NOT_ACCEPTED_LICENSE
 

@@ -1,9 +1,11 @@
+import { Map } from 'immutable';
+
 import { types } from '../actions/notifications';
 
-const initialState = {
+const initialState = Map({
   notifications: [],
   pagination: { hasNext: false, hasPrev: false, page: 1 },
-};
+});
 
 export const notificationsReducer = (state = initialState, action) => {
   switch (action.type) {

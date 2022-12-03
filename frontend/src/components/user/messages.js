@@ -66,10 +66,6 @@ export default defineMessages({
     id: 'user.slack',
     defaultMessage: 'Username on {org} Slack',
   },
-  osmChaUsername: {
-    id: 'user.osmCha',
-    defaultMessage: 'Changesets on OSMCha',
-  },
   urlDetectedError: {
     id: 'user.personalInfo.error',
     defaultMessage: 'Type only your username, not the URL.',

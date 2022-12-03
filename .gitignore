@@ -46,7 +46,3 @@ ehthumbs.db
 Thumbs.db
 .elasticbeanstalk/
 venv_aws/
-
-# Backend coverage generated files
-htmlcov/
-.coverage

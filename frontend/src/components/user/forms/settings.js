@@ -13,8 +13,8 @@ import { pushUserDetails } from '../../../store/actions/auth';
 import { getEditors } from '../../../utils/editorsList';
 
 const mapStateToProps = (state) => ({
-  userDetails: state.auth.userDetails,
-  token: state.auth.token,
+  userDetails: state.auth.get('userDetails'),
+  token: state.auth.get('token'),
 });
 
 function _EditorDropdown(props) {

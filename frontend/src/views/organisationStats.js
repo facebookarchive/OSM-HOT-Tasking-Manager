@@ -15,14 +15,13 @@ import { useSetTitleTag } from '../hooks/UseMetaTags';
 import { RemainingTasksStats } from '../components/teamsAndOrgs/remainingTasksStats';
 import { OrganisationUsageLevel, OrganisationTier } from '../components/teamsAndOrgs/orgUsageLevel';
 import { TasksStats } from '../components/teamsAndOrgs/tasksStats';
-import { OrganisationProjectStats } from '../components/teamsAndOrgs/organisationProjectStats';
 
 export const OrganisationStats = ({ id }) => {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const isOrgManager = useSelector(
     (state) =>
-      state.auth.userDetails.role === 'ADMIN' ||
-      (state.auth.organisations && state.auth.organisations.includes(Number(id))),
+      state.auth.get('userDetails').role === 'ADMIN' ||
+      (state.auth.get('organisations') && state.auth.get('organisations').includes(Number(id))),
   );
   const [query, setQuery] = useTasksStatsQueryParams();
   const [forceUpdated, forceUpdate] = useForceUpdate();
@@ -112,17 +111,6 @@ export const OrganisationStats = ({ id }) => {
                 />
               )}
             </ReactPlaceholder>
-          </div>
-          <div className="w-40-l w-100 fl cf">
-            <h4 className="f3 fw6 ttu barlow-condensed blue-dark mt0 pt4 mb2">
-              <FormattedMessage {...messages.orgProjectStats} />
-            </h4>
-            <div className="pa2">
-              <OrganisationProjectStats
-                projects={orgStats && orgStats.projects}
-                orgName={organisation.name}
-              />
-            </div>
           </div>
         </div>
       </ReactPlaceholder>

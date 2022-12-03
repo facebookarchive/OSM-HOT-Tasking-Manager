@@ -3,16 +3,15 @@ import { FormattedMessage } from 'react-intl';
 import messages from './messages';
 
 export const TabSelector = ({ activeSection, setActiveSection }) => (
-  <div className="ttu barlow-condensed f4 blue-dark bb b--grey-light">
+  <div className="cf ttu barlow-condensed f4 pv2 blue-dark">
     {['tasks', 'instructions', 'contributions'].map((section) => (
-      <div
+      <span
         key={section}
-        className={`mr4 pb2 fw5 pointer dib ${activeSection === section && 'bb bw1'}`}
-        style={{ letterSpacing: '-0.0857513px', borderColor: '#979797' }}
+        className={`mr4 pb1 pointer ${activeSection === section && 'bb bw1 b--blue-dark'}`}
         onClick={() => setActiveSection(section)}
       >
         <FormattedMessage {...messages[section]} />
-      </div>
+      </span>
     ))}
   </div>
 );

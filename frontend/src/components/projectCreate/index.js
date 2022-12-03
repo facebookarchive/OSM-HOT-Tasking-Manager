@@ -38,7 +38,7 @@ const ProjectCreationMap = React.lazy(() =>
 
 const ProjectCreate = (props) => {
   const intl = useIntl();
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const [drawModeIsActive, setDrawModeIsActive] = useState(false);
   const [showProjectsAOILayer, setShowProjectsAOILayer] = useState(false);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from '@reach/router';
 import { Form, Field } from 'react-final-form';
 import { FormattedMessage } from 'react-intl';
@@ -9,7 +9,6 @@ import { Management } from '../teamsAndOrgs/management';
 import { HashtagIcon } from '../svgIcons';
 import { Button } from '../button';
 import { nCardPlaceholders } from '../teamsAndOrgs/campaignsPlaceholder';
-import { TextField } from '../formInputs';
 
 export const InterestCard = ({ interest }) => {
   return (
@@ -29,14 +28,6 @@ export const InterestCard = ({ interest }) => {
 };
 
 export const InterestsManagement = ({ interests, _userDetails, isInterestsFetched }) => {
-  const [query, setQuery] = useState('');
-
-  const onSearchInputChange = (e) => setQuery(e.target.value);
-
-  const filteredInterests = interests?.filter((interest) =>
-    interest.name.toLowerCase().includes(query.toLowerCase()),
-  );
-
   return (
     <Management
       title={
@@ -54,16 +45,8 @@ export const InterestsManagement = ({ interests, _userDetails, isInterestsFetche
         delay={10}
         ready={isInterestsFetched}
       >
-        <div className="w-20-l w-25-m">
-          <TextField
-            value={query}
-            placeholderMsg={messages.searchCategories}
-            onChange={onSearchInputChange}
-            onCloseIconClick={() => setQuery('')}
-          />
-        </div>
-        {filteredInterests?.length ? (
-          filteredInterests.map((i, n) => <InterestCard key={n} interest={i} />)
+        {interests?.length ? (
+          interests.map((i, n) => <InterestCard key={n} interest={i} />)
         ) : (
           <div>
             <FormattedMessage {...messages.noCategories} />

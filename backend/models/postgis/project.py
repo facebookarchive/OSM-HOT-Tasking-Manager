@@ -38,6 +38,7 @@ from backend.models.postgis.project_chat import ProjectChat
 from backend.models.postgis.statuses import (
     ProjectStatus,
     ProjectPriority,
+    MappingLevel,
     TaskStatus,
     MappingTypes,
     TaskCreationMode,
@@ -45,7 +46,6 @@ from backend.models.postgis.statuses import (
     TeamRoles,
     MappingPermission,
     ValidationPermission,
-    ProjectDifficulty,
 )
 from backend.models.postgis.task import Task, TaskHistory
 from backend.models.postgis.team import Team
@@ -127,7 +127,7 @@ class Project(db.Model):
     author_id = db.Column(
         db.BigInteger, db.ForeignKey("users.id", name="fk_users"), nullable=False
     )
-    difficulty = db.Column(
+    mapper_level = db.Column(
         db.Integer, default=2, nullable=False, index=True
     )  # Mapper level project is suitable for
     mapping_permission = db.Column(db.Integer, default=MappingPermission.ANY.value)
@@ -146,10 +146,7 @@ class Project(db.Model):
         db.String
     )  # Optional custom filter id for filtering on OSMCha
     due_date = db.Column(db.DateTime)
-    earliest_street_imagery = db.Column(db.DateTime)
     imagery = db.Column(db.String)
-    image_capture_mode = db.Column(db.Boolean, default=False)
-    mapillary_organization_id = db.Column(db.String)
     josm_preset = db.Column(db.String)
     id_presets = db.Column(ARRAY(db.String))
     extra_id_params = db.Column(db.String)
@@ -217,9 +214,7 @@ class Project(db.Model):
         cascade="all, delete-orphan",
         single_parent=True,
     )
-    custom_editor = db.relationship(
-        CustomEditor, cascade="all, delete-orphan", uselist=False
-    )
+    custom_editor = db.relationship(CustomEditor, uselist=False)
     favorited = db.relationship(User, secondary=project_favorites, backref="favorites")
     organisation = db.relationship(Organisation, backref="projects")
     campaign = db.relationship(
@@ -353,8 +348,7 @@ class Project(db.Model):
         for field in ["interests", "campaign"]:
             value = getattr(orig, field)
             setattr(new_proj, field, value)
-        if orig.custom_editor:
-            new_proj.custom_editor = orig.custom_editor.clone_to_project(new_proj.id)
+        new_proj.custom_editor = orig.custom_editor
 
         return new_proj
 
@@ -381,12 +375,9 @@ class Project(db.Model):
         self.default_locale = project_dto.default_locale
         self.enforce_random_task_selection = project_dto.enforce_random_task_selection
         self.private = project_dto.private
-        self.difficulty = ProjectDifficulty[project_dto.difficulty.upper()].value
+        self.mapper_level = MappingLevel[project_dto.mapper_level.upper()].value
         self.changeset_comment = project_dto.changeset_comment
         self.due_date = project_dto.due_date
-        self.earliest_street_imagery = project_dto.earliest_street_imagery
-        self.image_capture_mode = project_dto.image_capture_mode
-        self.mapillary_organization_id = project_dto.mapillary_organization_id
         self.imagery = project_dto.imagery
         self.josm_preset = project_dto.josm_preset
         self.id_presets = project_dto.id_presets
@@ -845,13 +836,10 @@ class Project(db.Model):
         summary.country_tag = self.country
         summary.changeset_comment = self.changeset_comment
         summary.due_date = self.due_date
-        summary.earliest_street_imagery = self.earliest_street_imagery
-        summary.image_capture_mode = self.image_capture_mode
-        summary.mapillary_organization_id = self.mapillary_organization_id
         summary.created = self.created
         summary.last_updated = self.last_updated
         summary.osmcha_filter_id = self.osmcha_filter_id
-        summary.difficulty = ProjectDifficulty(self.difficulty).name
+        summary.mapper_level = MappingLevel(self.mapper_level).name
         summary.mapping_permission = MappingPermission(self.mapping_permission).name
         summary.validation_permission = ValidationPermission(
             self.validation_permission
@@ -1019,13 +1007,10 @@ class Project(db.Model):
         ).name
         base_dto.enforce_random_task_selection = self.enforce_random_task_selection
         base_dto.private = self.private
-        base_dto.difficulty = ProjectDifficulty(self.difficulty).name
+        base_dto.mapper_level = MappingLevel(self.mapper_level).name
         base_dto.changeset_comment = self.changeset_comment
         base_dto.osmcha_filter_id = self.osmcha_filter_id
         base_dto.due_date = self.due_date
-        base_dto.earliest_street_imagery = self.earliest_street_imagery
-        base_dto.image_capture_mode = self.image_capture_mode
-        base_dto.mapillary_organization_id = self.mapillary_organization_id
         base_dto.imagery = self.imagery
         base_dto.josm_preset = self.josm_preset
         base_dto.id_presets = self.id_presets

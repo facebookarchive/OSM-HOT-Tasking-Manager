@@ -33,19 +33,18 @@ export function OrderBySelector(props) {
       type: 'ASC',
     },
     {
-      label: <FormattedMessage {...messages.sortByEasy} />,
-      value: 'difficulty.ASC',
-      sort: 'difficulty',
+      label: <FormattedMessage {...messages.sortByBeginner} />,
+      value: 'mapper_level.ASC',
+      sort: 'mapper_level',
       type: 'ASC',
     },
     {
-      label: <FormattedMessage {...messages.sortByChallenging} />,
-      value: 'difficulty.DESC',
-      sort: 'difficulty',
+      label: <FormattedMessage {...messages.sortByAdvanced} />,
+      value: 'mapper_level.DESC',
+      sort: 'mapper_level',
       type: 'DESC',
     },
   ];
-
   const onSortSelect = (arr) => {
     if (arr.length === 1) {
       props.setQuery(
@@ -61,14 +60,13 @@ export function OrderBySelector(props) {
       throw new Error('filter select array is bigger.');
     }
   };
-
   return (
     <Dropdown
       onChange={onSortSelect}
       value={`${props.allQueryParams.orderBy}.${props.allQueryParams.orderByType}` || []}
       options={options}
       display={<FormattedMessage {...messages.sortBy} />}
-      className={`ba b--tan bg-white mr3 v-mid pv2 br1 pl3 fw5 blue-dark ${props.className || ''}`}
+      className={`ba b--grey-light bg-white mr1 v-mid pv2 ${props.className || ''}`}
     />
   );
 }

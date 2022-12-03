@@ -34,16 +34,16 @@ const LearnNav = ({ sections, section, setSection, urlParamToSection }) => {
 
   return (
     <div className="w-50 w-100-m">
-      <ul className="pa0 ma0 list dib nav-bg">
+      <ul className="pa0 ma0 list bg-tan dib">
         {sections.map((s) => (
           <li
-            key={s}
             className={`f5 dib mh3 pt3 link pointer no-underline ${
               section === s ? 'bb b--blue-dark bw1 pb1' : 'pb3'
             }`}
             onClick={() => {
               handleClick(s);
             }}
+            key={s}
           >
             <FormattedMessage {...messages[s]} />
           </li>
@@ -54,72 +54,86 @@ const LearnNav = ({ sections, section, setSection, urlParamToSection }) => {
 };
 
 const Intro = ({ section, messagesObjs }) => (
-  <div className="intro-container flex flex-column flex-row-l">
-    <div className="w-100 w-30-l">
-      <p className="barlow-condensed f2 ttu b fw5 ma0">
-        {<FormattedMessage {...messages[section]} />}
-      </p>
-    </div>
-    <div className="w-100 w-70-l lh-copy mt4 mt0-l">
-      <p className="fw7-l fw5 mt0 intro-description f4">
-        {<FormattedMessage {...messages[messagesObjs.intro]} />}
-      </p>
-      <p className="f125 intro-sub-description">
-        {<FormattedMessage {...messages[messagesObjs.description]} values={messagesObjs.values} />}
-      </p>
+  <div className="w-100 cf">
+    <div className="w-100 cf">
+      <div className="w-30-ns w-100 fl">
+        <p className="barlow-condensed f2 ttu b fw6">
+          {<FormattedMessage {...messages[section]} />}
+        </p>
+      </div>
+      <div className="w-70-ns w-100 fr lh-copy f4">
+        <p className="b">{<FormattedMessage {...messages[messagesObjs.intro]} />}</p>
+        <p className="f5">
+          {
+            <FormattedMessage
+              {...messages[messagesObjs.description]}
+              values={messagesObjs.values}
+            />
+          }
+        </p>
+      </div>
     </div>
   </div>
 );
 
 const Steps = ({ items }) => (
-  <div className="step-cards-container-parent">
-    <div className="step-cards-container">
-      {items.map((item, i) => (
-        <div className="bg-white" key={i}>
-          <div className="shadow-1 pa3 h-100 step-item br1">
-            {item.img}
-            <h6 className="blue-dark b f125 pt0 steps-title">
-              <span className="mr1">{i + 1}.</span>
-              {item.titleLink ? (
-                <Link to={item.titleLink} className="link no-underline blue-dark">
-                  <FormattedMessage {...messages[`${item.message}Title`]} />
-                </Link>
-              ) : (
+  <div className="w-100 cf flex flex-wrap">
+    {items.map((item, i) => (
+      <div className="w-50-m w-third-ns pa2 z-2 bg-white" key={i}>
+        <div className="shadow-1 pa3 h-100">
+          {item.img}
+          <p className="blue-dark b f4 pt0">
+            <span className="mr1">{i + 1}.</span>
+            {item.titleLink ? (
+              <Link to={item.titleLink} className="link no-underline blue-dark">
                 <FormattedMessage {...messages[`${item.message}Title`]} />
-              )}
-            </h6>
-            <p className="blue-grey lh-title f6 f5-ns">
-              <FormattedMessage {...messages[`${item.message}Description`]} values={item.values} />
-            </p>
-          </div>
+              </Link>
+            ) : (
+              <FormattedMessage {...messages[`${item.message}Title`]} />
+            )}
+          </p>
+          <p className="blue-grey lh-title f5">
+            <FormattedMessage {...messages[`${item.message}Description`]} values={item.values} />
+          </p>
         </div>
-      ))}
-    </div>
+      </div>
+    ))}
   </div>
 );
 
 const Manuals = ({ contents }) => (
-  <div className="manuals-container">
-    <h3 className="barlow-condensed ttu fw5 ma0">
+  <div className="mv3">
+    <h3 className="f2 ttu barlow-condensed fw6">
       <FormattedMessage {...messages.learnManualsTitle} />
     </h3>
-    <div className="w-100 cards">
+    <div className="w-100 cf flex flex-wrap">
       {contents.map((content, i) => (
-        <div key={i} className="br1 shadow-1 h-100">
-          <a className="no-underline" rel="noopener noreferrer" target="_blank" href={content.url}>
-            <div className="w-100 tc bg-mask flex items-center justify-center manual-card-image br1 br--top ">
-              <img src={content.img} height="40" alt="" />
-            </div>
-            <div className="detail-container">
-              <h6 className="fw7 f125 mt0 mb2 blue-dark">
-                <FormattedMessage {...messages[`${content.message}Title`]} />
-              </h6>
+        <div key={i} className="w-50-ns w-50-m w-25-l w-100 fl pa2">
+          <div className="shadow-4 h-100">
+            <a
+              className="no-underline"
+              rel="noopener noreferrer"
+              target="_blank"
+              href={content.url}
+            >
+              <div
+                className="bg-tan w-100 tc h4"
+                style={{
+                  background: `#f0efef url(${content.img}) no-repeat center`,
+                  backgroundSize: '55%',
+                }}
+              ></div>
+              <div className="pa3">
+                <p className="fw7 f4 mt0 blue-dark">
+                  <FormattedMessage {...messages[`${content.message}Title`]} />
+                </p>
 
-              <p className="blue-grey lh-title f6 f5-ns ma0">
-                <FormattedMessage {...messages[`${content.message}Description`]} />
-              </p>
-            </div>
-          </a>
+                <p className="blue-grey lh-title f5">
+                  <FormattedMessage {...messages[`${content.message}Description`]} />
+                </p>
+              </div>
+            </a>
+          </div>
         </div>
       ))}
     </div>
@@ -137,29 +151,29 @@ const Videos = ({ contents }) => {
     width: '100%',
   };
   return (
-    <div className="videos-container">
-      <h3 className="ttu barlow-condensed fw5">
+    <div className="mv3">
+      <h3 className="f2 ttu barlow-condensed fw6">
         <FormattedMessage {...messages.learnVideosTitle} />
       </h3>
-      <div className="cards">
+      <div className="w-100 cf flex flex-wrap">
         {contents.map((content, i) => {
           return (
-            <div className="br1" key={i}>
-              <div className="shadow-1 pointer h-100 br1 " onClick={() => setActiveVideo(content)}>
+            <div className="w-50-ns w-50-m w-25-l w-100 pa2" key={i}>
+              <div className="shadow-4 pointer h-100" onClick={() => setActiveVideo(content)}>
                 <div
-                  className="bg-tan w-100 tc h5-ns h4 br1 br--top"
+                  className="bg-tan w-100 tc h5-l h4"
                   style={{
                     background: `linear-gradient(rgba(0, 0, 0, 0.3) 100%, rgba(0, 0, 0, 0.3) 100%), url(https://img.youtube.com/vi/${content.youTubeId}/hqdefault.jpg) no-repeat center`,
                     backgroundSize: 'cover',
                   }}
                 >
-                  <PlayIcon className="white pv5-ns pv0 mv3" height="5rem" />
+                  <PlayIcon className="white pv5-l pv0 mv3" height="6rem" />
                 </div>
-                <div className="pa3 db detail-container">
-                  <p className="fw7 f125 mt0 mb2 blue-dark">
+                <div className="pa3 db">
+                  <p className="fw7 f4 mt0 blue-dark">
                     <FormattedMessage {...messages[`${content.message}Title`]} />
                   </p>
-                  <p className="blue-grey lh-title f6 f5-ns ma0">
+                  <p className="blue-grey lh-title f5 db">
                     <FormattedMessage {...messages[`${content.message}Description`]} />
                   </p>
                 </div>
@@ -270,7 +284,7 @@ const LearnToManage = ({ section }) => {
   ];
 
   return (
-    <div className="w-100 mb6">
+    <div className="w-100">
       <Intro section={section} messagesObjs={messagesObjs} />
       <Steps items={items} />
       <Manuals contents={tutorials} />
@@ -327,10 +341,10 @@ const LearnToValidate = ({ section }) => {
   ];
 
   return (
-    <div className="w-100 pb6">
+    <div className="w-100">
       <Intro section={section} messagesObjs={messagesObjs} />
       <Steps items={items} />
-      <p className="w-60 lh-copy f125 left mb5">
+      <p className="w-60 lh-copy f5 left mb5">
         {<FormattedMessage {...messages.learnValidateNote} />}
       </p>
       <Videos contents={videos} />
@@ -393,7 +407,7 @@ const LearnToMap = ({ section }) => {
   ];
 
   return (
-    <div className="pb6">
+    <div className="w-100 cf">
       <Intro section={section} messagesObjs={messagesObjs} />
       <Steps items={items} />
       <Manuals contents={tutorials} />
@@ -425,7 +439,7 @@ export const LearnPage = () => {
   return (
     <div className="pt180 pull-center blue-dark">
       <TopBar pageName={<FormattedMessage {...messages.learn} />} />
-      <div className="ph6-l ph5-m ph4">
+      <div className="ph6-l ph4-m ph2">
         <LearnNav
           sections={sections}
           section={section}

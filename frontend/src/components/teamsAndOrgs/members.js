@@ -25,7 +25,7 @@ export function Members({
   managerJoinTeamError,
   setManagerJoinTeamError,
 }: Object) {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const [editMode, setEditMode] = useState(false);
   const [membersBackup, setMembersBackup] = useState(null);
   const selectPlaceHolder = <FormattedMessage {...messages.searchUsers} />;
@@ -65,16 +65,14 @@ export function Members({
     members.some((member) => member.username === username);
 
   const formatOptionLabel = (member, menu) => (
-    <div className="flex justify-between">
+    <>
       <div>{member.username}</div>
-      {doesMemberExistInTeam(member.username) && menu.context === 'menu' ? (
+      {doesMemberExistInTeam(member.username) && menu.context === 'menu' && (
         <div className="f7 lh-copy gray">
           <FormattedMessage {...messages.alreadyInTeam} />
         </div>
-      ) : (
-        menu.context !== 'value' && <button className="bg-red white br2 pointer bn f7">Add</button>
       )}
-    </div>
+    </>
   );
 
   return (
@@ -165,12 +163,13 @@ export function JoinRequests({
   updateRequests,
   managers,
   updateTeam,
-  joinMethod,
+  isTeamInviteOnly,
 }: Object) {
-  const token = useSelector((state) => state.auth.token);
-  const { username: loggedInUsername } = useSelector((state) => state.auth.userDetails);
+  const token = useSelector((state) => state.auth.get('token'));
+  const { username: loggedInUsername } = useSelector((state) => state.auth.get('userDetails'));
+
   const showJoinRequestSwitch =
-    joinMethod === 'BY_REQUEST' &&
+    isTeamInviteOnly &&
     managers?.filter(
       (manager) => manager.username === loggedInUsername && manager.function === 'MANAGER',
     ).length > 0;

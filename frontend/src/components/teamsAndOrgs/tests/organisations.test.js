@@ -1,9 +1,8 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Provider } from 'react-redux';
-import '@testing-library/jest-dom';
 
-import { createComponentWithIntl, IntlProviders } from '../../../utils/testWithIntl';
+import { createComponentWithIntl } from '../../../utils/testWithIntl';
 import { store } from '../../../store';
 import { OrgsManagement, OrganisationCard } from '../organisations';
 import { AddButton } from '../management';
@@ -150,34 +149,5 @@ describe('OrgsManagement with', () => {
     );
     const testInstance = element.root;
     expect(testInstance.findAllByProps({ className: 'show-loading-animation' }).length).toBe(0);
-  });
-
-  it('filters organisations list by the search query', async () => {
-    render(
-      <IntlProviders>
-        <OrgsManagement
-          organisations={orgData.organisations}
-          isOrgManager={true}
-          isAdmin={false}
-          isOrganisationsFetched={true}
-        />
-      </IntlProviders>,
-    );
-    const textField = screen.getByRole('textbox');
-    fireEvent.change(textField, {
-      target: {
-        value: 'Singapore',
-      },
-    });
-    expect(screen.getByRole('heading', { name: 'Singapore Red Cross' })).toHaveTextContent(
-      'Singapore Red Cross',
-    );
-    fireEvent.change(textField, {
-      target: {
-        value: 'not Singapore',
-      },
-    });
-    expect(screen.queryByRole('heading', { name: 'Singapore Red Cross' })).not.toBeInTheDocument();
-    expect(screen.queryByText('No organizations were found.')).toBeInTheDocument();
   });
 });

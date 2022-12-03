@@ -12,9 +12,9 @@ import bannerLR from '../../assets/img/banner_824.jpg';
 import { HOMEPAGE_VIDEO_URL, HOMEPAGE_IMG_HIGH, HOMEPAGE_IMG_LOW } from '../../config';
 
 function JumbotronButtons() {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   return (
-    <div className="buttons">
+    <p>
       <Link to={'explore'}>
         <Button className="bg-primary white mr3">
           <FormattedMessage {...messages.startButton} />
@@ -33,7 +33,7 @@ function JumbotronButtons() {
           {(close) => <SignUp closeModal={close} />}
         </Popup>
       )}
-    </div>
+    </p>
   );
 }
 
@@ -55,10 +55,16 @@ export function Jumbotron() {
   const [width, height] = useWindowSize();
 
   return (
-    <div id="jumbotron" className="white relative jumbotron-primary">
+    <div id="jumbotron" className="white relative" style={{ height: '32rem' }}>
       <div className="truncate relative h-100">
         {HOMEPAGE_VIDEO_URL && width > 824 ? (
-          <video className="w-100 h-100 object-fit-cover" style={{ zIndex: 0 }} muted loop autoPlay>
+          <video
+            className={`${width > 824 ? 'w-100' : 'h-100'} object-fit-cover`}
+            style={{ zIndex: 0 }}
+            muted
+            loop
+            autoPlay
+          >
             <source src={HOMEPAGE_VIDEO_URL} type="video/mp4"></source>
           </video>
         ) : (
@@ -70,16 +76,14 @@ export function Jumbotron() {
           />
         )}
       </div>
-      <div className="absolute top-0 pl6-l pl4 pv5-ns pv3 z-1 h-100">
-        <div className="flex flex-column justify-center h-100">
-          <h3 className="f-4rem-l f2 ttu barlow-condensed fw8 ma0">
-            <FormattedMessage {...messages.jumbotronTitle} />
-          </h3>
-          <p className="pr2 f5 f3-ns mb4">
-            <FormattedMessage {...messages.jumbotronHeadLine} />
-          </p>
-          <JumbotronButtons />
+      <div className="absolute top-0 pl6-l pl4 pv5-ns pv3 z-1">
+        <h3 className="mb4 mw7-ns mw-20rem f-4rem-l f1 ttu barlow-condensed fw8">
+          <FormattedMessage {...messages.jumbotronTitle} />
+        </h3>
+        <div className="pr2 f4 f3-ns mw7-l mw6-m mw5 mb4">
+          <FormattedMessage {...messages.jumbotronHeadLine} />
         </div>
+        <JumbotronButtons />
       </div>
     </div>
   );
@@ -87,12 +91,12 @@ export function Jumbotron() {
 
 export function SecondaryJumbotron() {
   return (
-    <div className="cover bg-sec-jumbotron white jumbotron-sec">
+    <div className="cover bg-sec-jumbotron white">
       <div className="pl6-l pl4 pv5-ns pv2">
-        <h3 className="mb4 mw6 f2 ttu barlow-condensed fw5">
+        <h3 className="mb4 mw6 f2 ttu barlow-condensed fw8">
           <FormattedMessage {...messages.secJumbotronTitle} />
         </h3>
-        <p className="pr2 f125 f4-ns mw6">
+        <p className="pr2 f5 f4-ns mw6">
           <FormattedMessage
             {...messages.secJumbotronHeadLine}
             values={{
@@ -104,7 +108,7 @@ export function SecondaryJumbotron() {
             }}
           />
         </p>
-        <p className="pr2 f125 f4-ns mw6 mb0">
+        <p className="pr2 f5 f4-ns mw6 mb4">
           <FormattedMessage {...messages.secJumbotronHeadLine2} />
         </p>
         <JumbotronButtons />

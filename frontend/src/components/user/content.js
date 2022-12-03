@@ -42,7 +42,7 @@ export function APIKeyCard({ token }) {
 }
 
 export function OSMCard({ username }: Object) {
-  const osmUserInfo = useSelector((state) => state.auth.osm);
+  const osmUserInfo = useSelector((state) => state.auth.get('osm'));
   const { value, unit } = selectUnit(
     osmUserInfo ? new Date(osmUserInfo.accountCreated) : new Date(),
   );
@@ -115,7 +115,10 @@ export function WelcomeCard() {
       <h3 className="f2 mt0 fw6">
         <FormattedMessage {...messages.welcomeTitle} />
       </h3>
-      <UserInterestsForm />
+      <p>
+        <FormattedMessage {...messages.interestsLead} />
+        <UserInterestsForm />
+      </p>
     </div>
   );
 }

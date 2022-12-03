@@ -9,7 +9,7 @@ export const useGetLockedTasks = (taskId) => {
 };
 
 export const useFetchLockedTasks = () => {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const dispatch = useDispatch();
   const memoCallback = useCallback(async () => {
     if (token) {

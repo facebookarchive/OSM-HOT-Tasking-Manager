@@ -5,15 +5,8 @@ import ReactTooltip from 'react-tooltip';
 
 import { ClockIcon } from '../svgIcons';
 import messages from './messages';
-import { TimerIcon } from '../svgIcons/timer';
 
-export function DueDateBox({
-  dueDate,
-  intervalMili,
-  tooltipMsg,
-  isTaskStatusPage = false,
-  isProjectDetailPage = false,
-}: Object) {
+export function DueDateBox({ dueDate, intervalMili, align = 'right', tooltipMsg }: Object) {
   const intl = useIntl();
   const [timer, setTimer] = useState(Date.now());
   useEffect(() => {
@@ -43,20 +36,19 @@ export function DueDateBox({
     return (
       <>
         <span
-          className={`inline-flex items-center lh-solid f8 br1 ph2 link ${
+          className={`dib relative lh-solid f7 tr br1 link ph1 pv2 truncate ${
+            align === 'right' ? 'fr' : 'fl'
+          } ${
             milliDifference < 60000 * 20 && intervalMili !== undefined
-              ? 'bg-primary white'
-              : 'bg-tan blue-grey'
+              ? 'bg-primary white fw6'
+              : 'bg-grey-light blue-grey'
           } ${intervalMili ? '' : 'mw4'}`}
           data-tip={tooltipMsg}
-          style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
         >
-          {!isTaskStatusPage ? (
-            <ClockIcon height="12px" width="12px" />
-          ) : (
-            <TimerIcon height="12px" width="12px" />
-          )}
-          <span className="pl1">
+          <span>
+            <ClockIcon className="absolute pl1 top-0 pt1 left-0" />
+          </span>
+          <span className="pl3 ml1 v-mid">
             <FormattedMessage
               className="indent"
               {...messages['dueDateRelativeRemainingDays']}
@@ -70,22 +62,6 @@ export function DueDateBox({
       </>
     );
   } else {
-    return (
-      isProjectDetailPage && (
-        <span
-          className="inline-flex items-center lh-solid f8 br1 ph2 link bg-tan blue-grey"
-          style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem' }}
-        >
-          <ClockIcon height="12px" width="12px" />
-          <span className="pl1">
-            {dueDate ? (
-              <FormattedMessage {...messages.dueDateExpired} />
-            ) : (
-              <FormattedMessage {...messages.noDueDate} />
-            )}
-          </span>
-        </span>
-      )
-    );
+    return null;
   }
 }

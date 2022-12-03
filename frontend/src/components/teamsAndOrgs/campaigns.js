@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from '@reach/router';
 import { FormattedMessage } from 'react-intl';
 import { Form, Field } from 'react-final-form';
@@ -9,17 +9,8 @@ import messages from './messages';
 import { Management } from './management';
 import { Button } from '../button';
 import { HashtagIcon } from '../svgIcons';
-import { TextField } from '../formInputs';
 
 export function CampaignsManagement({ campaigns, userDetails, isCampaignsFetched }: Object) {
-  const [query, setQuery] = useState('');
-
-  const onSearchInputChange = (e) => setQuery(e.target.value);
-
-  const filteredCampaigns = campaigns?.filter((campaign) =>
-    campaign.name.toLowerCase().includes(query.toLowerCase()),
-  );
-
   return (
     <Management
       title={
@@ -37,16 +28,8 @@ export function CampaignsManagement({ campaigns, userDetails, isCampaignsFetched
         delay={10}
         ready={isCampaignsFetched}
       >
-        <div className="w-20-l w-25-m">
-          <TextField
-            value={query}
-            placeholderMsg={messages.searchCampaigns}
-            onChange={onSearchInputChange}
-            onCloseIconClick={() => setQuery('')}
-          />
-        </div>
-        {filteredCampaigns?.length ? (
-          filteredCampaigns.map((campaign, n) => <CampaignCard campaign={campaign} key={n} />)
+        {campaigns?.length ? (
+          campaigns.map((campaign, n) => <CampaignCard campaign={campaign} key={n} />)
         ) : (
           <div>
             <FormattedMessage {...messages.noCampaigns} />

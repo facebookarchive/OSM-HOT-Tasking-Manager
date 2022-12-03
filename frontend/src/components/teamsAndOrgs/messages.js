@@ -100,22 +100,6 @@ export default defineMessages({
     id: 'management.projects',
     defaultMessage: 'Projects',
   },
-  stale: {
-    id: 'management.projects.stale',
-    defaultMessage: 'Stale',
-  },
-  createdThisYear: {
-    id: 'management.projects.created_this_year',
-    defaultMessage: 'Created this year',
-  },
-  projectsCreated: {
-    id: 'management.projects.created.total',
-    defaultMessage: '{number, plural, one {# project created} other {# projects created}}',
-  },
-  numberOfProjects: {
-    id: 'management.projects.stats',
-    defaultMessage: '{number, plural, one {# project} other {# projects}}',
-  },
   campaigns: {
     id: 'management.campaigns',
     defaultMessage: 'Campaigns',
@@ -159,26 +143,6 @@ export default defineMessages({
   myOrganisations: {
     id: 'management.filter.buttons.myOrganisations',
     defaultMessage: 'My Organizations',
-  },
-  searchOrganisations: {
-    id: 'management.filter.textarea.searchOrganisations',
-    defaultMessage: 'Search organisations...',
-  },
-  searchTeams: {
-    id: 'management.filter.textarea.searchTeams',
-    defaultMessage: 'Search teams...',
-  },
-  searchCampaigns: {
-    id: 'management.filter.textarea.searchCampaigns',
-    defaultMessage: 'Search campaigns...',
-  },
-  searchCategories: {
-    id: 'management.filter.textarea.searchCategories',
-    defaultMessage: 'Search categories...',
-  },
-  searchLicenses: {
-    id: 'management.filter.textarea.searchLicenses',
-    defaultMessage: 'Search licenses...',
   },
   all: {
     id: 'management.filter.buttons.all',
@@ -393,9 +357,9 @@ export default defineMessages({
     id: 'management.fields.description',
     defaultMessage: 'Description',
   },
-  joinMethod: {
-    id: 'management.fields.join_method',
-    defaultMessage: 'Join method',
+  inviteOnly: {
+    id: 'management.fields.invite_only',
+    defaultMessage: 'Invite only',
   },
   visibility: {
     id: 'management.fields.visibility',
@@ -435,7 +399,7 @@ export default defineMessages({
   },
   noTeams: {
     id: 'management.teams.no_teams',
-    defaultMessage: 'No team found.',
+    defaultMessage: 'You are not a member of a team yet.',
   },
   noCampaigns: {
     id: 'management.teams.no_campaigns',
@@ -449,46 +413,17 @@ export default defineMessages({
     id: 'management.no_licenses',
     defaultMessage: 'There are no licenses yet.',
   },
-  anyoneCanJoin: {
-    id: 'management.teams.join_method.any',
-    defaultMessage: 'Anyone can join',
-  },
-  anyoneCanJoinDescription: {
-    id: 'management.teams.join_method.any.description',
-    defaultMessage: 'This team is open to everyone.',
-  },
-  byRequest: {
-    id: 'management.teams.join_method.byRequest',
-    defaultMessage: 'By request',
-  },
-  byRequestDescription: {
-    id: 'management.teams.join_method.by_request.description',
-    defaultMessage:
-      'To join this team, users must send a join request, which must be approved by team managers.',
-  },
-  byInvite: {
-    id: 'management.teams.join_method.byInvite',
-    defaultMessage: 'By invite',
-  },
-  byInviteDescription: {
-    id: 'management.teams.join_method.by_invite.description',
-    defaultMessage: 'Users can only join this team if managers invite them.',
-  },
   public: {
     id: 'management.teams.visibility.public',
     defaultMessage: 'Public',
-  },
-  publicDescription: {
-    id: 'management.teams.visibility.public.description',
-    defaultMessage: 'This team will be displayed on the team members profiles.',
   },
   private: {
     id: 'management.teams.visibility.private',
     defaultMessage: 'Private',
   },
-  privateDescription: {
-    id: 'management.teams.visibility.private.description',
-    defaultMessage: 'This team will not be displayed on the team members profiles.',
+  inviteOnlyDescription: {
+    id: 'management.teams.invite_only.description',
+    defaultMessage: "Managers need to approve a member's request to join.",
   },
   newJoinRequestNotification: {
     id: 'management.teams.newJoinRequestNotification',
