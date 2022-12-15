@@ -12,13 +12,3 @@ export const MappingLevelMessage = (props) => {
   );
   return <span {...otherProps}>{message}</span>;
 };
-
-export const DifficultyMessage = (props) => {
-  const { level, ...otherProps } = props;
-  const message = ['ALL', 'EASY', 'MODERATE', 'CHALLENGING'].includes(level) ? (
-    <FormattedMessage {...messages[`difficulty${level}`]} />
-  ) : (
-    level
-  );
-  return <span {...otherProps}>{message}</span>;
-};

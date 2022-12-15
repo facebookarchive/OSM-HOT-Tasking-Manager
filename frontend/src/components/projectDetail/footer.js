@@ -9,7 +9,7 @@ import messages from './messages';
 import { AddToFavorites } from './favorites';
 
 export const ProjectDetailFooter = (props) => {
-  const userIsloggedIn = useSelector((state) => state.auth.token);
+  const userIsloggedIn = useSelector((state) => state.auth.get('token'));
   return (
     <div
       className={`${

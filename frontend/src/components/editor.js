@@ -3,19 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import * as iD from '@hotosm/id';
 import '@hotosm/id/dist/iD.css';
 
-import { OSM_CLIENT_ID, OSM_CLIENT_SECRET, OSM_REDIRECT_URI, OSM_SERVER_URL } from '../config';
+import { OSM_CONSUMER_KEY, OSM_CONSUMER_SECRET, OSM_SERVER_URL } from '../config';
 
-export default function Editor({
-  setDisable,
-  comment,
-  presets,
-  imagery,
-  gpxUrl,
-  earliestStreetImagery,
-  imageCaptureMode,
-}) {
+export default function Editor({ setDisable, comment, presets, imagery, gpxUrl }) {
   const dispatch = useDispatch();
-  const session = useSelector((state) => state.auth.session);
+  const session = useSelector((state) => state.auth.get('session'));
   const iDContext = useSelector((state) => state.editor.context);
   const locale = useSelector((state) => state.preferences.locale);
   const [customImageryIsSet, setCustomImageryIsSet] = useState(false);
@@ -94,12 +86,12 @@ export default function Editor({
       }
 
       let osm = iDContext.connection();
-      var auth = {
-        url: OSM_SERVER_URL,
-        client_id: OSM_CLIENT_ID,
-        client_secret: OSM_CLIENT_SECRET,
-        redirect_uri: OSM_REDIRECT_URI,
-        access_token: session.osm_oauth_token,
+      const auth = {
+        urlroot: OSM_SERVER_URL,
+        oauth_consumer_key: OSM_CONSUMER_KEY,
+        oauth_secret: OSM_CONSUMER_SECRET,
+        oauth_token: session.osm_oauth_token,
+        oauth_token_secret: session.osm_oauth_token_secret,
       };
       osm.switch(auth);
 
@@ -113,25 +105,8 @@ export default function Editor({
           setDisable(false);
         }
       });
-
-      if (imageCaptureMode) {
-        if (earliestStreetImagery) {
-          iDContext.photos().setDateFilter('fromDate', earliestStreetImagery.substr(0, 10), false);
-        }
-        window.location.href =
-          window.location.href + '&photo_overlay=mapillary,mapillary-map-features,mapillary-signs';
-      }
     }
-  }, [
-    session,
-    iDContext,
-    setDisable,
-    presets,
-    locale,
-    gpxUrl,
-    earliestStreetImagery,
-    imageCaptureMode,
-  ]);
+  }, [session, iDContext, setDisable, presets, locale, gpxUrl]);
 
   return <div className="w-100 vh-minus-77-ns" id="id-container"></div>;
 }

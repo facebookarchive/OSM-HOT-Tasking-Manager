@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { navigate, useLocation } from '@reach/router';
 import ReactPlaceholder from 'react-placeholder';
@@ -33,28 +33,14 @@ import { MultipleTaskHistoriesAccordion } from './multipleTaskHistories';
 import { ResourcesTab } from './resourcesTab';
 import { ActionTabsNav } from './actionTabsNav';
 import { LockedTaskModalContent } from './lockedTasks';
-import { SessionAboutToExpire, SessionExpired } from './extendSession';
-import { MappingTypes } from '../mappingTypes';
 const Editor = React.lazy(() => import('../editor'));
 const RapiDEditor = React.lazy(() => import('../rapidEditor'));
 
-const MINUTES_BEFORE_DIALOG = 5;
-
-export function TaskMapAction({
-  project,
-  projectIsReady,
-  tasks,
-  activeTasks,
-  getTasks,
-  action,
-  editor,
-}) {
+export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, action, editor }) {
   const location = useLocation();
-  const aboutToExpireTimeoutRef = useRef();
-  const expiredTimeoutRef = useRef();
   useSetProjectPageTitleTag(project);
-  const userDetails = useSelector((state) => state.auth.userDetails);
-  const token = useSelector((state) => state.auth.token);
+  const userDetails = useSelector((state) => state.auth.get('userDetails'));
+  const token = useSelector((state) => state.auth.get('token'));
   const [activeSection, setActiveSection] = useState('completion');
   const [activeEditor, setActiveEditor] = useState(editor);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -79,8 +65,6 @@ export function TaskMapAction({
   const [historyTabChecked, setHistoryTabChecked] = useState(false);
   const [multipleTasksInfo, setMultipleTasksInfo] = useState({});
   const [showMapChangesModal, setShowMapChangesModal] = useState(false);
-  const [showSessionExpiringDialog, setShowSessionExpiringDialog] = useState(false);
-  const [showSessionExpiredDialog, setSessionTimeExpiredDialog] = useState(false);
   const intl = useIntl();
 
   const activeTask = activeTasks && activeTasks[0];
@@ -92,9 +76,10 @@ export function TaskMapAction({
     project.projectId && tasksIds && tasksIds.length === 1,
   );
 
-  const contributors = taskHistory?.taskHistory
-    ? getTaskContributors(taskHistory.taskHistory, userDetails.username)
-    : [];
+  const contributors =
+    taskHistory && taskHistory.taskHistory
+      ? getTaskContributors(taskHistory.taskHistory, userDetails.username)
+      : [];
 
   const readTaskComments = useReadTaskComments(taskHistory);
   const disableBadImagery = useDisableBadImagery(taskHistory);
@@ -120,29 +105,6 @@ export function TaskMapAction({
   };
 
   useEffect(() => {
-    const tempTimer = new Date(activeTask.lastUpdated);
-    tempTimer.setSeconds(tempTimer.getSeconds() + activeTask.autoUnlockSeconds);
-    const milliDifferenceForSessionExpire = new Date(tempTimer) - Date.now();
-    const milliDifferenceForAboutToSessionExpire =
-      milliDifferenceForSessionExpire - MINUTES_BEFORE_DIALOG * 60 * 1000;
-
-    aboutToExpireTimeoutRef.current = setTimeout(() => {
-      setSessionTimeExpiredDialog(false);
-      setShowSessionExpiringDialog(true);
-    }, milliDifferenceForAboutToSessionExpire);
-
-    expiredTimeoutRef.current = setTimeout(() => {
-      setShowSessionExpiringDialog(false);
-      setSessionTimeExpiredDialog(true);
-    }, milliDifferenceForSessionExpire);
-
-    return () => {
-      clearTimeout(aboutToExpireTimeoutRef.current);
-      clearTimeout(expiredTimeoutRef.current);
-    };
-  }, [activeTask.autoUnlockSeconds, activeTask.lastUpdated]);
-
-  useEffect(() => {
     if (!editor && projectIsReady && userDetails.defaultEditor && tasks && tasksIds) {
       let editorToUse;
       if (action === 'MAPPING') {
@@ -150,9 +112,7 @@ export function TaskMapAction({
           ? [userDetails.defaultEditor]
           : project.mappingEditors;
       } else {
-        editorToUse = project.validationLockTimeExpiredDialogEditors.includes(
-          userDetails.defaultEditor,
-        )
+        editorToUse = project.validationEditors.includes(userDetails.defaultEditor)
           ? [userDetails.defaultEditor]
           : project.validationEditors;
       }
@@ -239,8 +199,6 @@ export function TaskMapAction({
                     setDisable={setDisable}
                     comment={project.changesetComment}
                     presets={project.idPresets}
-                    earliestStreetImagery={project.earliestStreetImagery}
-                    imageCaptureMode={project.imageCaptureMode}
                     imagery={formatImageryUrlCallback(project.imagery)}
                     gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                   />
@@ -249,8 +207,6 @@ export function TaskMapAction({
                     setDisable={setDisable}
                     comment={project.changesetComment}
                     presets={project.idPresets}
-                    earliestStreetImagery={project.earliestStreetImagery}
-                    imageCaptureMode={project.imageCaptureMode}
                     imagery={formatImageryUrlCallback(project.imagery)}
                     gpxUrl={getTaskGpxUrlCallback(project.projectId, tasksIds)}
                     powerUser={project.rapidPowerUser}
@@ -310,11 +266,10 @@ export function TaskMapAction({
                     ))}
                   </h3>
                   <div className="db" title={intl.formatMessage(messages.timeToUnlock)}>
-                    <DueDateBox dueDate={timer} isTaskStatusPage intervalMili={60000} />
+                    <DueDateBox dueDate={timer} align="left" intervalMili={60000} />
                   </div>
                 </div>
-                <MappingTypes types={project.mappingTypes} />
-                <div className="cf mt3">
+                <div className="cf">
                   <ActionTabsNav
                     activeSection={activeSection}
                     setActiveSection={setActiveSection}
@@ -335,11 +290,15 @@ export function TaskMapAction({
                           tasksIds={tasksIds}
                           showReadCommentsAlert={readTaskComments && !historyTabChecked}
                           disableBadImagery={
-                            userDetails.mappingLevel !== 'ADVANCED' || disableBadImagery
+                            userDetails.mappingLevel !== 'ADVANCED' && disableBadImagery
                           }
                           contributors={contributors}
                           historyTabSwitch={historyTabSwitch}
-                          taskInstructions={activeTasks && activeTasks[0].perTaskInstructions}
+                          taskInstructions={
+                            activeTasks && activeTasks.length === 1
+                              ? activeTasks[0].perTaskInstructions
+                              : null
+                          }
                           disabled={disabled}
                           taskComment={taskComment}
                           setTaskComment={setTaskComment}
@@ -351,7 +310,11 @@ export function TaskMapAction({
                         <CompletionTabForValidation
                           project={project}
                           tasksIds={tasksIds}
-                          taskInstructions={activeTasks && activeTasks[0].perTaskInstructions}
+                          taskInstructions={
+                            activeTasks && activeTasks.length === 1
+                              ? activeTasks[0].perTaskInstructions
+                              : null
+                          }
                           disabled={disabled}
                           contributors={contributors}
                           validationComments={validationComments}
@@ -482,24 +445,6 @@ export function TaskMapAction({
           {(close) => <LockedTaskModalContent project={project} error="JOSM" close={close} />}
         </Popup>
       )}
-      <SessionAboutToExpire
-        showSessionExpiringDialog={showSessionExpiringDialog}
-        setShowSessionExpiryDialog={setShowSessionExpiringDialog}
-        projectId={project.projectId}
-        tasksIds={tasksIds}
-        token={token}
-        getTasks={getTasks}
-        expiredTimeoutRef={expiredTimeoutRef}
-      />
-      <SessionExpired
-        showSessionExpiredDialog={showSessionExpiredDialog}
-        setShowSessionExpiredDialog={setSessionTimeExpiredDialog}
-        projectId={project.projectId}
-        tasksIds={tasksIds}
-        token={token}
-        action={action}
-        getTasks={getTasks}
-      />
     </>
   );
 }

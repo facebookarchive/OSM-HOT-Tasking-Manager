@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 
 class EnvironmentConfig:
-    """Base class for configuration."""
+    """ Base class for configuration. """
 
     """ Most settings can be defined through environment variables. """
 
@@ -103,7 +103,7 @@ class EnvironmentConfig:
     MAIL_DEBUG = True if LOG_LEVEL == "DEBUG" else False
 
     # If disabled project update emails will not be sent.
-    SEND_PROJECT_EMAIL_UPDATES = int(os.getenv("TM_SEND_PROJECT_EMAIL_UPDATES", True))
+    SEND_PROJECT_EMAIL_UPDATES = os.getenv("TM_SEND_PROJECT_EMAIL_UPDATES", True)
 
     # Languages offered by the Tasking Manager
     # Please note that there must be exactly the same number of Codes as languages.
@@ -119,19 +119,20 @@ class EnvironmentConfig:
     }
 
     # Connection to OSM authentification system
-    OAUTH_API_URL = "{}/api/0.6/".format(OSM_SERVER_URL)
-    OAUTH_CLIENT_ID = os.getenv("TM_CLIENT_ID", None)
-    OAUTH_CLIENT_SECRET = os.getenv("TM_CLIENT_SECRET", None)
-    OAUTH_SCOPE = os.getenv("TM_SCOPE", None)
-    OAUTH_REDIRECT_URI = os.getenv("TM_REDIRECT_URI", None)
+    OSM_OAUTH_SETTINGS = {
+        "base_url": "{}/api/0.6/".format(OSM_SERVER_URL),
+        "consumer_key": os.getenv("TM_CONSUMER_KEY", None),
+        "consumer_secret": os.getenv("TM_CONSUMER_SECRET", None),
+        "request_token_url": "{}/oauth/request_token".format(OSM_SERVER_URL),
+        "access_token_url": "{}/oauth/access_token".format(OSM_SERVER_URL),
+        "authorize_url": "{}/oauth/authorize".format(OSM_SERVER_URL),
+    }
 
     # Some more definitions (not overridable)
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_size": 10,
-        "max_overflow": 10,
-    }
     SEND_FILE_MAX_AGE_DEFAULT = 0
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_SIZE = 10
+    SQLALCHEMY_MAX_OVERFLOW = 10
 
     # Image upload Api
     IMAGE_UPLOAD_API_KEY = os.getenv("TM_IMAGE_UPLOAD_API_KEY", None)

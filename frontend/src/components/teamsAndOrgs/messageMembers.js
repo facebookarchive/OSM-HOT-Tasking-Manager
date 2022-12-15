@@ -8,8 +8,8 @@ import { CommentInputField } from '../comments/commentInput';
 import { MessageStatus } from '../comments/status';
 import { pushToLocalJSONAPI } from '../../network/genericJSONRequest';
 
-export function MessageMembers({ teamId, members }: Object) {
-  const token = useSelector((state) => state.auth.token);
+export function MessageMembers({ teamId }: Object) {
+  const token = useSelector((state) => state.auth.get('token'));
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [status, setStatus] = useState(null);
@@ -59,11 +59,7 @@ export function MessageMembers({ teamId, members }: Object) {
           </div>
         )}
         <div className="cf mb1">
-          <CommentInputField
-            comment={message}
-            setComment={setMessage}
-            contributors={members?.map((member) => member.username)}
-          />
+          <CommentInputField comment={message} setComment={setMessage} />
         </div>
         {!message && <MessageStatus status={status} />}
       </div>

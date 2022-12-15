@@ -58,7 +58,7 @@ export default defineMessages({
   },
   newNotifications: {
     id: 'notifications.nav.new.plural',
-    defaultMessage: '{n} new ',
+    defaultMessage: '{n} new messages',
   },
   viewAll: {
     id: 'notifications.nav.viewAll',

@@ -45,8 +45,8 @@ const getRandomTaskByAction = (activities, taskAction) => {
 
 export function TaskSelection({ project, type, loading }: Object) {
   const location = useLocation();
-  const user = useSelector((state) => state.auth.userDetails);
-  const userOrgs = useSelector((state) => state.auth.organisations);
+  const user = useSelector((state) => state.auth.get('userDetails'));
+  const userOrgs = useSelector((state) => state.auth.get('organisations'));
   const lockedTasks = useGetLockedTasks();
   const dispatch = useDispatch();
   const [tasks, setTasks] = useState();
@@ -254,9 +254,11 @@ export function TaskSelection({ project, type, loading }: Object) {
           setSelectedTasks(selected.concat([selection]));
         } else {
           setSelectedTasks([selection]);
-          if (lockedTasks.tasks.includes(selection)) {
+          if (lockedTasks.get('tasks').includes(selection)) {
             setTaskAction(
-              lockedTasks.status === 'LOCKED_FOR_MAPPING' ? 'resumeMapping' : 'resumeValidation',
+              lockedTasks.get('status') === 'LOCKED_FOR_MAPPING'
+                ? 'resumeMapping'
+                : 'resumeValidation',
             );
           } else {
             setTaskAction(getTaskAction(user, project, status, userTeams.teams, userOrgs));
@@ -292,15 +294,15 @@ export function TaskSelection({ project, type, loading }: Object) {
             )}
           </Popup>
         )}
-        <div className="w-100 w-50-ns fl pt3 overflow-y-auto-ns vh-minus-200-ns h-100">
-          <div className="pl4-l pl2 pr4">
+        <div className="w-100 w-50-ns fl pt3 overflow-y-scroll-ns vh-minus-200-ns h-100">
+          <div className="pl4-l pl2 pr2">
             <ReactPlaceholder
               showLoadingAnimation={true}
               rows={3}
               ready={typeof project.projectId === 'number' && project.projectId > 0}
             >
               <ProjectHeader project={project} />
-              <div className="mt3">
+              <div className="cf">
                 <TabSelector activeSection={activeSection} setActiveSection={setActiveSection} />
                 <div className="pt3">
                   <div className={`${activeSection !== 'tasks' ? 'dn' : ''}`}>
@@ -321,7 +323,6 @@ export function TaskSelection({ project, type, loading }: Object) {
                     <>
                       <ProjectInstructions
                         instructions={project.projectInfo && project.projectInfo.instructions}
-                        isProjectArchived={project.status === 'ARCHIVED'}
                       />
                       <ChangesetCommentTags tags={project.changesetComment} />
                     </>
@@ -367,7 +368,7 @@ export function TaskSelection({ project, type, loading }: Object) {
               priorityAreas={priorityAreas}
               animateZoom={false}
             />
-            <TasksMapLegend imageCaptureMode={project.imageCaptureMode} />
+            <TasksMapLegend />
           </ReactPlaceholder>
         </div>
       </div>

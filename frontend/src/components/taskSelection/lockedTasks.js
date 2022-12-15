@@ -52,19 +52,21 @@ export function SameProjectLock({ lockedTasks, action }: Object) {
       <div className="mv4 lh-title">
         <FormattedMessage
           {...messages[
-            lockedTasks.tasks.length > 1
+            lockedTasks.get('tasks').length > 1
               ? 'currentProjectLockTextPlural'
               : 'currentProjectLockTextSingular'
           ]}
-          values={{ taskId: <span className="fw6">{lockedTasks.tasks}</span> }}
+          values={{ taskId: <span className="fw6">{lockedTasks.get('tasks')}</span> }}
         />
       </div>
       <Button
         className="bg-primary white"
-        onClick={() => navigate(`/projects/${lockedTasks.project}/${action}/`)}
+        onClick={() => navigate(`/projects/${lockedTasks.get('project')}/${action}/`)}
       >
         <FormattedMessage
-          {...messages[lockedTasks.tasks.length > 1 ? 'workOnTasksPlural' : 'workOnTasksSingular']}
+          {...messages[
+            lockedTasks.get('tasks').length > 1 ? 'workOnTasksPlural' : 'workOnTasksSingular'
+          ]}
           values={{ mapOrValidate: <FormattedMessage {...messages[action]} /> }}
         />
       </Button>
@@ -73,7 +75,7 @@ export function SameProjectLock({ lockedTasks, action }: Object) {
 }
 
 export const LicenseError = ({ id, close, lockTasks }) => {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const [license, setLicense] = useState(null);
   useEffect(() => {
     const fetchLicense = async (id) => {
@@ -144,24 +146,24 @@ export function LockError({ error, close }) {
 
 export function LockedTaskModalContent({ project, error, close, lockTasks }: Object) {
   const lockedTasks = useGetLockedTasks();
-  const action = lockedTasks.status === 'LOCKED_FOR_VALIDATION' ? 'validate' : 'map';
-  const licenseError = error === 'UserLicenseError' && !lockedTasks.project;
+  const action = lockedTasks.get('status') === 'LOCKED_FOR_VALIDATION' ? 'validate' : 'map';
+  const licenseError = error === 'UserLicenseError' && !lockedTasks.get('project');
 
   return (
     <div className="blue-dark bg-white pv2 pv4-ns ph2 ph4-ns">
       {licenseError && <LicenseError id={project.licenseId} close={close} lockTasks={lockTasks} />}
       {/* Other error happened */}
-      {!lockedTasks.project && !licenseError && <LockError error={error} close={close} />}
+      {!lockedTasks.get('project') && !licenseError && <LockError error={error} close={close} />}
       {/* User has tasks locked on another project */}
-      {lockedTasks.project && lockedTasks.project !== project.projectId && (
+      {lockedTasks.get('project') && lockedTasks.get('project') !== project.projectId && (
         <AnotherProjectLock
-          projectId={lockedTasks.project}
+          projectId={lockedTasks.get('project')}
           action={action}
-          lockedTasksLength={lockedTasks.tasks.length}
+          lockedTasksLength={lockedTasks.get('tasks').length}
         />
       )}
       {/* User has tasks locked on the current project */}
-      {lockedTasks.project === project.projectId && (
+      {lockedTasks.get('project') === project.projectId && (
         <SameProjectLock action={action} lockedTasks={lockedTasks} />
       )}
     </div>

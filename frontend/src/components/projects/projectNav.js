@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import messages from './messages';
 import { useExploreProjectsQueryParams, stringify } from '../../hooks/UseProjectsQueryAPI';
-import { DifficultyMessage } from '../mappingLevel';
+import { MappingLevelMessage } from '../mappingLevel';
 import { Dropdown } from '../dropdown';
 import { ProjectSearchBox } from './projectSearchBox';
 import ClearFilters from './clearFilters';
@@ -32,7 +32,7 @@ export const ProjetListViewToggle = (props) => {
   const dispatch = useDispatch();
   const listViewIsActive = useSelector((state) => state.preferences['projectListView']);
   return (
-    <div className="fr pv2 dib-ns dn">
+    <div className="fr pv2 dib-ns dn ">
       <ListIcon
         height="25"
         width="25"
@@ -65,13 +65,13 @@ const DifficultyDropdown = (props) => {
       }}
       value={props.fullProjectsQuery.difficulty || []}
       options={[
-        { label: <DifficultyMessage level="ALL" className="" />, value: 'ALL' },
-        { label: <DifficultyMessage level="EASY" className="" />, value: 'EASY' },
-        { label: <DifficultyMessage level="MODERATE" className="" />, value: 'MODERATE' },
-        { label: <DifficultyMessage level="CHALLENGING" className="" />, value: 'CHALLENGING' },
+        { label: <MappingLevelMessage level="ALL" className="" />, value: 'ALL' },
+        { label: <MappingLevelMessage level="BEGINNER" className="" />, value: 'BEGINNER' },
+        { label: <MappingLevelMessage level="INTERMEDIATE" className="" />, value: 'INTERMEDIATE' },
+        { label: <MappingLevelMessage level="ADVANCED" className="" />, value: 'ADVANCED' },
       ]}
       display={<FormattedMessage {...messages.mappingDifficulty} />}
-      className={'ba b--tan bg-white mr3 f6 v-mid dn dib-ns pv2 br1 pl3 fw5 blue-dark'}
+      className={'ba b--grey-light bg-white mr1 f6 v-mid dn dib-ns pv2'}
     />
   );
 };
@@ -82,7 +82,7 @@ export const ProjectNav = (props) => {
     ? ['?', stringify(fullProjectsQuery)].join('')
     : '';
 
-  const linkCombo = 'link ph3 f6 pv2 ba b--tan br1 ph3 fw5';
+  const linkCombo = 'link ph3 f6 pv2 ba b--grey-light';
 
   const moreFiltersAnyActive =
     fullProjectsQuery.organisation ||
@@ -111,13 +111,13 @@ export const ProjectNav = (props) => {
             <ProjectsActionFilter setQuery={setQuery} fullProjectsQuery={fullProjectsQuery} />
             <Link
               to={filterRouteToggled}
-              className={`dn mr3 dib-l lh-title f6 ${linkCombo} ${moreFiltersCurrentActiveStyle} blue-dark`}
+              className={`dn mh1 di-l ${linkCombo} ${moreFiltersCurrentActiveStyle}`}
             >
               <FormattedMessage {...messages.moreFilters} />
             </Link>
             <Link
               to={filterRouteToggled}
-              className={`di dib-m dn-l mr3 lh-title f6 ${linkCombo} ${moreFiltersCurrentActiveStyle}`}
+              className={`di di-m dn-l mh1 ${linkCombo} ${moreFiltersCurrentActiveStyle}`}
             >
               <FormattedMessage {...messages.filters} />
             </Link>
@@ -127,6 +127,7 @@ export const ProjectNav = (props) => {
               className="f6"
             />
             {!filterIsEmpty && <ClearFilters url="./" className="mv2 mh1 fr dn dib-l" />}
+
             <ProjectSearchBox
               className="dib fr mh1"
               setQuery={setQuery}

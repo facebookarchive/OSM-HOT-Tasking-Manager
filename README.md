@@ -1,6 +1,6 @@
 # MapWithAI Tasking Manager
 
-[![CircleCI](https://circleci.com/gh/facebook/OSM-HOT-Tasking-Manager/tree/develop.svg?style=svg&circle-token=af41c891f1ce0c291dc05cdb5c400fc02d1cf040)](https://circleci.com/gh/facebook/OSM-HOT-Tasking-Manager/tree/develop)
+[![CircleCI](https://circleci.com/gh/facebookincubator/OSM-HOT-Tasking-Manager/tree/develop.svg?style=svg&circle-token=af41c891f1ce0c291dc05cdb5c400fc02d1cf040)](https://circleci.com/gh/facebookincubator/OSM-HOT-Tasking-Manager/tree/develop)
 
 The [MapWithAI](https://mapwith.ai) Tasking Manager is an extension of the [HOT Tasking Manager](https://github.com/hotosm/tasking-manager). This repository aims to further integrate MapWithAI's data sets into the TM to improve project planning and task distribution. We will also be deploying new features to help improve other aspects of the Tasking Manager.
 

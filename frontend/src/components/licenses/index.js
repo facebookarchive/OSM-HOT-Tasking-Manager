@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from '@reach/router';
 import { Form, Field } from 'react-final-form';
 import { FormattedMessage } from 'react-intl';
@@ -9,7 +9,6 @@ import { Management } from '../teamsAndOrgs/management';
 import { CopyrightIcon } from '../svgIcons';
 import { Button } from '../button';
 import { nCardPlaceholders } from './licensesPlaceholder';
-import { TextField } from '../formInputs';
 
 export const LicenseCard = ({ license }) => {
   return (
@@ -29,14 +28,6 @@ export const LicenseCard = ({ license }) => {
 };
 
 export const LicensesManagement = ({ licenses, userDetails, isLicensesFetched }) => {
-  const [query, setQuery] = useState('');
-
-  const onSearchInputChange = (e) => setQuery(e.target.value);
-
-  const filteredLicenses = licenses?.filter((license) =>
-    license.name.toLowerCase().includes(query.toLowerCase()),
-  );
-
   return (
     <Management
       title={
@@ -54,16 +45,8 @@ export const LicensesManagement = ({ licenses, userDetails, isLicensesFetched })
         delay={10}
         ready={isLicensesFetched}
       >
-        <div className="w-20-l w-25-m">
-          <TextField
-            value={query}
-            placeholderMsg={messages.searchLicenses}
-            onChange={onSearchInputChange}
-            onCloseIconClick={() => setQuery('')}
-          />
-        </div>
-        {filteredLicenses?.length ? (
-          filteredLicenses.map((i, n) => <LicenseCard key={n} license={i} />)
+        {licenses?.length ? (
+          licenses.map((i, n) => <LicenseCard key={n} license={i} />)
         ) : (
           <div className="pv3">
             <FormattedMessage {...messages.noLicenses} />

@@ -16,7 +16,7 @@ import { MappingTypes } from '../mappingTypes';
 import { LockedTaskModalContent } from './lockedTasks';
 
 const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, selectedTasks }) => {
-  const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.get('token'));
   const locale = useSelector((state) => state.preferences.locale);
   const [editor, setEditor] = useState(defaultUserEditor);
   const [editorOptions, setEditorOptions] = useState([]);
@@ -58,12 +58,8 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
 
   const lockTasks = async () => {
     // if user can not map or validate the project, lead him to the explore projects page
-    if (
-      ['selectAnotherProject', 'mappingIsComplete', 'projectIsComplete'].includes(taskAction) ||
-      project.status === 'ARCHIVED'
-    ) {
+    if (['selectAnotherProject', 'mappingIsComplete', 'projectIsComplete'].includes(taskAction)) {
       navigate(`/explore/`);
-      return;
     }
     // then pass to the JOSM check and validate/map checks
     if (editor === 'JOSM' && !window.safari) {
@@ -170,8 +166,7 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
   ]);
 
   const updateEditor = (arr) => setEditor(arr[0].value);
-  const titleClasses = 'db ttu f7 blue-grey mb2 fw5';
-
+  const titleClasses = 'db ttu f6 blue-light mb2';
   return (
     <div className="cf bg-white pb2 ph4-l ph2">
       {lockError !== null && (
@@ -214,17 +209,17 @@ const TaskSelectionFooter = ({ defaultUserEditor, project, tasks, taskAction, se
           options={editorOptions}
           value={editor}
           display={<FormattedMessage {...messages.selectEditor} />}
-          className="bg-white bn pl0"
+          className="bg-white bn"
           toTop={true}
           onChange={updateEditor}
         />
       </div>
       <div className="w-30-ns w-60 fl tr">
         <div className="mt3">
-          <Button className="white bg-primary fw5" onClick={() => lockTasks()} loading={isPending}>
+          <Button className="white bg-primary" onClick={() => lockTasks()} loading={isPending}>
             {['selectAnotherProject', 'mappingIsComplete', 'projectIsComplete'].includes(
               taskAction,
-            ) || project.status === 'ARCHIVED' ? (
+            ) ? (
               <FormattedMessage {...messages.selectAnotherProject} />
             ) : (
               <FormattedMessage
