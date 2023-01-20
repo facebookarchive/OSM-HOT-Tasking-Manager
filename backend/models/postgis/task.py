@@ -96,16 +96,16 @@ class TaskInvalidationHistory(db.Model):
         db.session.commit()
 
     @staticmethod
-    def get_open_for_task(project_id, task_id):
-        return TaskInvalidationHistory.query.filter_by(
-            task_id=task_id, project_id=project_id, is_closed=False
-        ).one_or_none()
-
-    @staticmethod
     def close_all_for_task(project_id, task_id):
         TaskInvalidationHistory.query.filter_by(
             task_id=task_id, project_id=project_id, is_closed=False
         ).update({"is_closed": True})
+        
+    @staticmethod
+    def get_open_for_task(project_id, task_id):
+        return TaskInvalidationHistory.query.filter_by(
+            task_id=task_id, project_id=project_id, is_closed=False
+        ).one_or_none()
 
     @staticmethod
     def record_invalidation(project_id, task_id, invalidator_id, history):
