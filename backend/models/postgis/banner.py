@@ -20,14 +20,14 @@ class Banner(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def update(self):
-        """ Updates the current model in the DB """
-        db.session.commit()
-
     def update_from_dto(self, dto: BannerDTO):
         """ Updates the current model in the DB """
         self.message = dto.message
         self.visible = dto.visible
+        db.session.commit()
+
+    def update(self):
+        """ Updates the current model in the DB """
         db.session.commit()
 
     def as_dto(self):

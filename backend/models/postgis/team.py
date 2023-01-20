@@ -23,7 +23,7 @@ from backend.models.postgis.utils import NotFound
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.sql.expression import cast, or_
 from sqlalchemy import func
-
+import time
 
 class TeamMembers(db.Model):
     __tablename__ = "team_members"
@@ -86,8 +86,8 @@ class Team(db.Model):
     visibility = db.Column(
         db.Integer, default=TeamVisibility.PUBLIC.value, nullable=False
     )
-
     organisation = db.relationship(Organisation, backref="teams")
+
 
     def create(self):
         """ Creates and saves the current model to the DB """
